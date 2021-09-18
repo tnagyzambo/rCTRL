@@ -1,0 +1,2 @@
+[requires]
+libcurl/7.77.0

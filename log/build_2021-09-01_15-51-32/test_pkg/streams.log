@@ -1,0 +1,24 @@
+[0.020s] Invoking command in '/media/psf/CODE/ros-test/build/test_pkg': CMAKE_PREFIX_PATH=/opt/ros/galactic /usr/bin/cmake --build /media/psf/CODE/ros-test/build/test_pkg -- -j6 -l6
+[0.102s] [ 50%] Built target talker
+[0.106s] [100%] Built target listener
+[0.112s] Invoked command in '/media/psf/CODE/ros-test/build/test_pkg' returned '0': CMAKE_PREFIX_PATH=/opt/ros/galactic /usr/bin/cmake --build /media/psf/CODE/ros-test/build/test_pkg -- -j6 -l6
+[0.131s] Invoking command in '/media/psf/CODE/ros-test/build/test_pkg': CMAKE_PREFIX_PATH=/opt/ros/galactic /usr/bin/cmake --install /media/psf/CODE/ros-test/build/test_pkg
+[0.135s] -- Install configuration: "Debug"
+[0.135s] -- Up-to-date: /media/psf/CODE/ros-test/install/test_pkg/share/ament_index/resource_index/package_run_dependencies/test_pkg
+[0.136s] -- Up-to-date: /media/psf/CODE/ros-test/install/test_pkg/share/ament_index/resource_index/parent_prefix_path/test_pkg
+[0.136s] -- Up-to-date: /media/psf/CODE/ros-test/install/test_pkg/share/test_pkg/environment/ament_prefix_path.sh
+[0.136s] -- Up-to-date: /media/psf/CODE/ros-test/install/test_pkg/share/test_pkg/environment/ament_prefix_path.dsv
+[0.137s] -- Up-to-date: /media/psf/CODE/ros-test/install/test_pkg/share/test_pkg/environment/path.sh
+[0.137s] -- Up-to-date: /media/psf/CODE/ros-test/install/test_pkg/share/test_pkg/environment/path.dsv
+[0.137s] -- Up-to-date: /media/psf/CODE/ros-test/install/test_pkg/share/test_pkg/local_setup.bash
+[0.138s] -- Up-to-date: /media/psf/CODE/ros-test/install/test_pkg/share/test_pkg/local_setup.sh
+[0.138s] -- Up-to-date: /media/psf/CODE/ros-test/install/test_pkg/share/test_pkg/local_setup.zsh
+[0.138s] -- Up-to-date: /media/psf/CODE/ros-test/install/test_pkg/share/test_pkg/local_setup.dsv
+[0.139s] -- Installing: /media/psf/CODE/ros-test/install/test_pkg/share/test_pkg/package.dsv
+[0.140s] -- Up-to-date: /media/psf/CODE/ros-test/install/test_pkg/share/ament_index/resource_index/packages/test_pkg
+[0.140s] -- Up-to-date: /media/psf/CODE/ros-test/install/test_pkg/share/test_pkg/cmake/test_pkgConfig.cmake
+[0.140s] -- Up-to-date: /media/psf/CODE/ros-test/install/test_pkg/share/test_pkg/cmake/test_pkgConfig-version.cmake
+[0.141s] -- Up-to-date: /media/psf/CODE/ros-test/install/test_pkg/share/test_pkg/package.xml
+[0.141s] -- Up-to-date: /media/psf/CODE/ros-test/install/test_pkg/lib/test_pkg/talker
+[0.143s] -- Up-to-date: /media/psf/CODE/ros-test/install/test_pkg/lib/test_pkg/listener
+[0.146s] Invoked command in '/media/psf/CODE/ros-test/build/test_pkg' returned '0': CMAKE_PREFIX_PATH=/opt/ros/galactic /usr/bin/cmake --install /media/psf/CODE/ros-test/build/test_pkg

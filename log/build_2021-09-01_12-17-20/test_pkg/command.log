@@ -1,0 +1,2 @@
+Invoking command in '/media/psf/CODE/ros-test/build/test_pkg': CMAKE_PREFIX_PATH=/opt/ros/galactic /usr/bin/cmake /media/psf/CODE/ros-test/src/test_pkg -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=/media/psf/CODE/ros-test/install/test_pkg
+Invoked command in '/media/psf/CODE/ros-test/build/test_pkg' returned '1': CMAKE_PREFIX_PATH=/opt/ros/galactic /usr/bin/cmake /media/psf/CODE/ros-test/src/test_pkg -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=/media/psf/CODE/ros-test/install/test_pkg

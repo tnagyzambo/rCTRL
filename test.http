@@ -1,0 +1,23 @@
+# @name login
+POST http://localhost:8086/api/v2/signin HTTP/1.1
+Authorization: Basic ros:rosinflux
+
+@authToken = QDBCYCGPiP982ff7WS98jRMTciLof4pDTdkV3O_Z7iltf8z9_t5TWeREKNHnTw-uXD0WeXwdikLqvuXDyjHQHA==
+
+###
+
+# @name write
+POST http://localhost:8086/api/v2/write?org=ros&bucket=default&precision=ns
+Authorization: Basic ros:rosinflux
+
+test,sensor=test value=0.352484
+
+###
+
+# @name read
+POST http://localhost:8086/api/v2/query?org=rosinflux&bucket=datalog
+Authorization: Token QDBCYCGPiP982ff7WS98jRMTciLof4pDTdkV3O_Z7iltf8z9_t5TWeREKNHnTw-uXD0WeXwdikLqvuXDyjHQHA==
+
+{
+    "query": "mem"
+}

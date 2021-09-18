@@ -1,0 +1,23 @@
+[0.013s] Invoking command in '/media/psf/CODE/ros-test/build/test_pkg': CMAKE_PREFIX_PATH=/opt/ros/galactic /usr/bin/cmake /media/psf/CODE/ros-test/src/test_pkg -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=/media/psf/CODE/ros-test/install/test_pkg
+[0.020s] -- Found ament_cmake: 1.1.4 (/opt/ros/galactic/share/ament_cmake/cmake)
+[0.030s] -- Using PYTHON_EXECUTABLE: /usr/bin/python3
+[0.069s] -- Found rclcpp: 9.1.0 (/opt/ros/galactic/share/rclcpp/cmake)
+[0.085s] -- Using single rosidl_typesupport_c: rosidl_typesupport_introspection_c
+[0.087s] -- Found rosidl_adapter: 2.2.1 (/opt/ros/galactic/share/rosidl_adapter/cmake)
+[0.098s] -- Using single rosidl_typesupport_cpp: rosidl_typesupport_introspection_cpp
+[0.133s] -- Found rmw_implementation_cmake: 3.3.1 (/opt/ros/galactic/share/rmw_implementation_cmake/cmake)
+[0.134s] -- Found rmw_cyclonedds_cpp: 0.22.3 (/opt/ros/galactic/share/rmw_cyclonedds_cpp/cmake)
+[0.146s] -- Using RMW implementation 'rmw_cyclonedds_cpp' as default
+[0.255s] -- Conan: checking conan executable
+[0.256s] CMake Error at /media/psf/CODE/ros-test/build/test_pkg/conan.cmake:795 (message):
+[0.256s]   Conan executable not found! Please install conan.
+[0.257s] Call Stack (most recent call first):
+[0.257s]   /media/psf/CODE/ros-test/build/test_pkg/conan.cmake:531 (conan_check)
+[0.257s]   cmake/Conan.cmake:28 (conan_cmake_install)
+[0.258s]   CMakeLists.txt:14 (include)
+[0.258s] 
+[0.259s] 
+[0.260s] -- Configuring incomplete, errors occurred!
+[0.260s] See also "/media/psf/CODE/ros-test/build/test_pkg/CMakeFiles/CMakeOutput.log".
+[0.261s] See also "/media/psf/CODE/ros-test/build/test_pkg/CMakeFiles/CMakeError.log".
+[0.265s] Invoked command in '/media/psf/CODE/ros-test/build/test_pkg' returned '1': CMAKE_PREFIX_PATH=/opt/ros/galactic /usr/bin/cmake /media/psf/CODE/ros-test/src/test_pkg -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=/media/psf/CODE/ros-test/install/test_pkg

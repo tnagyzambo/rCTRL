@@ -1,0 +1,64 @@
+[0.000000] (-) TimerEvent: {}
+[0.000920] (test_pkg) JobQueued: {'identifier': 'test_pkg', 'dependencies': OrderedDict()}
+[0.001038] (test_pkg) JobStarted: {'identifier': 'test_pkg'}
+[0.009288] (test_pkg) JobProgress: {'identifier': 'test_pkg', 'progress': 'cmake'}
+[0.010200] (test_pkg) Command: {'cmd': ['/usr/bin/cmake', '/media/psf/CODE/ros-test/src/test_pkg', '-DCMAKE_BUILD_TYPE=Debug', '-DCMAKE_INSTALL_PREFIX=/media/psf/CODE/ros-test/install/test_pkg'], 'cwd': '/media/psf/CODE/ros-test/build/test_pkg', 'env': OrderedDict([('LESSOPEN', '| /usr/bin/lesspipe %s'), ('USER', 'parallels'), ('SSH_CLIENT', '10.0.0.244 56663 22'), ('XDG_SESSION_TYPE', 'tty'), ('GIT_ASKPASS', '/home/parallels/.vscode-server/bin/3866c3553be8b268c8a7f8c0482c0c0177aa8bfa/extensions/git/dist/askpass.sh'), ('SHLVL', '1'), ('LD_LIBRARY_PATH', '/opt/ros/galactic/opt/yaml_cpp_vendor/lib:/opt/ros/galactic/lib/aarch64-linux-gnu:/opt/ros/galactic/lib'), ('BROWSER', '/home/parallels/.vscode-server/bin/3866c3553be8b268c8a7f8c0482c0c0177aa8bfa/bin/helpers/browser.sh'), ('MOTD_SHOWN', 'pam'), ('HOME', '/home/parallels'), ('OLDPWD', '/home/parallels/.vscode-server/bin/3866c3553be8b268c8a7f8c0482c0c0177aa8bfa'), ('TERM_PROGRAM_VERSION', '1.59.1'), ('VSCODE_IPC_HOOK_CLI', '/run/user/1000/vscode-ipc-16b99207-6304-46af-b757-566d4b353640.sock'), ('ROS_PYTHON_VERSION', '3'), ('VSCODE_GIT_ASKPASS_MAIN', '/home/parallels/.vscode-server/bin/3866c3553be8b268c8a7f8c0482c0c0177aa8bfa/extensions/git/dist/askpass-main.js'), ('VSCODE_GIT_ASKPASS_NODE', '/home/parallels/.vscode-server/bin/3866c3553be8b268c8a7f8c0482c0c0177aa8bfa/node'), ('DBUS_SESSION_BUS_ADDRESS', 'unix:path=/run/user/1000/bus'), ('COLORTERM', 'truecolor'), ('ROS_DISTRO', 'galactic'), ('LOGNAME', 'parallels'), ('_', '/usr/bin/colcon'), ('ROS_VERSION', '2'), ('XDG_SESSION_CLASS', 'user'), ('TERM', 'xterm-256color'), ('XDG_SESSION_ID', '4'), ('ROS_LOCALHOST_ONLY', '0'), ('PATH', '/home/parallels/.vscode-server/bin/3866c3553be8b268c8a7f8c0482c0c0177aa8bfa/bin:/opt/ros/galactic/bin:/home/parallels/.vscode-server/bin/3866c3553be8b268c8a7f8c0482c0c0177aa8bfa/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin'), ('XDG_RUNTIME_DIR', '/run/user/1000'), ('LANG', 'en_US.UTF-8'), ('VSCODE_GIT_IPC_HANDLE', '/run/user/1000/vscode-git-8578a3bf13.sock'), ('TERM_PROGRAM', 'vscode'), ('AMENT_PREFIX_PATH', '/opt/ros/galactic'), ('SHELL', '/bin/bash'), ('LESSCLOSE', '/usr/bin/lesspipe %s %s'), ('PWD', '/media/psf/CODE/ros-test/build/test_pkg'), ('SSH_CONNECTION', '10.0.0.244 56663 10.0.0.226 22'), ('XDG_DATA_DIRS', '/usr/local/share:/usr/share:/var/lib/snapd/desktop'), ('PYTHONPATH', '/opt/ros/galactic/lib/python3.8/site-packages'), ('COLCON', '1'), ('CMAKE_PREFIX_PATH', '/opt/ros/galactic')]), 'shell': False}
+[0.053576] (test_pkg) StdoutLine: {'line': b'-- The C compiler identification is GNU 9.3.0\n'}
+[0.090793] (test_pkg) StdoutLine: {'line': b'-- The CXX compiler identification is GNU 9.3.0\n'}
+[0.097014] (test_pkg) StdoutLine: {'line': b'-- Check for working C compiler: /usr/bin/cc\n'}
+[0.099398] (-) TimerEvent: {}
+[0.161079] (test_pkg) StdoutLine: {'line': b'-- Check for working C compiler: /usr/bin/cc -- works\n'}
+[0.162569] (test_pkg) StdoutLine: {'line': b'-- Detecting C compiler ABI info\n'}
+[0.199597] (-) TimerEvent: {}
+[0.223832] (test_pkg) StdoutLine: {'line': b'-- Detecting C compiler ABI info - done\n'}
+[0.238711] (test_pkg) StdoutLine: {'line': b'-- Detecting C compile features\n'}
+[0.239194] (test_pkg) StdoutLine: {'line': b'-- Detecting C compile features - done\n'}
+[0.243955] (test_pkg) StdoutLine: {'line': b'-- Check for working CXX compiler: /usr/bin/c++\n'}
+[0.299703] (-) TimerEvent: {}
+[0.306088] (test_pkg) StdoutLine: {'line': b'-- Check for working CXX compiler: /usr/bin/c++ -- works\n'}
+[0.307248] (test_pkg) StdoutLine: {'line': b'-- Detecting CXX compiler ABI info\n'}
+[0.374655] (test_pkg) StdoutLine: {'line': b'-- Detecting CXX compiler ABI info - done\n'}
+[0.383909] (test_pkg) StdoutLine: {'line': b'-- Detecting CXX compile features\n'}
+[0.384376] (test_pkg) StdoutLine: {'line': b'-- Detecting CXX compile features - done\n'}
+[0.388372] (test_pkg) StdoutLine: {'line': b'-- Found ament_cmake: 1.1.4 (/opt/ros/galactic/share/ament_cmake/cmake)\n'}
+[0.400011] (-) TimerEvent: {}
+[0.400841] (test_pkg) StdoutLine: {'line': b'-- Found PythonInterp: /usr/bin/python3 (found suitable version "3.8.10", minimum required is "3") \n'}
+[0.401203] (test_pkg) StdoutLine: {'line': b'-- Using PYTHON_EXECUTABLE: /usr/bin/python3\n'}
+[0.446060] (test_pkg) StdoutLine: {'line': b'-- Found rclcpp: 9.1.0 (/opt/ros/galactic/share/rclcpp/cmake)\n'}
+[0.472249] (test_pkg) StdoutLine: {'line': b'-- Using single rosidl_typesupport_c: rosidl_typesupport_introspection_c\n'}
+[0.476377] (test_pkg) StdoutLine: {'line': b'-- Found rosidl_adapter: 2.2.1 (/opt/ros/galactic/share/rosidl_adapter/cmake)\n'}
+[0.488767] (test_pkg) StdoutLine: {'line': b'-- Using single rosidl_typesupport_cpp: rosidl_typesupport_introspection_cpp\n'}
+[0.500403] (-) TimerEvent: {}
+[0.529337] (test_pkg) StdoutLine: {'line': b'-- Found rmw_implementation_cmake: 3.3.1 (/opt/ros/galactic/share/rmw_implementation_cmake/cmake)\n'}
+[0.531141] (test_pkg) StdoutLine: {'line': b'-- Found rmw_cyclonedds_cpp: 0.22.3 (/opt/ros/galactic/share/rmw_cyclonedds_cpp/cmake)\n'}
+[0.544094] (test_pkg) StdoutLine: {'line': b"-- Using RMW implementation 'rmw_cyclonedds_cpp' as default\n"}
+[0.547953] (test_pkg) StdoutLine: {'line': b'-- Looking for pthread.h\n'}
+[0.600540] (-) TimerEvent: {}
+[0.614196] (test_pkg) StdoutLine: {'line': b'-- Looking for pthread.h - found\n'}
+[0.615329] (test_pkg) StdoutLine: {'line': b'-- Performing Test CMAKE_HAVE_LIBC_PTHREAD\n'}
+[0.676141] (test_pkg) StdoutLine: {'line': b'-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Failed\n'}
+[0.676778] (test_pkg) StdoutLine: {'line': b'-- Looking for pthread_create in pthreads\n'}
+[0.700694] (-) TimerEvent: {}
+[0.735498] (test_pkg) StdoutLine: {'line': b'-- Looking for pthread_create in pthreads - not found\n'}
+[0.735926] (test_pkg) StdoutLine: {'line': b'-- Looking for pthread_create in pthread\n'}
+[0.791506] (test_pkg) StdoutLine: {'line': b'-- Looking for pthread_create in pthread - found\n'}
+[0.792486] (test_pkg) StdoutLine: {'line': b'-- Found Threads: TRUE  \n'}
+[0.801194] (-) TimerEvent: {}
+[0.891408] (test_pkg) StdoutLine: {'line': b'-- Downloading conan.cmake from https://github.com/conan-io/cmake-conan\n'}
+[0.901315] (-) TimerEvent: {}
+[0.988145] (test_pkg) StdoutLine: {'line': b'-- Conan: checking conan executable\n'}
+[0.988982] (test_pkg) StderrLine: {'line': b'CMake Error at /media/psf/CODE/ros-test/build/test_pkg/conan.cmake:795 (message):\n'}
+[0.989575] (test_pkg) StderrLine: {'line': b'  Conan executable not found! Please install conan.\n'}
+[0.990074] (test_pkg) StderrLine: {'line': b'Call Stack (most recent call first):\n'}
+[0.990598] (test_pkg) StderrLine: {'line': b'  /media/psf/CODE/ros-test/build/test_pkg/conan.cmake:531 (conan_check)\n'}
+[0.991009] (test_pkg) StderrLine: {'line': b'  cmake/Conan.cmake:28 (conan_cmake_install)\n'}
+[0.991505] (test_pkg) StderrLine: {'line': b'  CMakeLists.txt:14 (include)\n'}
+[0.991933] (test_pkg) StderrLine: {'line': b'\n'}
+[0.992265] (test_pkg) StderrLine: {'line': b'\n'}
+[0.992537] (test_pkg) StdoutLine: {'line': b'-- Configuring incomplete, errors occurred!\n'}
+[0.992767] (test_pkg) StdoutLine: {'line': b'See also "/media/psf/CODE/ros-test/build/test_pkg/CMakeFiles/CMakeOutput.log".\n'}
+[0.993089] (test_pkg) StdoutLine: {'line': b'See also "/media/psf/CODE/ros-test/build/test_pkg/CMakeFiles/CMakeError.log".\n'}
+[0.996469] (test_pkg) CommandEnded: {'returncode': 1}
+[1.001446] (-) TimerEvent: {}
+[1.022781] (test_pkg) JobEnded: {'identifier': 'test_pkg', 'rc': 1}
+[1.033856] (-) EventReactorShutdown: {}
