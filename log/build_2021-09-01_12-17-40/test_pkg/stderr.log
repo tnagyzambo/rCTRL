@@ -1,8 +1,0 @@
-CMake Error at /media/psf/CODE/ros-test/build/test_pkg/conan.cmake:795 (message):
-  Conan executable not found! Please install conan.
-Call Stack (most recent call first):
-  /media/psf/CODE/ros-test/build/test_pkg/conan.cmake:531 (conan_check)
-  cmake/Conan.cmake:28 (conan_cmake_install)
-  CMakeLists.txt:14 (include)
-
-
