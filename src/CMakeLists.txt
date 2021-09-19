@@ -15,11 +15,11 @@ include(cmake/Conan.cmake)
 
 ament_package()
 
-add_executable(rocketdata src/rocketdata/main.cpp)
+add_executable(rocketdata rocketdata/src/main.cpp)
 target_link_libraries(rocketdata CONAN_PKG::libcurl)
 ament_target_dependencies(rocketdata rclcpp std_msgs)
 
-add_executable(rocketdata_virtual_sensor src/rocketdata_virtual_sensor/main.cpp)
+add_executable(rocketdata_virtual_sensor rocketdata_virtual_sensor/src/main.cpp)
 ament_target_dependencies(rocketdata_virtual_sensor rclcpp std_msgs)
 
 install(TARGETS

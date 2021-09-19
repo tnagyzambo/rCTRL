@@ -27,12 +27,6 @@ RUN echo "source /opt/ros/galactic/setup.bash" >> /home/$USERNAME/.bashrc
 # Pull in ROS2 application dependancies
 FROM base AS depends
 
-ENV INFLUX_USER=ros
-ENV INFLUX_PASSWORD=rosinflux
-ENV INFLUX_ORG=ros
-ENV INFLUX_BUCKET=default
-ENV INFLUX_RETENTION=0
-
 # influxdb
 # REFERENCE: https://docs.influxdata.com/influxdb/v2.0/install/?t=Linux
 ARG INFLUX_RELEASE=influxdb2-2.0.7-arm64.deb
@@ -43,10 +37,14 @@ RUN dpkg -i ${INFLUX_RELEASE}
 RUN rm ${INFLUX_RELEASE}
 RUN service influxdb start
 
+# Add influx credentials file
+RUN mkdir /rocketDATA
+RUN mkdir /rocketDATA/influx
+COPY .testcontainer/resources/influx-credentials.toml /rocketDATA/influx/credentials.toml
+
 # Add influx configuration file
-RUN mkdir /influx
-COPY .testcontainer/resources/influx-config.toml /influx/config.toml
-ENV INFLUXD_CONFIG_PATH=/influx
+COPY .testcontainer/resources/influx-config.toml /rocketDATA/influx/config.toml
+ENV INFLUXD_CONFIG_PATH = "/rocketDATA/influx"
 
 # TLS
 # REFERENCE: https://docs.influxdata.com/influxdb/v2.0/security/enable-tls/
@@ -55,7 +53,6 @@ ENV INFLUXD_CONFIG_PATH=/influx
 #     -out /etc/ssl/influxdb-selfsigned.crt
 # RUN chmod 644 /etc/ssl/influxdb-selfsigned.crt
 # RUN chmod 600 /etc/ssl/influxdb-selfsigned.key
-
 
 # Bring in entrypoint script from local machine
 # Make sure script is executable with chmod -x

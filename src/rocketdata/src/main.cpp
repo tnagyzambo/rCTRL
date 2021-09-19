@@ -1,5 +1,6 @@
 #include <memory>
 #include <string>
+#include "../lib/InfluxClient.cpp"
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/string.hpp"
 #include <stdio.h>
@@ -8,14 +9,7 @@
 using std::placeholders::_1;
 using std::string;
 
-struct InfluxInfo {
-    string token;
-    string user;
-    string password;
-    string org;
-    string bucket;
-    string retention;
-};
+
 
 class MinimalSubscriber : public rclcpp::Node {
     public:
@@ -24,20 +18,20 @@ class MinimalSubscriber : public rclcpp::Node {
                 "topic", 10, std::bind(&MinimalSubscriber::topic_callback, this, _1));
 
             // Example get user from env
-            char* pEnv;
-            pEnv = getenv("ROS_INFLUX_API_TOKEN");
-            if(pEnv == NULL) {
-                throw std::runtime_error("No 'ROS_INFLUX_API_TOKEN' enviroment variable could be found.");
-            }
-            this->influxInfo.token = pEnv;
-            this->influxInfo.user = "ros";
-            this->influxInfo.password = "ros";
-            this->influxInfo.org = "ros";
-            this->influxInfo.bucket = "default";
+            // char* pEnv;
+            // pEnv = getenv("ROS_INFLUX_API_TOKEN");
+            // if(pEnv == NULL) {
+            //     throw std::runtime_error("No 'ROS_INFLUX_API_TOKEN' enviroment variable could be found.");
+            // }
+            // this->influxInfo.token = pEnv;
+            // this->influxInfo.user = "ros";
+            // this->influxInfo.password = "ros";
+            // this->influxInfo.org = "ros";
+            // this->influxInfo.bucket = "default";
 
             /* get a curl handle */ 
             this->curl = curl_easy_init();
-            this->authorization = "Authorization: Token " + this->influxInfo.token;
+            ///this->authorization = "Authorization: Token " + this->influxInfo.token;
             this->headers = curl_slist_append(this->headers, this->authorization.c_str());
             curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
             curl_easy_setopt(this->curl, CURLOPT_URL, "http://localhost:8086/api/v2/write?org=ros&bucket=default&precision=ns");
@@ -46,7 +40,7 @@ class MinimalSubscriber : public rclcpp::Node {
             curl_easy_setopt(this->curl, CURLOPT_WRITEFUNCTION, MinimalSubscriber::WriteCallback);
             curl_easy_setopt(this->curl, CURLOPT_WRITEDATA, &curlReadBuffer);
 
-            RCLCPP_INFO(this->get_logger(), "%s", this->influxInfo.user.c_str());
+            //RCLCPP_INFO(this->get_logger(), "%s", this->influxInfo.user.c_str());
         }
 
     private:
@@ -79,7 +73,7 @@ class MinimalSubscriber : public rclcpp::Node {
         }
 
         rclcpp::Subscription<std_msgs::msg::String>::SharedPtr subscription_;
-        InfluxInfo influxInfo;
+        InfluxClient influxClient;
         string readBuffer;
         CURL *curl;
         CURLcode res;
@@ -90,17 +84,19 @@ class MinimalSubscriber : public rclcpp::Node {
 
 
 
-int main(int argc, char *argv[]) {
+int main() {
+    //int argc, char *argv[]
+    InfluxClient influxClient;
     /* In windows, this will init the winsock stuff */ 
-    curl_global_init(CURL_GLOBAL_ALL);
+    // curl_global_init(CURL_GLOBAL_ALL);
 
-    rclcpp::init(argc, argv);
-    rclcpp::spin(std::make_shared<MinimalSubscriber>());
-    rclcpp::shutdown();
+    // rclcpp::init(argc, argv);
+    // rclcpp::spin(std::make_shared<MinimalSubscriber>());
+    // rclcpp::shutdown();
 
-    // curl_slist_free_all(headers);
-    // curl_easy_cleanup(curl);
-    curl_global_cleanup();
+    // // curl_slist_free_all(headers);
+    // // curl_easy_cleanup(curl);
+    // curl_global_cleanup();
 
     return 0;
 }
