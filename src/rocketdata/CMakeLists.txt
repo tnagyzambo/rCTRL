@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(test_pkg)
+project(rocketdata)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     add_compile_options(-Wall -Wextra -Wpedantic)
@@ -15,14 +15,14 @@ include(cmake/Conan.cmake)
 
 ament_package()
 
-add_executable(talker src/publisher_member_function.cpp)
-ament_target_dependencies(talker rclcpp std_msgs)
+add_executable(rocketdata src/rocketdata/main.cpp)
+target_link_libraries(rocketdata CONAN_PKG::libcurl)
+ament_target_dependencies(rocketdata rclcpp std_msgs)
 
-add_executable(listener src/subscriber_member_function.cpp)
-target_link_libraries(listener CONAN_PKG::libcurl)
-ament_target_dependencies(listener rclcpp std_msgs)
+add_executable(rocketdata_virtual_sensor src/rocketdata_virtual_sensor/main.cpp)
+ament_target_dependencies(rocketdata_virtual_sensor rclcpp std_msgs)
 
 install(TARGETS
-        talker
-        listener
+        rocketdata
+        rocketdata_virtual_sensor
         DESTINATION lib/${PROJECT_NAME})

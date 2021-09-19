@@ -4,7 +4,8 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**",
-                "/opt/ros/${ROS_DISTRO}/include/**"
+                "/opt/ros/${ROS_DISTRO}/include/**",
+                "~/.conan/data/**"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/clang-12",
