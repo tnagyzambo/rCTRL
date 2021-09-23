@@ -14,7 +14,8 @@ endif()
 include(${CMAKE_BINARY_DIR}/conan.cmake)
 
 # Use Conan Cmake wrapper to setup dependencies
-conan_cmake_configure(REQUIRES libcurl/7.77.0)
+conan_cmake_configure(REQUIRES libcurl/7.77.0
+                      REQUIRES tomlplusplus/2.4.0)
 
 # Use default Conan settings
 conan_cmake_autodetect(settings)
