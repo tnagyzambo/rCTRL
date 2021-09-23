@@ -67,6 +67,7 @@
         "hash_map": "cpp",
         "complex": "cpp",
         "forward_list": "cpp",
-        "charconv": "cpp"
+        "charconv": "cpp",
+        "*.tpp": "cpp"
     }
 }

@@ -15,7 +15,7 @@ include(cmake/Conan.cmake)
 
 ament_package()
 
-add_library(rocketdata_lib STATIC rocketdata/lib/RosNode.cpp
+add_library(rocketdata_lib STATIC rocketdata/lib/RocketDataNode.cpp
                                   rocketdata/lib/InfluxClient.cpp)
 target_link_libraries(rocketdata_lib CONAN_PKG::libcurl)
 target_link_libraries(rocketdata_lib CONAN_PKG::tomlplusplus)

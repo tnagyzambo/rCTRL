@@ -1,31 +1,56 @@
 #include "InfluxClient.hpp"
 
 InfluxClient::InfluxClient() {
-    this->getCredentials();
+    this->credentials = getCredentials();
+    this->url = constructInfluxURL();
+    this->authorization = constructInfluxAuthorization();
+    this->headers = curl_slist_append(this->headers, this->authorization.c_str());
+
+    curl_global_init(CURL_GLOBAL_ALL);
+    this->curl = curl_easy_init();
+    
+    curl_easy_setopt(this->curl, CURLOPT_URL, "http://localhost:8086/api/v2/write?org=ros&bucket=default&precision=ns");
+    curl_easy_setopt(this->curl, CURLOPT_HTTPHEADER, headers);
+    curl_easy_setopt(this->curl, CURLOPT_POST, 1L);
+    curl_easy_setopt(this->curl, CURLOPT_VERBOSE, 1L);
+    curl_easy_setopt(this->curl, CURLOPT_WRITEFUNCTION, InfluxClient::writeCallback);
+    curl_easy_setopt(this->curl, CURLOPT_WRITEDATA, &this->curlReadBuffer);
 }
 
-void InfluxClient::getCredentials() {
+InfluxClient::~InfluxClient() {
+    curl_global_cleanup();
+}
+
+size_t InfluxClient::writeCallback(char *contents, size_t size, size_t nmemb, void *userp) {
+    ((std::string*)userp)->append((char*)contents, size * nmemb);
+
+    return size * nmemb;
+}
+
+Credentials InfluxClient::getCredentials() {
+    Credentials credentials;
+
     toml::table tbl = getToml(CREDENTIALS_FILE);
 
-    this->info.user = getTomlEntryBySectionKey(tbl, "credentials", "user");
-    this->info.password = getTomlEntryBySectionKey(tbl, "credentials", "password");
-    this->info.token = getTomlEntryBySectionKey(tbl, "credentials", "token");
-    this->info.org = getTomlEntryBySectionKey(tbl, "credentials", "org");
-    this->info.retention = getTomlEntryBySectionKey(tbl, "default-params", "retention");
+    credentials.user = getTomlEntryBySectionKey(tbl, "credentials", "user");
+    credentials.password = getTomlEntryBySectionKey(tbl, "credentials", "password");
+    credentials.token = getTomlEntryBySectionKey(tbl, "credentials", "token");
+    credentials.org = getTomlEntryBySectionKey(tbl, "credentials", "org");
+    credentials.retention = getTomlEntryBySectionKey(tbl, "default-params", "retention");
 
     std::string bucket = getTomlEntryBySectionKey(tbl, "default-params", "bucket");
-    this->info.bucket = promptForBucket(bucket);
+    credentials.bucket = promptForBucket(bucket);
 
-    return;
+    return credentials;
 }
 
 void InfluxClient::printCredentials() {
-    std::cout << "\033[1mUser: \033[0m" << this->info.user << "\n";
-    std::cout << "\033[1mPassword: \033[0m" << this->info.password << "\n";
-    std::cout << "\033[1mToken: \033[0m" << this->info.token << "\n";
-    std::cout << "\033[1mOrg: \033[0m" << this->info.org << "\n";
-    std::cout << "\033[1mBucket: \033[0m" << this->info.bucket << "\n";
-    std::cout << "\033[1mRetention: \033[0m" << this->info.retention << "\n";
+    std::cout << "\033[1mUser: \033[0m" << this->credentials.user << "\n";
+    std::cout << "\033[1mPassword: \033[0m" << this->credentials.password << "\n";
+    std::cout << "\033[1mToken: \033[0m" << this->credentials.token << "\n";
+    std::cout << "\033[1mOrg: \033[0m" << this->credentials.org << "\n";
+    std::cout << "\033[1mBucket: \033[0m" << this->credentials.bucket << "\n";
+    std::cout << "\033[1mRetention: \033[0m" << this->credentials.retention << "\n";
 
     return;
 }
@@ -78,4 +103,51 @@ std::string InfluxClient::getTomlEntryBySectionKey(toml::table tbl, std::string 
     }
     
     return entry.value();
+}
+
+std::string InfluxClient::constructInfluxURL() {
+    std::string url = "http://localhost:8086/api/v2/write?org=";
+    url.append(this->credentials.org);
+    url.append("&bucket=");
+    url.append(this->credentials.bucket);
+    url.append("&precision=ns");
+
+    return url;
+}
+
+std::string InfluxClient::constructInfluxAuthorization() {
+    std::string authorization = "Authorization: Token ";
+    authorization.append(this->credentials.token);
+
+    return authorization;
+}
+
+template<>
+std::string InfluxClient::constructInfluxValueString(float value) {
+    std::string influxValueString = std::to_string(value);
+
+    return influxValueString;
+}
+
+template<>
+std::string InfluxClient::constructInfluxValueString(int value) {
+    std::string influxValueString = std::to_string(value);
+    influxValueString.append("i");
+
+    return influxValueString;
+}
+
+template<>
+std::string InfluxClient::constructInfluxValueString(uint value) {
+    std::string influxValueString = std::to_string(value);
+    influxValueString.append("u");
+
+    return influxValueString;
+}
+
+template<>
+std::string InfluxClient::constructInfluxValueString(bool value) {
+    std::string influxValueString = std::to_string(value);
+
+    return influxValueString;
 }
