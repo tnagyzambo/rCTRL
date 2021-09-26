@@ -1,4 +1,4 @@
-#include "RocketDataNode.hpp"
+#include <RocketDataNode.hpp>
 
 RocketDataNode::RocketDataNode() : rclcpp::Node("rocketdata") {
     std::cout << "\033[1;35mRocketDATA is subscribing to topic \"" << ROS_SUBSCRIPTION_TOPIC << "\".\033[0m" << std::endl;

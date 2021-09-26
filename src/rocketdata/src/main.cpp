@@ -1,4 +1,4 @@
-#include "../lib/RocketDataNode.hpp"
+#include <RocketDataNode.hpp>
 
 int main(int argc, char *argv[]) {
     /* In windows, this will init the winsock stuff */ 

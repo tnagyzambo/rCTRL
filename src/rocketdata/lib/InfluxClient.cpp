@@ -1,4 +1,4 @@
-#include "InfluxClient.hpp"
+#include <InfluxClient.hpp>
 
 InfluxClient::InfluxClient() {
     this->credentials = getCredentials();
@@ -45,12 +45,13 @@ Credentials InfluxClient::getCredentials() {
 }
 
 void InfluxClient::printCredentials() {
-    std::cout << "\033[1mUser: \033[0m" << this->credentials.user << "\n";
-    std::cout << "\033[1mPassword: \033[0m" << this->credentials.password << "\n";
-    std::cout << "\033[1mToken: \033[0m" << this->credentials.token << "\n";
-    std::cout << "\033[1mOrg: \033[0m" << this->credentials.org << "\n";
-    std::cout << "\033[1mBucket: \033[0m" << this->credentials.bucket << "\n";
-    std::cout << "\033[1mRetention: \033[0m" << this->credentials.retention << "\n";
+    std::cout << std::endl;
+    std::cout << "\033[1mUser: \033[0m" << this->credentials.user << std::endl;
+    std::cout << "\033[1mPassword: \033[0m" << this->credentials.password << std::endl;
+    std::cout << "\033[1mToken: \033[0m" << this->credentials.token << std::endl;
+    std::cout << "\033[1mOrg: \033[0m" << this->credentials.org << std::endl;
+    std::cout << "\033[1mBucket: \033[0m" << this->credentials.bucket << std::endl;
+    std::cout << "\033[1mRetention: \033[0m" << this->credentials.retention << std::endl;
 
     return;
 }
@@ -58,6 +59,7 @@ void InfluxClient::printCredentials() {
 std::string InfluxClient::promptForBucket(std::string bucket) {
     std::string input;
 
+    std::cout << std::endl;
     std::cout << "\033[1;36mEnter bucket for current data logging session.\033[0m" << std::endl;
     std::cout << "\033[1mLeave empty to use default bucket \"" << bucket << "\".\033[0m" << std::endl;
     std::cout << "\033[1mBucket: \033[0m";
@@ -77,10 +79,13 @@ toml::table InfluxClient::getToml(std::string path) {
     try {
         tbl = toml::parse_file(path);
     } catch (const toml::parse_error& e) {
-        std::cout << "\033[1;31mCANNOT PARSE CREDENTIALS FILE!\033[0m" << std::endl;
-        std::cout << "\033[1mError: \033[0m" << e << "\n";
+        std::stringstream error;
+
+        error << std::endl;
+        error << "\033[1;31mCANNOT PARSE CREDENTIALS FILE!\033[0m" << std::endl;
+        error << "\033[1mError: \033[0m" << e << std::endl;
         
-        exit(EXIT_FAILURE);
+        throw std::runtime_error(error.str());
     }
 
     return tbl;
@@ -92,14 +97,17 @@ std::string InfluxClient::getTomlEntryBySectionKey(toml::table tbl, std::string 
     try {
         entry.value();
     } catch (const std::bad_optional_access& e) {
-        std::cout << "\033[1;31mNO \"" << key << "\" FOUND IN CREDENTIALS FILE!\033[0m" << std::endl;
-        std::cout << "\033[1mFile Path: \033[0m" << CREDENTIALS_FILE << std::endl;
-        std::cout << "\033[1mSection: \033[0m" << section << std::endl;
-        std::cout << "\033[1mKey: \033[0m" << key << std::endl;
-        std::cout << "\033[1mError: \033[0m" << e.what() << std::endl;
-        std::cout << std::endl;
+        std::stringstream error;
 
-        exit(EXIT_FAILURE);
+        error << std::endl;
+        error << "\033[1;31mNO \"" << key << "\" FOUND IN CREDENTIALS FILE!\033[0m" << std::endl;
+        error << "\033[1mFile Path: \033[0m" << CREDENTIALS_FILE << std::endl;
+        error << "\033[1mSection: \033[0m" << section << std::endl;
+        error << "\033[1mKey: \033[0m" << key << std::endl;
+        error << "\033[1mError: \033[0m" << e.what() << std::endl;
+        error << std::endl;
+
+        throw std::runtime_error(error.str());
     }
     
     return entry.value();
