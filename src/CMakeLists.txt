@@ -22,7 +22,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
                            "rocketdata/msg/LogFloat64.msg"
                            "rocketdata/msg/LogInt64.msg"
                            "rocketdata/msg/LogString.msg"
-                           "rocketdata/msg/LogUInt64.msg")
+                           "rocketdata/msg/LogUint64.msg")
 
 # rocketDATA executable
 add_executable(rocketdata_node rocketdata/src/main.cpp 

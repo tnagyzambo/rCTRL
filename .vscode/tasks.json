@@ -19,12 +19,12 @@
         {
             "label": "run rocketdata",
             "type": "shell",
-            "command": "docker exec -it --user ros testcontainer /bin/bash -c 'chmod +x /install/setup.bash; . /install/setup.bash; ros2 run rocketdata rocketdata'",
+            "command": "docker exec -it --user ros testcontainer /bin/bash -c 'chmod +x /install/setup.bash; . /install/setup.bash; ros2 run rocketdata rocketdata_node'",
         },
         {
             "label": "run rocketdata_virtual_sensor",
             "type": "shell",
-            "command": "docker exec -it --user ros testcontainer /bin/bash -c 'chmod +x /install/setup.bash; . /install/setup.bash; ros2 run rocketdata rocketdata_virtual_sensor'",
+            "command": "docker exec -it --user ros testcontainer /bin/bash -c 'chmod +x /install/setup.bash; . /install/setup.bash; ros2 run rocketdata rocketdata_virtual_sensor_node'",
         },
         {
             "label": "run",
