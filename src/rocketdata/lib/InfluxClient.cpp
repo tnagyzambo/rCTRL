@@ -8,13 +8,12 @@ InfluxClient::InfluxClient() {
 
     curl_global_init(CURL_GLOBAL_ALL);
     this->curl = curl_easy_init();
-    
-    curl_easy_setopt(this->curl, CURLOPT_URL, "http://localhost:8086/api/v2/write?org=ros&bucket=default&precision=ns");
-    curl_easy_setopt(this->curl, CURLOPT_HTTPHEADER, headers);
+    curl_easy_setopt(this->curl, CURLOPT_URL, this->url.c_str());
+    curl_easy_setopt(this->curl, CURLOPT_HTTPHEADER, this->headers);
     curl_easy_setopt(this->curl, CURLOPT_POST, 1L);
     curl_easy_setopt(this->curl, CURLOPT_VERBOSE, 1L);
     curl_easy_setopt(this->curl, CURLOPT_WRITEFUNCTION, InfluxClient::writeCallback);
-    curl_easy_setopt(this->curl, CURLOPT_WRITEDATA, &this->curlReadBuffer);
+    //curl_easy_setopt(this->curl, CURLOPT_WRITEDATA, &this->curlReadBuffer);
 }
 
 InfluxClient::~InfluxClient() {
@@ -130,32 +129,41 @@ std::string InfluxClient::constructInfluxAuthorization() {
     return authorization;
 }
 
-template<>
-std::string InfluxClient::constructInfluxValueString(float value) {
+std::string InfluxClient::constructInfluxValueString(bool value) {
+    std::string influxValueString;
+    if (value == true) {
+        influxValueString = "TRUE";
+    } else {
+        influxValueString = "FALSE";
+    }
+
+    return influxValueString;
+}
+
+std::string InfluxClient::constructInfluxValueString(double value) {
     std::string influxValueString = std::to_string(value);
 
     return influxValueString;
 }
 
-template<>
-std::string InfluxClient::constructInfluxValueString(int value) {
+std::string InfluxClient::constructInfluxValueString(std::string value) {
+    std::string influxValueString = "\"";
+    influxValueString.append(value);
+    influxValueString.append("\"");
+
+    return influxValueString;
+}
+
+std::string InfluxClient::constructInfluxValueString(int64_t value) {
     std::string influxValueString = std::to_string(value);
     influxValueString.append("i");
 
     return influxValueString;
 }
 
-template<>
-std::string InfluxClient::constructInfluxValueString(uint value) {
+std::string InfluxClient::constructInfluxValueString(uint64_t value) {
     std::string influxValueString = std::to_string(value);
     influxValueString.append("u");
-
-    return influxValueString;
-}
-
-template<>
-std::string InfluxClient::constructInfluxValueString(bool value) {
-    std::string influxValueString = std::to_string(value);
 
     return influxValueString;
 }

@@ -5,7 +5,6 @@
 #include <memory>
 #include <string>
 #include <rclcpp/rclcpp.hpp>
-#include <std_msgs/msg/string.hpp>
 #include <rocketdata/msg/log_bool.hpp>
 #include <rocketdata/msg/log_float64.hpp>
 #include <rocketdata/msg/log_int64.hpp>
@@ -57,7 +56,7 @@ class VirtualSensorNodeFloat64 : public VirtualSensorNode {
 
     private:
         rclcpp::Publisher<rocketdata::msg::LogFloat64>::SharedPtr publisher;
-        uint sinPeriod;
+        double sinPeriod;
 
         void timerCallback();
 };

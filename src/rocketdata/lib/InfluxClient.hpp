@@ -47,8 +47,11 @@ class InfluxClient
         std::string constructInfluxURL();
         std::string constructInfluxAuthorization();
 
-        template <typename T>
-        std::string constructInfluxValueString(T);
+        std::string constructInfluxValueString(bool);
+        std::string constructInfluxValueString(double);
+        std::string constructInfluxValueString(std::string);
+        std::string constructInfluxValueString(int64_t);
+        std::string constructInfluxValueString(uint64_t);
 };
 
 #include "InfluxClient.tpp"
