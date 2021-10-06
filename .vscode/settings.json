@@ -69,5 +69,6 @@
         "forward_list": "cpp",
         "charconv": "cpp",
         "*.tpp": "cpp"
-    }
+    },
+    "editor.formatOnSave": true
 }

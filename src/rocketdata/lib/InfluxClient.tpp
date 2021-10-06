@@ -1,25 +1,39 @@
+// Implentation of the templated function writeToInflux
+// Write the POST request to InfluxDB
+// The POST request can fail and should be regarded as a non critical error
+// If CURL is incorrectly configured at runtime it should be considered and unrecoverable error
 template <typename T>
-void InfluxClient::writeToInflux(std::string measurment, std::string sensor, T value) {
-    if (curl) {
-        std::string postBody = measurment;
-        postBody.append(",sensor=");
-        postBody.append(sensor);
-        postBody.append(" value=");
-        postBody.append(constructInfluxValueString(value));
+void influxclient::Client::writeToInflux(std::string measurment, std::string sensor, T value)
+{
+    if (curl)
+    {
+        long curlResponseCode;
 
-        std::cout << postBody << std::endl;
+        std::string postBody = constructInfluxPostBody(measurment, sensor, constructInfluxValueString(value));
         curl_easy_setopt(curl, CURLOPT_POSTFIELDS, postBody.c_str());
-        
-        // Perform the request, res will get the return code
-        res = curl_easy_perform(curl);
 
-        if(res != CURLE_OK) {
-            std::cout << "\033[1;31m" << stderr << "curl_easy_perform() failed: " << curl_easy_strerror(res) << "\033[0m" << std::endl;
+        // Perform the POST request and get the response
+        this->curlReadBuffer.clear();
+        this->curlResponse = curl_easy_perform(curl);
+
+        curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &curlResponseCode);
+
+        if (this->curlResponse == CURLE_OK)
+        {
+            if (curlResponseCode != 204)
+            {
+                throw influxclient::PostRequestException(this->curlReadBuffer);
+            }
         }
-
-        //std::cout << res << std::endl;             
-    } else {
-        //throw
+        else
+        {
+            std::string error = curl_easy_strerror(this->curlResponse);
+            throw influxclient::CurlException(error);
+        }
+    }
+    else
+    {
+        throw influxclient::CurlException("CURL object does not exist.");
     }
 
     return;

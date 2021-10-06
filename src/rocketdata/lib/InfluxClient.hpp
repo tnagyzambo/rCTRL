@@ -4,41 +4,48 @@
 #include <iostream>
 #include <curl/curl.h>
 #include <toml++/toml.h>
+#include "InfluxClientException.hpp"
 
 #define CREDENTIALS_FILE "/rocketDATA/influx/credentials.toml"
 
-struct Credentials {
-    std::string user;
-    std::string password;
-    std::string token;
-    std::string org;
-    std::string bucket;
-    std::string retention;
-};
-
-class InfluxClient
+namespace influxclient
 {
+    // Structure to hold the basic info required to make post requests to InfluxDB
+    struct Credentials
+    {
+        std::string user;
+        std::string password;
+        std::string token;
+        std::string org;
+        std::string bucket;
+        std::string retention;
+    };
+
+    class Client
+    {
     public:
         Credentials credentials;
         std::string url;
         std::string authorization;
-        struct curl_slist* headers = NULL;
+        struct curl_slist *headers = NULL;
 
-        InfluxClient();
-        ~InfluxClient();
+        Client();
+        ~Client();
 
         void printCredentials();
 
+        // Templated function to allow writing all supported types to InfluxDB
+        // Templated functions must implemented in the header or a separate .tpp file appended to the bottom of the header
         template <typename T>
         void writeToInflux(std::string, std::string, T);
 
     private:
         CURL *curl;
         std::string curlReadBuffer;
-        CURLcode res;
+        CURLcode curlResponse;
 
-        static size_t writeCallback(char *, size_t, size_t, void*);
-        
+        static size_t writeCallback(char *, size_t, size_t, void *);
+
         Credentials getCredentials();
         std::string promptForBucket(std::string);
         toml::table getToml(std::string);
@@ -52,6 +59,10 @@ class InfluxClient
         std::string constructInfluxValueString(std::string);
         std::string constructInfluxValueString(int64_t);
         std::string constructInfluxValueString(uint64_t);
-};
 
+        std::string constructInfluxPostBody(std::string, std::string, std::string);
+    };
+
+// Implementation of templated functions
 #include "InfluxClient.tpp"
+}

@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.9)
 project(rocketdata)
 
-if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    add_compile_options(-Wall -Wextra -Wpedantic)
-endif()
+# Set compiler options
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_FLAGS "-Wall -Werror -Wextra -Wpedantic -Wvla -Wextra-semi -Wnull-dereference -Wswitch-enum")
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -27,7 +27,8 @@ rosidl_generate_interfaces(${PROJECT_NAME}
 # rocketDATA executable
 add_executable(rocketdata_node rocketdata/src/main.cpp 
                                rocketdata/lib/RocketDataNode.cpp
-                               rocketdata/lib/InfluxClient.cpp)
+                               rocketdata/lib/InfluxClient.cpp
+                               rocketdata/lib/InfluxClientException.cpp)
 
 target_include_directories(rocketdata_node PRIVATE rocketdata/lib)
 target_link_libraries(rocketdata_node CONAN_PKG::libcurl) 
