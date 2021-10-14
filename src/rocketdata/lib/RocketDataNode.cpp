@@ -66,8 +66,8 @@ RocketDataNode::~RocketDataNode()
     RCLCPP_INFO(this->get_logger(), "\033[1;31mDestroying RocketDATA node.\033[0m");
 }
 
-// The callbacks needed buy the ros2 subscriptions cannot be templated so this must be done through overloading
-// The function call 'tryToWriteToInfluxDB()' can be templated however which lets us define the error handling logic once for all overloads
+// The callbacks needed by the ros2 subscriptions cannot be templated so this must be done through overloading
+// The function call 'tryToWriteToInfluxDB()' can be templated however which lets us define uniform error handling logic once for all overloads
 void RocketDataNode::topicCallbackLogBool(const rocketdata::msg::LogBool::SharedPtr msg)
 {
     tryToWriteToInfluxDB(msg);
