@@ -21,8 +21,15 @@ jobs:
                 docker build . -f .testcontainer/Dockerfile -t testcontainer
                 docker save testcontainer:latest | gzip > testcontainer.tar.gz
 
+            - name: Build
+              run: |
+                source /opt/ros/galactic/setup.bash
+                colcon build --cmake-args '-DCMAKE_BUILD_TYPE=Release'
+                tar -czvf rocketdata.tar.gz install
+
             - name: Release
               uses: softprops/action-gh-release@v1
               with:
                 files: |
+                    rocketdata.tar.gz
                     testcontainer.tar.gz
