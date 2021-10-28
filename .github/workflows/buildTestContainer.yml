@@ -3,12 +3,8 @@ name: Build and publish CI Docker image
 # Trigger on changes to dependacies (CMake), Dockerfile definition or 
 # GitHub Actions on main branch or manually
 on:
-    push:
-        branches: 
-            - main
-        paths:
-            - .testcontainer/*
-            - .github/workflows/buildTestContainer.yml
+    release:
+        types: [published]
     workflow_dispatch:
 
 jobs:
