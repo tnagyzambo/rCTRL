@@ -34,4 +34,4 @@ jobs:
                     file: ./.testcontainer/Dockerfile
                     platforms: linux/arm64
                     push: true
-                    tags: ghcr.io/${{ github.repository }}/testcontainer:latest
+                    tags: ghcr.io/rocketdata/testcontainer:latest
