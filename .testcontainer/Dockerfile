@@ -40,10 +40,10 @@ RUN service influxdb start
 # Add influx credentials file
 RUN mkdir /rocketDATA
 RUN mkdir /rocketDATA/influx
-COPY .testcontainer/resources/influx-credentials.toml /rocketDATA/influx/credentials.toml
+COPY .testcontainer/resources/influx/credentials.toml /rocketDATA/influx/credentials.toml
 
 # Add influx configuration file
-COPY .testcontainer/resources/influx-config.toml /rocketDATA/influx/config.toml
+COPY .testcontainer/resources/influx/config.toml /rocketDATA/influx/config.toml
 ENV INFLUXD_CONFIG_PATH = "/rocketDATA/influx"
 
 # TLS

@@ -1,0 +1,35 @@
+name: Build and publish CI Docker image
+
+on:
+    push:
+        tags:
+            - "v*.*.*"
+    workflow_dispatch:
+
+jobs:
+    docker_build_publish:
+        runs-on: self-hosted
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v2
+
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@v1
+
+            - name: Build Docker
+              run: |
+                docker build . -f .testcontainer/Dockerfile -t testcontainer
+                docker save testcontainer:latest | gzip > testcontainer.tar.gz
+
+            - name: Build
+              run: |
+                source /opt/ros/galactic/setup.bash
+                colcon build --cmake-args '-DCMAKE_BUILD_TYPE=Release'
+                tar -czvf rocketdata.tar.gz install
+
+            - name: Release
+              uses: softprops/action-gh-release@v1
+              with:
+                files: |
+                    rocketdata.tar.gz
+                    testcontainer.tar.gz
