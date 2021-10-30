@@ -14,7 +14,7 @@
         {
             "label": "run test container",
             "type": "shell",
-            "command": "docker run --net=host --rm -v ${PWD}/install:/install -i --name testcontainer testcontainer:latest",
+            "command": "docker run --user ros --net=host --rm -v ${PWD}/install:/install -i --name testcontainer testcontainer:latest",
         },
         {
             "label": "run rocketdata",
