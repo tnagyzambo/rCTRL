@@ -25,7 +25,6 @@ sed -i -E "s/$(grep -oP '(token = [^\s]+")' ${CREDENTIALS_FILE})/token = \"${INF
 # Remove setup script
 rm -f ~/setup.sh
 
-# Leave container running
 echo ""
-echo "Press any key to close container..."
+echo "Press any key to stop influxDB..."
 read -rsp -n1 key

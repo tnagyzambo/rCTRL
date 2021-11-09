@@ -7,11 +7,11 @@ void RocketDataNode::tryToWriteToInfluxDB(T msg)
     }
     catch (influxclient::PostRequestException &e)
     {
-        RCLCPP_ERROR(this->get_logger(), e.what());
+        RCLCPP_ERROR(this->get_logger(), "%s", e.what());
     }
     catch (influxclient::CurlException &e)
     {
-        RCLCPP_FATAL(this->get_logger(), e.what());
+        RCLCPP_FATAL(this->get_logger(), "%s", e.what());
         exit(1);
     }
 }

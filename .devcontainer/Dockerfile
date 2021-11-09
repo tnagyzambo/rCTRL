@@ -6,14 +6,18 @@ ARG GROUP_ID=1000
 RUN addgroup --gid $GROUP_ID ros
 RUN adduser --disabled-password --gecos '' --uid $USER_ID --gid $GROUP_ID ros
 
-# Fix locales
-# RUN apt update 
-# RUN DEBIAN_FRONTEND=noninteractive apt install -qy locales
-# RUN locale-gen en_US en_US.UTF-8
-# RUN update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
-# RUN export LANG=en_US.UTF-8
+# Install compile tools
+RUN apt-get update 
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy clang-12 clang-tidy gdb gdbserver python3-pip
+ENV CC=/bin/clang-12
+ENV CXX=/bin/clang++-12
+
+# Install conan
+USER ros
+RUN pip3 install conan
 
 # Install ROS2
+USER root
 RUN apt-get update 
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy curl gnupg lsb-release
 RUN curl -SSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key  -o /usr/share/keyrings/ros-archive-keyring.gpg
@@ -21,7 +25,7 @@ RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/r
 
 # Setup ROS2 enviroment
 RUN apt-get update 
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy ros-galactic-ros-base
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy ros-galactic-ros-base python3-colcon-common-extensions
 RUN echo "source /opt/ros/galactic/setup.bash" >> /home/ros/.bashrc
 
 # Pull in ROS2 application dependancies
@@ -35,16 +39,16 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy wget
 RUN wget https://dl.influxdata.com/influxdb/releases/${INFLUX_RELEASE}
 RUN dpkg -i ${INFLUX_RELEASE}
 RUN rm ${INFLUX_RELEASE}
-RUN service influxdb start
+# RUN service influxdb start
 
 # Add influx credentials file
 USER ros
 RUN mkdir /home/ros/rocketDATA
 RUN mkdir /home/ros/rocketDATA/influx
-COPY .testcontainer/resources/influx/credentials.toml /home/ros/rocketDATA/influx/credentials.toml
+COPY resources/influx/credentials.toml /home/ros/rocketDATA/influx/credentials.toml
 
 # Add influx configuration file
-COPY .testcontainer/resources/influx/config.toml /home/ros/rocketDATA/influx/config.toml
+COPY resources/influx/config.toml /home/ros/rocketDATA/influx/config.toml
 ENV INFLUXD_CONFIG_PATH = "/home/ros/rocketDATA/influx"
 
 # TLS
@@ -57,9 +61,6 @@ ENV INFLUXD_CONFIG_PATH = "/home/ros/rocketDATA/influx"
 
 # Bring in entrypoint script from local machine
 # Make sure script is executable with chmod -x
-COPY .testcontainer/resources/setup.sh /home/ros/setup.sh
+COPY resources/setup.sh /home/ros/setup.sh
 USER root
 RUN chmod +x /home/ros/setup.sh
-USER ros
-
-ENTRYPOINT ["/home/ros/setup.sh"]

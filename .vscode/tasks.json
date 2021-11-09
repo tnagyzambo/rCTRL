@@ -7,24 +7,14 @@
             "command": "colcon build --cmake-args '-DCMAKE_BUILD_TYPE=Debug'",
         },
         {
-            "label": "build test container",
-            "type": "shell",
-            "command": "docker build . -f .testcontainer/Dockerfile -t testcontainer",
-        },
-        {
-            "label": "run test container",
-            "type": "shell",
-            "command": "docker run --user ros --net=host --rm -v ${PWD}/install:/install -i --name testcontainer testcontainer:latest",
-        },
-        {
             "label": "run rocketdata",
             "type": "shell",
-            "command": "docker exec -it --user ros testcontainer /bin/bash -c 'chmod +x /install/setup.bash; . /install/setup.bash; ros2 run rocketdata rocketdata_node'",
+            "command": "source install/setup.bash; ros2 run rocketdata rocketdata_node",
         },
         {
             "label": "run rocketdata_virtual_sensor",
             "type": "shell",
-            "command": "docker exec -it --user ros testcontainer /bin/bash -c 'chmod +x /install/setup.bash; . /install/setup.bash; ros2 run rocketdata rocketdata_virtual_sensor_node'",
+            "command": "source install/setup.bash; ros2 run rocketdata rocketdata_virtual_sensor_node",
         },
         {
             "label": "run",
@@ -32,11 +22,6 @@
                 "run rocketdata",
                 "run rocketdata_virtual_sensor"
             ],
-        },
-        {
-            "label": "debug test container",
-            "type": "shell",
-            "command": "docker run --rm -v ${PWD}/install:/install -i --name testcontainer testcontainer:latest /bin/bash",
         },
     ]
 }
