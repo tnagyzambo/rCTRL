@@ -1,4 +1,4 @@
-name: Build and publish CI Docker image
+name: Build and Publish Release
 
 on:
     push:
@@ -13,14 +13,6 @@ jobs:
             - name: Checkout
               uses: actions/checkout@v2
 
-            - name: Set up Docker Buildx
-              uses: docker/setup-buildx-action@v1
-
-            - name: Build Docker
-              run: |
-                docker build . -f .testcontainer/Dockerfile -t testcontainer
-                docker save testcontainer:latest | gzip > testcontainer.tar.gz
-
             - name: Build
               run: |
                 source /opt/ros/galactic/setup.bash
@@ -32,4 +24,3 @@ jobs:
               with:
                 files: |
                     rocketdata.tar.gz
-                    testcontainer.tar.gz

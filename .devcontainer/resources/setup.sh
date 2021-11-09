@@ -8,7 +8,7 @@ sleep 15s
 
 # Inital setup of influx
 # REFERENCE: https://docs.influxdata.com/influxdb/v2.0/reference/cli/influx/setup/#flags
-export CREDENTIALS_FILE="/rocketDATA/influx/credentials.toml"
+export CREDENTIALS_FILE="/home/ros/rocketDATA/influx/credentials.toml"
 export INFLUX_USER=$(grep -oP '(?<=user = ")([^\s]+)(?<!")' ${CREDENTIALS_FILE})
 export INFLUX_PASSWORD=$(grep -oP '(?<=password = ")([^\s]+)(?<!")' ${CREDENTIALS_FILE})
 export INFLUX_ORG=$(grep -oP '(?<=org = ")([^\s]+)(?<!")' ${CREDENTIALS_FILE})
@@ -22,8 +22,9 @@ influx setup -u ${INFLUX_USER} -p ${INFLUX_PASSWORD} -o ${INFLUX_ORG} -b ${INFLU
 export INFLUX_TOKEN=$(influx auth list | grep -oP "([^\s]*)(?=\s+\b${INFLUX_USER}(?![^\s])\b)")
 sed -i -E "s/$(grep -oP '(token = [^\s]+")' ${CREDENTIALS_FILE})/token = \"${INFLUX_TOKEN}\"/" ${CREDENTIALS_FILE}
 
-rm /influx-setup.sh
+# Remove setup script
+rm -f ~/setup.sh
 
 echo ""
-echo "Press any key to close container..."
+echo "Press any key to stop influxDB..."
 read -rsp -n1 key
