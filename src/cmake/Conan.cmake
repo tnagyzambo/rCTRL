@@ -5,7 +5,7 @@ list(APPEND CMAKE_PREFIX_PATH ${CMAKE_BINARY_DIR})
 # Get CMake wrapper for Conan
 if(NOT EXISTS "${CMAKE_BINARY_DIR}/conan.cmake")
     message(STATUS "Downloading conan.cmake from https://github.com/conan-io/cmake-conan")
-    file(DOWNLOAD "https://raw.githubusercontent.com/conan-io/cmake-conan/v0.16.1/conan.cmake"
+    file(DOWNLOAD "https://raw.githubusercontent.com/conan-io/cmake-conan/v0.17.0/conan.cmake"
                   "${CMAKE_BINARY_DIR}/conan.cmake"
                   TLS_VERIFY ON)
 endif()
@@ -15,7 +15,8 @@ include(${CMAKE_BINARY_DIR}/conan.cmake)
 
 # Use Conan Cmake wrapper to setup dependencies
 conan_cmake_configure(REQUIRES libcurl/7.79.1
-                      REQUIRES tomlplusplus/2.5.0)
+                               tomlplusplus/2.5.0
+                      GENERATORS cmake)
 
 # Use default Conan settings
 conan_cmake_autodetect(settings)
@@ -27,7 +28,6 @@ conan_cmake_autodetect(settings)
 # I'm not sure how to resolve this so for now Conan packages have to be references using the
 # prefix CONAN_PKG::${PACKAGE_NAME}
 conan_cmake_install(PATH_OR_REFERENCE .
-                    GENERATOR cmake
                     BUILD missing
                     REMOTE conancenter
                     SETTINGS ${settings})
