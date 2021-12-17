@@ -1,5 +1,10 @@
 FROM ubuntu:20.04 AS base
 
+# Fix locale issues
+RUN apt-get update
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy locales
+RUN locale-gen en_US.UTF-8
+
 # Create non-root user
 ARG USER_ID=1000
 ARG GROUP_ID=1000
@@ -8,7 +13,7 @@ RUN adduser --disabled-password --gecos '' --uid $USER_ID --gid $GROUP_ID ros
 
 # Install compile tools
 RUN apt-get update 
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy clang-12 clang-tidy gdb gdbserver python3-pip
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy clang-12 python3-pip
 ENV CC=/bin/clang-12
 ENV CXX=/bin/clang++-12
 
