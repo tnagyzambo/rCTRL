@@ -1,6 +1,6 @@
 #include <RDataNode.hpp>
 
-rdata::Node::Node() : rclcpp::Node("rdata")
+rdata::Node::Node() : rclcpp_lifecycle::LifecycleNode("rdata")
 {
     this->srvCreateLoggerF64 = this->create_service<rdata::srv::CreateLogger>(iface::srv_create_logger_f64,
                                                                               std::bind(&rdata::Node::createLoggerF64,
@@ -22,6 +22,28 @@ rdata::Node::Node() : rclcpp::Node("rdata")
 rdata::Node::~Node()
 {
     RCLCPP_INFO(this->get_logger(), "\033[1;31mDestroying RocketDATA node.\033[0m");
+}
+
+rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn rdata::Node::on_configure(const rclcpp_lifecycle::State &)
+{
+    // This callback is supposed to be used for initialization and
+    // configuring purposes.
+    // We thus initialize and configure our publishers and timers.
+    // The lifecycle node API does return lifecycle components such as
+    // lifecycle publishers. These entities obey the lifecycle and
+    // can comply to the current state of the node.
+    // As of the beta version, there is only a lifecycle publisher
+    // available.
+
+    RCLCPP_INFO(get_logger(), "on_configure() is called.");
+
+    // We return a success and hence invoke the transition to the next
+    // step: "inactive".
+    // If we returned TRANSITION_CALLBACK_FAILURE instead, the state machine
+    // would stay in the "unconfigured" state.
+    // In case of TRANSITION_CALLBACK_ERROR or any thrown exception within
+    // this callback, the state machine transitions to state "errorprocessing".
+    return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 
 // Service functions to create a new data logger of a given type

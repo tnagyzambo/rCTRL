@@ -3,9 +3,11 @@
 #include <string>
 #include <memory>
 #include <vector>
-#include <rclcpp/rclcpp.hpp>
-#include <InfluxClient.hpp>
 
+#include <rclcpp/rclcpp.hpp>
+#include <rclcpp_lifecycle/lifecycle_node.hpp>
+
+#include <InfluxClient.hpp>
 #include <RDataIFace.hpp>
 
 #include <rdata/srv/create_logger.hpp>
@@ -28,13 +30,15 @@ namespace rdata
         rclcpp::SubscriptionOptions opts;
     };
 
-    class Node : public rclcpp::Node
+    class Node : public rclcpp_lifecycle::LifecycleNode
     {
     public:
         Node();
         ~Node();
 
     private:
+        rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_configure(const rclcpp_lifecycle::State &);
+
         rclcpp::Service<rdata::srv::CreateLogger>::SharedPtr srvCreateLoggerF64;
 
         rclcpp::Service<rdata::srv::RemoveLogger>::SharedPtr srvRemoveLoggerF64;

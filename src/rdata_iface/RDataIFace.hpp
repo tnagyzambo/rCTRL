@@ -8,6 +8,9 @@ using namespace std::chrono_literals;
 // https://www.learncpp.com/cpp-tutorial/sharing-global-constants-across-multiple-files-using-inline-variables/
 namespace rdata::iface
 {
+    inline constexpr const char *srv_get_state{"rdata/get_state"};
+    inline constexpr const char *srv_change_state{"rdata/change_state"};
+
     inline constexpr const char *srv_create_logger_bool{"rdata_srv_create_logger_bool"};
     inline constexpr const char *srv_create_logger_f64{"rdata_srv_create_logger_f64"};
     inline constexpr const char *srv_create_logger_i64{"rdata_srv_create_logger_i64"};

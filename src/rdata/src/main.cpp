@@ -8,7 +8,8 @@ int main(int argc, char *argv[])
     rclcpp::executors::MultiThreadedExecutor executor;
 
     auto rdataNode = std::make_shared<rdata::Node>();
-    executor.add_node(rdataNode);
+
+    executor.add_node(rdataNode->get_node_base_interface());
     executor.spin();
     rclcpp::shutdown();
 
