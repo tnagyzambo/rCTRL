@@ -1,6 +1,15 @@
 #include <RDataNode.hpp>
 
-rdata::Node::Node() : rclcpp_lifecycle::LifecycleNode("rdata")
+rdata::Node::Node() : rclcpp_lifecycle::LifecycleNode(iface::nodeName)
+{
+}
+
+rdata::Node::~Node()
+{
+    RCLCPP_INFO(this->get_logger(), "\033[1;31mDestroying RocketDATA node.\033[0m");
+}
+
+rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn rdata::Node::on_configure(const rclcpp_lifecycle::State &)
 {
     this->srvCreateLoggerF64 = this->create_service<rdata::srv::CreateLogger>(iface::srv_create_logger_f64,
                                                                               std::bind(&rdata::Node::createLoggerF64,
@@ -17,33 +26,52 @@ rdata::Node::Node() : rclcpp_lifecycle::LifecycleNode("rdata")
                                                                                         std::placeholders::_2));
 
     RCLCPP_INFO(this->get_logger(), "\033[1;32mCreated service: %s\033[0m", iface::srv_remove_logger_f64);
-}
 
-rdata::Node::~Node()
-{
-    RCLCPP_INFO(this->get_logger(), "\033[1;31mDestroying RocketDATA node.\033[0m");
-}
-
-rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn rdata::Node::on_configure(const rclcpp_lifecycle::State &)
-{
-    // This callback is supposed to be used for initialization and
-    // configuring purposes.
-    // We thus initialize and configure our publishers and timers.
-    // The lifecycle node API does return lifecycle components such as
-    // lifecycle publishers. These entities obey the lifecycle and
-    // can comply to the current state of the node.
-    // As of the beta version, there is only a lifecycle publisher
-    // available.
-
-    RCLCPP_INFO(get_logger(), "on_configure() is called.");
-
-    // We return a success and hence invoke the transition to the next
-    // step: "inactive".
-    // If we returned TRANSITION_CALLBACK_FAILURE instead, the state machine
-    // would stay in the "unconfigured" state.
-    // In case of TRANSITION_CALLBACK_ERROR or any thrown exception within
-    // this callback, the state machine transitions to state "errorprocessing".
     return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
+}
+
+rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn rdata::Node::on_activate(const rclcpp_lifecycle::State &)
+{
+    // Cannot activate subscribers
+    // REFERENCE: https://github.com/ros2/demos/issues/488
+    return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
+}
+
+rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn rdata::Node::on_deactivate(const rclcpp_lifecycle::State &)
+{
+    // Cannot deactivate subscribers
+    // REFERENCE: https://github.com/ros2/demos/issues/488
+    return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
+}
+
+// Return to unitialized state
+// Drop all smart pointers and reset influx client
+rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn rdata::Node::on_cleanup(const rclcpp_lifecycle::State &)
+{
+    this->deleteAllPointers();
+
+    return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
+}
+
+// Clean up on exit
+rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn rdata::Node::on_shutdown(const rclcpp_lifecycle::State &)
+{
+    this->deleteAllPointers();
+
+    return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
+}
+
+void rdata::Node::deleteAllPointers()
+{
+    this->srvCreateLoggerF64.reset();
+
+    this->srvRemoveLoggerF64.reset();
+
+    this->loggersBool.clear();
+    this->loggersF64.clear();
+    this->loggersI64.clear();
+    this->loggersStr.clear();
+    this->loggersU64.clear();
 }
 
 // Service functions to create a new data logger of a given type

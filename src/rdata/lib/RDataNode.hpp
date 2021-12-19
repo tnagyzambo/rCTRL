@@ -38,6 +38,10 @@ namespace rdata
 
     private:
         rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_configure(const rclcpp_lifecycle::State &);
+        rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_activate(const rclcpp_lifecycle::State &);
+        rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_deactivate(const rclcpp_lifecycle::State &);
+        rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_cleanup(const rclcpp_lifecycle::State &);
+        rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_shutdown(const rclcpp_lifecycle::State &state);
 
         rclcpp::Service<rdata::srv::CreateLogger>::SharedPtr srvCreateLoggerF64;
 
@@ -59,6 +63,8 @@ namespace rdata
 
         template <typename T>
         static std::vector<typename rdata::Logger<T>> removeLoggerByTopic(std::vector<typename rdata::Logger<T>>, const char *);
+
+        void deleteAllPointers();
 
         influxclient::Client influxClient;
         std::string readBuffer;

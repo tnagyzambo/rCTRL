@@ -12,12 +12,8 @@
 
 #include <RDataIFace.hpp>
 
-// which node to handle
-static constexpr char const *lifecycle_node = "rdata";
-
 template <typename FutureT, typename WaitTimeT>
-std::future_status
-wait_for_result(FutureT &future, WaitTimeT time_to_wait)
+std::future_status wait_for_result(FutureT &future, WaitTimeT time_to_wait)
 {
     auto end = std::chrono::steady_clock::now() + time_to_wait;
     std::chrono::milliseconds wait_period(100);
@@ -38,13 +34,11 @@ wait_for_result(FutureT &future, WaitTimeT time_to_wait)
 class LifecycleServiceClient : public rclcpp::Node
 {
 public:
-    explicit LifecycleServiceClient(const std::string &node_name)
-        : Node(node_name)
+    explicit LifecycleServiceClient(const std::string &node_name) : Node(node_name)
     {
     }
 
-    void
-    init()
+    void init()
     {
         // Every lifecycle node spawns automatically a couple
         // of services which allow an external interaction with
@@ -66,17 +60,13 @@ public:
    * how long we wait for a response before returning
    * unknown state
    */
-    unsigned int
-    get_state(std::chrono::seconds time_out = 3s)
+    unsigned int get_state(std::chrono::seconds time_out = 3s)
     {
         auto request = std::make_shared<lifecycle_msgs::srv::GetState::Request>();
 
         if (!client_get_state_->wait_for_service(time_out))
         {
-            RCLCPP_ERROR(
-                get_logger(),
-                "Service %s is not available.",
-                client_get_state_->get_service_name());
+            RCLCPP_ERROR(get_logger(), "Service %s is not available.", client_get_state_->get_service_name());
             return lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN;
         }
 
@@ -90,23 +80,19 @@ public:
 
         if (future_status != std::future_status::ready)
         {
-            RCLCPP_ERROR(
-                get_logger(), "Server time out while getting current state for node %s", lifecycle_node);
+            RCLCPP_ERROR(get_logger(), "Server time out while getting current state for node %s", rdata::iface::nodeName);
             return lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN;
         }
 
         // We have an succesful answer. So let's print the current state.
         if (future_result.get())
         {
-            RCLCPP_INFO(
-                get_logger(), "Node %s has current state %s.",
-                lifecycle_node, future_result.get()->current_state.label.c_str());
+            RCLCPP_INFO(get_logger(), "Node %s has current state %s.", rdata::iface::nodeName, future_result.get()->current_state.label.c_str());
             return future_result.get()->current_state.id;
         }
         else
         {
-            RCLCPP_ERROR(
-                get_logger(), "Failed to get current state for node %s", lifecycle_node);
+            RCLCPP_ERROR(get_logger(), "Failed to get current state for node %s", rdata::iface::nodeName);
             return lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN;
         }
     }
@@ -127,18 +113,14 @@ public:
    * how long we wait for a response before returning
    * unknown state
    */
-    bool
-    change_state(std::uint8_t transition, std::chrono::seconds time_out = 3s)
+    bool change_state(std::uint8_t transition, std::chrono::seconds time_out = 3s)
     {
         auto request = std::make_shared<lifecycle_msgs::srv::ChangeState::Request>();
         request->transition.id = transition;
 
         if (!client_change_state_->wait_for_service(time_out))
         {
-            RCLCPP_ERROR(
-                get_logger(),
-                "Service %s is not available.",
-                client_change_state_->get_service_name());
+            RCLCPP_ERROR(get_logger(), "Service %s is not available.", client_change_state_->get_service_name());
             return false;
         }
 
@@ -151,22 +133,19 @@ public:
 
         if (future_status != std::future_status::ready)
         {
-            RCLCPP_ERROR(
-                get_logger(), "Server time out while getting current state for node %s", lifecycle_node);
+            RCLCPP_ERROR(get_logger(), "Server time out while getting current state for node %s", rdata::iface::nodeName);
             return false;
         }
 
         // We have an answer, let's print our success.
         if (future_result.get()->success)
         {
-            RCLCPP_INFO(
-                get_logger(), "Transition %d successfully triggered.", static_cast<int>(transition));
+            RCLCPP_INFO(get_logger(), "Transition %d successfully triggered.", static_cast<int>(transition));
             return true;
         }
         else
         {
-            RCLCPP_WARN(
-                get_logger(), "Failed to trigger transition %u", static_cast<unsigned int>(transition));
+            RCLCPP_WARN(get_logger(), "Failed to trigger transition %u", static_cast<unsigned int>(transition));
             return false;
         }
     }
@@ -321,9 +300,7 @@ int main(int argc, char **argv)
     rclcpp::executors::SingleThreadedExecutor exe;
     exe.add_node(lc_client);
 
-    std::shared_future<void> script = std::async(
-        std::launch::async,
-        std::bind(callee_script, lc_client));
+    std::shared_future<void> script = std::async(std::launch::async, std::bind(callee_script, lc_client));
     exe.spin_until_future_complete(script);
 
     rclcpp::shutdown();
