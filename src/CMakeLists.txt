@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.9)
+cmake_minimum_required(VERSION 3.16)
 project(rdata)
 
 # Set compiler options
@@ -11,7 +11,6 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
-find_package(std_msgs REQUIRED)
 
 # Include .cmake modules
 include(cmake/Conan.cmake)
@@ -23,34 +22,52 @@ rosidl_generate_interfaces(${PROJECT_NAME}
                            "rdata/msg/LogI64.msg"
                            "rdata/msg/LogStr.msg"
                            "rdata/msg/LogU64.msg"
-                           "rdata/srv/CreateSub.srv"
-                           "rdata/srv/RemoveSub.srv")
+                           "rdata/srv/CreateLogger.srv"
+                           "rdata/srv/RemoveLogger.srv")
+
+# Utilities library
+add_library(rctl_util INTERFACE)
+
+target_sources(rctl_util INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/util/Util.hpp)
+
+target_include_directories(rctl_util INTERFACE util/) 
+
+# rockerDATA interface library
+add_library(rdata_iface INTERFACE)
+
+target_sources(rdata_iface INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/rdata_iface/RDataIFace.hpp)
+
+target_include_directories(rdata_iface INTERFACE rdata_iface/) 
 
 # rocketDATA executable
-add_executable(rdata_node rdata/src/main.cpp 
-                               rdata/lib/RDataNode.cpp
-                               rdata/lib/InfluxClient.cpp
-                               rdata/lib/InfluxClientException.cpp)
+add_executable(rdata_main rdata/src/main.cpp 
+                          rdata/lib/RDataNode.cpp
+                          rdata/lib/InfluxClient.cpp
+                          rdata/lib/InfluxClientException.cpp)
 
-target_include_directories(rdata_node PRIVATE rdata/lib)
-target_link_libraries(rdata_node CONAN_PKG::libcurl) 
-target_link_libraries(rdata_node CONAN_PKG::tomlplusplus)
+target_include_directories(rdata_main PRIVATE rdata/lib)
+target_link_libraries(rdata_main CONAN_PKG::libcurl) 
+target_link_libraries(rdata_main CONAN_PKG::tomlplusplus)
+target_link_libraries(rdata_main rdata_iface)
+target_link_libraries(rdata_main rctl_util)
 
-ament_target_dependencies(rdata_node rclcpp std_msgs)
-rosidl_target_interfaces(rdata_node ${PROJECT_NAME} "rosidl_typesupport_cpp")
+ament_target_dependencies(rdata_main rclcpp)
+rosidl_target_interfaces(rdata_main ${PROJECT_NAME} "rosidl_typesupport_cpp")
 
-# RocketDATA Virtual Sensor executable
-add_executable(rocketdata_virtual_sensor_node rocketdata_virtual_sensor/src/main.cpp
-                                              rocketdata_virtual_sensor/lib/VirtualSensorNode.cpp)
+# rocketDATA Virtual Sensor executable
+add_executable(rdata_vsensor rdata_vsensor/src/main.cpp
+                             rdata_vsensor/lib/VSensorNode.cpp)
 
-target_include_directories(rocketdata_virtual_sensor_node PRIVATE rocketdata_virtual_sensor/lib)
+target_include_directories(rdata_vsensor PRIVATE rdata_vsensor/lib)
+target_link_libraries(rdata_vsensor rdata_iface)
+target_link_libraries(rdata_vsensor rctl_util)
 
-ament_target_dependencies(rocketdata_virtual_sensor_node rclcpp std_msgs)
-rosidl_target_interfaces(rocketdata_virtual_sensor_node ${PROJECT_NAME} "rosidl_typesupport_cpp")
+ament_target_dependencies(rdata_vsensor rclcpp std_msgs)
+rosidl_target_interfaces(rdata_vsensor ${PROJECT_NAME} "rosidl_typesupport_cpp")
 
 install(TARGETS
-        rdata_node
-        rocketdata_virtual_sensor_node
+        rdata_main
+        rdata_vsensor
         DESTINATION lib/${PROJECT_NAME})
 
 ament_package()

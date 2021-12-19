@@ -2,17 +2,21 @@
 
 rdata::Node::Node() : rclcpp::Node("rdata")
 {
-    this->srvCreateSubBool = this->create_service<rdata::srv::CreateSub>(RDATA_SRV_CREATE_SUB_BOOL,
-                                                                         std::bind(&rdata::Node::createSubBool,
-                                                                                   this,
-                                                                                   std::placeholders::_1,
-                                                                                   std::placeholders::_2));
+    this->srvCreateLoggerF64 = this->create_service<rdata::srv::CreateLogger>(iface::srv_create_logger_f64,
+                                                                              std::bind(&rdata::Node::createLoggerF64,
+                                                                                        this,
+                                                                                        std::placeholders::_1,
+                                                                                        std::placeholders::_2));
 
-    this->srvRemoveSubBool = this->create_service<rdata::srv::RemoveSub>(RDATA_SRV_REMOVE_SUB_BOOL,
-                                                                         std::bind(&rdata::Node::removeSubBool,
-                                                                                   this,
-                                                                                   std::placeholders::_1,
-                                                                                   std::placeholders::_2));
+    RCLCPP_INFO(this->get_logger(), "\033[1;32mCreated service: %s\033[0m", iface::srv_create_logger_f64);
+
+    this->srvRemoveLoggerF64 = this->create_service<rdata::srv::RemoveLogger>(iface::srv_remove_logger_f64,
+                                                                              std::bind(&rdata::Node::removeLoggerF64,
+                                                                                        this,
+                                                                                        std::placeholders::_1,
+                                                                                        std::placeholders::_2));
+
+    RCLCPP_INFO(this->get_logger(), "\033[1;32mCreated service: %s\033[0m", iface::srv_remove_logger_f64);
 }
 
 rdata::Node::~Node()
@@ -25,41 +29,48 @@ rdata::Node::~Node()
 // will know the type of datalogger that they will be requisting at compile time (avoid last minute decision making)
 // These functions will append the created subscriber to the approriate vector
 // These functions cannot be templated as it would require templated function pointers in the std::bind of the callback function
-void rdata::Node::createSubBool(const std::shared_ptr<rdata::srv::CreateSub::Request> request,
-                                std::shared_ptr<rdata::srv::CreateSub::Response> response)
+void rdata::Node::createLoggerF64(const std::shared_ptr<rdata::srv::CreateLogger::Request> request,
+                                  std::shared_ptr<rdata::srv::CreateLogger::Response> response)
 {
     auto callbackGroup = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
     auto opts = rclcpp::SubscriptionOptions();
     opts.callback_group = callbackGroup;
 
-    auto subPtr = this->create_subscription<rdata::msg::LogBool>(request->topic.c_str(),
-                                                                 10,
-                                                                 std::bind(&rdata::Node::callbackLogBool, this, std::placeholders::_1),
-                                                                 opts);
+    auto subPtr = this->create_subscription<rdata::msg::LogF64>(request->topic.c_str(),
+                                                                10,
+                                                                std::bind(&rdata::Node::callbackLogF64, this, std::placeholders::_1),
+                                                                opts);
 
-    rdata::Sub<rdata::msg::LogBool> sub = {
+    rdata::Logger<rdata::msg::LogF64> logger = {
         subPtr,
         callbackGroup,
         opts,
     };
 
-    this->subsBool.push_back(sub);
+    this->loggersF64.push_back(logger);
+
+    RCLCPP_INFO(this->get_logger(), "\033[1;32mCreated F64 logger: %s\033[0m", this->loggersF64.back().subPtr->get_topic_name());
 
     response->completed = true;
 }
 
 // Service functions to remove data loggers by topic name
-void rdata::Node::removeSubBool(const std::shared_ptr<rdata::srv::RemoveSub::Request> request,
-                                std::shared_ptr<rdata::srv::RemoveSub::Response> response)
+void rdata::Node::removeLoggerF64(const std::shared_ptr<rdata::srv::RemoveLogger::Request> request,
+                                  std::shared_ptr<rdata::srv::RemoveLogger::Response> response)
 {
-    this->subsBool = removeSubByTopic(this->subsBool, request->topic.c_str());
+
+    auto loggersTranformed = removeLoggerByTopic(this->loggersF64, request->topic.c_str());
+    int loggersRemoved = this->loggersF64.size() - loggersTranformed.size();
+    this->loggersF64 = loggersTranformed;
+
+    RCLCPP_INFO(this->get_logger(), "\033[1;31mRemoved %d F64 logger(s) with topic: %s\033[0m", loggersRemoved, request->topic.c_str());
 
     response->completed = true;
 }
 
 // The callbacks needed by the ros2 subscriptions cannot be templated so this must be done through overloading
 // The function call 'tryToWriteToInfluxDB()' can be templated however which lets us define uniform error handling logic once for all overloads
-void rdata::Node::callbackLogBool(const rdata::msg::LogBool::SharedPtr msg)
+void rdata::Node::callbackLogF64(const rdata::msg::LogF64::SharedPtr msg)
 {
     tryToWriteToInfluxDB(msg);
 }

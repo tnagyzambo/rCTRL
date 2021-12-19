@@ -6,9 +6,11 @@
 #include <rclcpp/rclcpp.hpp>
 #include <InfluxClient.hpp>
 
-#include <rdata/srv/create_sub.hpp>
+#include <RDataIFace.hpp>
 
-#include <rdata/srv/remove_sub.hpp>
+#include <rdata/srv/create_logger.hpp>
+
+#include <rdata/srv/remove_logger.hpp>
 
 #include <rdata/msg/log_bool.hpp>
 #include <rdata/msg/log_f64.hpp>
@@ -16,14 +18,10 @@
 #include <rdata/msg/log_str.hpp>
 #include <rdata/msg/log_u64.hpp>
 
-#define RDATA_SRV_CREATE_SUB_BOOL "rdata_srv_create_sub_bool"
-
-#define RDATA_SRV_REMOVE_SUB_BOOL "rdata_srv_remove_sub_bool"
-
 namespace rdata
 {
     template <typename T>
-    struct Sub
+    struct Logger
     {
         typename rclcpp::Subscription<T>::SharedPtr subPtr;
         rclcpp::CallbackGroup::SharedPtr callbackGroup;
@@ -37,26 +35,26 @@ namespace rdata
         ~Node();
 
     private:
-        rclcpp::Service<rdata::srv::CreateSub>::SharedPtr srvCreateSubBool;
+        rclcpp::Service<rdata::srv::CreateLogger>::SharedPtr srvCreateLoggerF64;
 
-        rclcpp::Service<rdata::srv::RemoveSub>::SharedPtr srvRemoveSubBool;
+        rclcpp::Service<rdata::srv::RemoveLogger>::SharedPtr srvRemoveLoggerF64;
 
-        std::vector<rdata::Sub<rdata::msg::LogBool>> subsBool;
-        std::vector<rclcpp::Subscription<rdata::msg::LogF64>::SharedPtr> subsF64;
-        std::vector<rclcpp::Subscription<rdata::msg::LogI64>::SharedPtr> subsI64;
-        std::vector<rclcpp::Subscription<rdata::msg::LogStr>::SharedPtr> subsStr;
-        std::vector<rclcpp::Subscription<rdata::msg::LogU64>::SharedPtr> subsU64;
+        std::vector<rdata::Logger<rdata::msg::LogBool>> loggersBool;
+        std::vector<rdata::Logger<rdata::msg::LogF64>> loggersF64;
+        std::vector<rdata::Logger<rdata::msg::LogI64>> loggersI64;
+        std::vector<rdata::Logger<rdata::msg::LogStr>> loggersStr;
+        std::vector<rdata::Logger<rdata::msg::LogU64>> loggersU64;
 
-        void callbackLogBool(const rdata::msg::LogBool::SharedPtr);
+        void callbackLogF64(const rdata::msg::LogF64::SharedPtr);
 
-        void createSubBool(const std::shared_ptr<rdata::srv::CreateSub::Request>,
-                           std::shared_ptr<rdata::srv::CreateSub::Response>);
+        void createLoggerF64(const std::shared_ptr<rdata::srv::CreateLogger::Request>,
+                             std::shared_ptr<rdata::srv::CreateLogger::Response>);
 
-        void removeSubBool(const std::shared_ptr<rdata::srv::RemoveSub::Request>,
-                           std::shared_ptr<rdata::srv::RemoveSub::Response>);
+        void removeLoggerF64(const std::shared_ptr<rdata::srv::RemoveLogger::Request>,
+                             std::shared_ptr<rdata::srv::RemoveLogger::Response>);
 
         template <typename T>
-        static std::vector<typename rdata::Sub<T>> removeSubByTopic(std::vector<typename rdata::Sub<T>> subs, const char *topicName);
+        static std::vector<typename rdata::Logger<T>> removeLoggerByTopic(std::vector<typename rdata::Logger<T>>, const char *);
 
         influxclient::Client influxClient;
         std::string readBuffer;

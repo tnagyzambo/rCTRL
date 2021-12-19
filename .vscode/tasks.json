@@ -7,20 +7,20 @@
             "command": "colcon build --cmake-args '-DCMAKE_BUILD_TYPE=Debug'",
         },
         {
-            "label": "run rocketdata",
+            "label": "run rdata",
             "type": "shell",
-            "command": "source install/setup.bash; ros2 run rocketdata rocketdata_node",
+            "command": "source install/setup.bash; ros2 run rdata rdata_main",
         },
         {
-            "label": "run rocketdata_virtual_sensor",
+            "label": "run rdata_vsensor",
             "type": "shell",
-            "command": "source install/setup.bash; ros2 run rocketdata rocketdata_virtual_sensor_node",
+            "command": "source install/setup.bash; ros2 run rdata rdata_vsensor",
         },
         {
             "label": "run",
             "dependsOn": [
-                "run rocketdata",
-                "run rocketdata_virtual_sensor"
+                "run rdata",
+                "run rocketdata_vsensor"
             ],
         },
     ]

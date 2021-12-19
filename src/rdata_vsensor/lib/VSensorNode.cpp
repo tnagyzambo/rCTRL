@@ -1,15 +1,41 @@
-// #include <VirtualSensorNode.hpp>
+#include <VSensorNode.hpp>
 
-// // Base class
-// VirtualSensorNode::VirtualSensorNode(std::string nodeName, std::chrono::milliseconds period) : Node(nodeName)
+// Base class
+// VSensorNode::VSensorNode(std::string nodeName, std::chrono::milliseconds period) : Node(nodeName)
 // {
+//     this->clCreatelogger = this->create_client<rdata::srv::CreateLogger>(RDATA_SRV_CREATE_LOGGER_F64);
+
+//     auto request = std::make_shared<rdata::srv::CreateLogger::Request>();
+//     request->topic = nodeName.c_str();
+
+//     while (!this->clCreatelogger->wait_for_service(1s))
+//     {
+//         if (!rclcpp::ok())
+//         {
+//             RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Interrupted while waiting for the service. Exiting.");
+//         }
+//         RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "service not available, waiting again...");
+//     }
+
+//     auto result = this->clCreatelogger->async_send_request(request);
+
+//     // Wait for the result.
+//     if (rclcpp::spin_until_future_complete(this->get_node_base_interface(), result) == rclcpp::FutureReturnCode::SUCCESS)
+//     {
+//         RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "DONE");
+//     }
+//     else
+//     {
+//         RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Failed to call service add_two_ints");
+//     }
+
 //     this->nodeName = nodeName;
 //     this->period = period;
 
-//     this->timer = this->create_wall_timer(period, std::bind(&VirtualSensorNode::timerCallback, this));
+//     this->timer = this->create_wall_timer(period, std::bind(&VSensorNode::timerCallback, this));
 // }
 
-// uint VirtualSensorNode::calcElapsedTime()
+// uint VSensorNode::calcElapsedTime()
 // {
 //     auto now = std::chrono::high_resolution_clock::now();
 //     auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now - this->startTime).count();
@@ -17,7 +43,7 @@
 //     return ms;
 // }
 
-// void VirtualSensorNode::timerCallback()
+// void VSensorNode::timerCallback()
 // {
 // }
 
@@ -53,31 +79,67 @@
 //     this->prevOutput = message.value;
 // }
 
-// // Virtual float sensor
-// VirtualSensorNodeFloat64::VirtualSensorNodeFloat64(std::string nodeName, std::chrono::milliseconds period) : VirtualSensorNode(nodeName, period)
-// {
-//     this->publisher = this->create_publisher<rocketdata::msg::LogFloat64>(ROS_ROCKEDATA_TOPIC_LOGFLOAT64, 10);
-//     this->sinPeriod = 2 * 3.14 / (100 * period.count());
+// Virtual float sensor
+rdata::vsensor::F64::F64(const char *nodeName, std::chrono::milliseconds period) : rdata::vsensor::Node<rdata::msg::LogF64>(nodeName, period)
+{
+    this->clCreateLogger = this->create_client<rdata::srv::CreateLogger>(rdata::iface::srv_create_logger_f64);
 
-//     RCLCPP_INFO(this->get_logger(), "Creating virtual float64 sensor \"%s\" with period \"%sms\".", this->nodeName.c_str(), std::to_string(period.count()).c_str());
-// }
+    try
+    {
+        rdata::iface::createLogger(rdata::iface::srv_create_logger_f64, this->get_node_base_interface(), this->clCreateLogger, this->loggerTopicName.c_str());
+    }
+    catch (const rdata::iface::service_error &e)
+    {
+        // Unrecoverable error on failure to parse
+        std::string error = "\033[1;31mFAILED TO CONSTRUCT NODE '";
+        error.append(nodeName);
+        error.append("'!\033[0m");
 
-// VirtualSensorNodeFloat64::~VirtualSensorNodeFloat64()
-// {
-//     RCLCPP_INFO(this->get_logger(), "Destroying virtual float64 sensor \"%s\" with period \"%sms\".", this->nodeName.c_str(), std::to_string(period.count()).c_str());
-// }
+        RCLCPP_FATAL(this->get_logger(), "%s", error.c_str());
 
-// void VirtualSensorNodeFloat64::timerCallback()
-// {
-//     auto message = rocketdata::msg::LogFloat64();
-//     uint ms = VirtualSensorNode::calcElapsedTime();
+        throw std::runtime_error(error);
+    }
 
-//     message.measurment = "virtual_float";
-//     message.sensor = this->nodeName;
-//     message.value = sin(this->sinPeriod * ms);
+    this->logger = this->create_publisher<rdata::msg::LogF64>(this->loggerTopicName, 10);
+    this->sinPeriod = 2 * 3.14 / (100 * period.count());
 
-//     this->publisher->publish(message);
-// }
+    RCLCPP_INFO(this->get_logger(), "\033[1;32mCreated virtual f64 sensor with period \"%sms\"\033[0m", std::to_string(period.count()).c_str());
+}
+
+rdata::vsensor::F64::~F64()
+{
+    this->clRemoveLogger = this->create_client<rdata::srv::RemoveLogger>(rdata::iface::srv_remove_logger_f64);
+
+    try
+    {
+        rdata::iface::removeLogger(rdata::iface::srv_remove_logger_f64, this->get_node_base_interface(), this->clRemoveLogger, this->loggerTopicName.c_str());
+    }
+    catch (const rdata::iface::service_error &e)
+    {
+        // Unrecoverable error on failure to parse
+        std::string error = "\033[1;31mFAILED TO DESTRUCT NODE '";
+        error.append(nodeName);
+        error.append("'!\033[0m");
+
+        RCLCPP_FATAL(this->get_logger(), "%s", error.c_str());
+
+        throw std::runtime_error(error);
+    }
+
+    RCLCPP_INFO(this->get_logger(), "Destroyed virtual f64 sensor with period \"%sms\".", std::to_string(period.count()).c_str());
+}
+
+void rdata::vsensor::F64::timerCallback()
+{
+    auto message = rdata::msg::LogF64();
+    uint ms = this->calcElapsedTime();
+
+    message.measurment = "virtual_float";
+    message.sensor = this->nodeName;
+    message.value = sin(this->sinPeriod * ms);
+
+    this->logger->publish(message);
+}
 
 // // Virtual int sensor
 // VirtualSensorNodeInt64::VirtualSensorNodeInt64(std::string nodeName, std::chrono::milliseconds period) : VirtualSensorNode(nodeName, period)
