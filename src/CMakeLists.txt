@@ -13,45 +13,44 @@ find_package(rclcpp REQUIRED)
 find_package(rclcpp_lifecycle REQUIRED)
 find_package(lifecycle_msgs REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
-
-# Include .cmake modules
-include(cmake/Conan.cmake)
+find_package(tomlplusplus REQUIRED)
+find_package(CURL REQUIRED)
 
 # Create ros2 interfaces
 rosidl_generate_interfaces(${PROJECT_NAME}
-                           "rdata/msg/LogBool.msg"
-                           "rdata/msg/LogF64.msg"
-                           "rdata/msg/LogI64.msg"
-                           "rdata/msg/LogStr.msg"
-                           "rdata/msg/LogU64.msg"
-                           "rdata/srv/CreateLogger.srv"
-                           "rdata/srv/RemoveLogger.srv")
+                           "rdata/iface/msg/LogBool.msg"
+                           "rdata/iface/msg/LogF64.msg"
+                           "rdata/iface/msg/LogI64.msg"
+                           "rdata/iface/msg/LogStr.msg"
+                           "rdata/iface/msg/LogU64.msg"
+                           "rdata/iface/srv/CreateLogger.srv"
+                           "rdata/iface/srv/RemoveLogger.srv")
 
 # Utilities library
-add_library(rctl_util INTERFACE)
+add_library(rctrl_util INTERFACE)
 
-target_sources(rctl_util INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/util/Util.hpp)
+target_sources(rctrl_util INTERFACE ${CMAKE_CURRENT_SOURCE_DIR} rctrl/util/lib/Util.hpp)
 
-target_include_directories(rctl_util INTERFACE util/) 
+target_include_directories(rctrl_util INTERFACE rctrl/util/lib) 
 
 # rockerDATA interface library
 add_library(rdata_iface INTERFACE)
 
-target_sources(rdata_iface INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/rdata_iface/RDataIFace.hpp)
+target_sources(rdata_iface INTERFACE ${CMAKE_CURRENT_SOURCE_DIR} rdata/iface/lib/RDataIFace.hpp)
 
-target_include_directories(rdata_iface INTERFACE rdata_iface/)
+target_include_directories(rdata_iface INTERFACE rdata/iface/lib)
 
 # rocketDATA executable
-add_executable(rdata_main rdata/src/main.cpp 
-                          rdata/lib/RDataNode.cpp
-                          rdata/lib/InfluxClient.cpp
-                          rdata/lib/InfluxClientException.cpp)
+add_executable(rdata_main rdata/main/src/main.cpp 
+                          rdata/main/lib/RDataNode.cpp
+                          rdata/main/lib/InfluxClient.cpp
+                          rdata/main/lib/InfluxClientException.cpp)
 
-target_include_directories(rdata_main PRIVATE rdata/lib)
-target_link_libraries(rdata_main CONAN_PKG::libcurl) 
-target_link_libraries(rdata_main CONAN_PKG::tomlplusplus)
+target_include_directories(rdata_main PRIVATE rdata/main/lib)
+target_link_libraries(rdata_main CURL::libcurl) 
+target_link_libraries(rdata_main tomlplusplus::tomlplusplus)
 target_link_libraries(rdata_main rdata_iface)
-target_link_libraries(rdata_main rctl_util)
+target_link_libraries(rdata_main rctrl_util)
 
 ament_target_dependencies(rdata_main rclcpp
                                      rclcpp_lifecycle
@@ -59,22 +58,22 @@ ament_target_dependencies(rdata_main rclcpp
 rosidl_target_interfaces(rdata_main ${PROJECT_NAME} "rosidl_typesupport_cpp")
 
 # rocketDATA Virtual Sensor executable
-add_executable(rdata_vsensor rdata_vsensor/src/main.cpp
-                             rdata_vsensor/lib/VSensorNode.cpp)
+add_executable(rdata_vsensor rdata/example/vsensor/src/main.cpp
+                             rdata/example/vsensor/lib/VSensorNode.cpp)
 
-target_include_directories(rdata_vsensor PRIVATE rdata_vsensor/lib)
+target_include_directories(rdata_vsensor PRIVATE rdata/example/vsensor/lib)
 target_link_libraries(rdata_vsensor rdata_iface)
-target_link_libraries(rdata_vsensor rctl_util)
+target_link_libraries(rdata_vsensor rctrl_util)
 
 ament_target_dependencies(rdata_vsensor rclcpp)
 rosidl_target_interfaces(rdata_vsensor ${PROJECT_NAME} "rosidl_typesupport_cpp")
 
 # rocketDATA minimal example executable
-add_executable(rdata_example rdata_example/src/main.cpp)
+add_executable(rdata_example rdata/example/lc_client/src/main.cpp)
 
-target_include_directories(rdata_example PRIVATE rdata_example/lib)
+target_include_directories(rdata_example PRIVATE rdata/example/lc_client/lib)
 target_link_libraries(rdata_example rdata_iface)
-target_link_libraries(rdata_example rctl_util)
+target_link_libraries(rdata_example rctrl_util)
 
 ament_target_dependencies(rdata_example rclcpp
                                         rclcpp_lifecycle
