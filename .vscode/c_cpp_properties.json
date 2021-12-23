@@ -3,9 +3,8 @@
         {
             "name": "Linux",
             "includePath": [
-                "${workspaceFolder}/**",
-                "/opt/ros/${ROS_DISTRO}/include/**",
-                "~/.conan/data/**"
+                "${workspaceFolder}/src/**",
+                "/opt/ros/${ROS_DISTRO}/include/**"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/clang++-12",
