@@ -4,7 +4,7 @@
 #include <iostream>
 #include <curl/curl.h>
 #include <toml++/toml.h>
-#include "InfluxClientException.hpp"
+#include "influx_client_exception.hpp"
 
 #define CREDENTIALS_FILE "/home/ros/rocketDATA/influx/credentials.toml"
 
@@ -64,5 +64,5 @@ namespace influxclient
     };
 
 // Implementation of templated functions
-#include "InfluxClient.tpp"
+#include "influx_client.tpp"
 }

@@ -7,8 +7,8 @@
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_lifecycle/lifecycle_node.hpp>
 
-#include <InfluxClient.hpp>
-#include <RDataIFace.hpp>
+#include <influx_client.hpp>
+#include <rdata_iface.hpp>
 
 #include <rdata/srv/create_logger.hpp>
 
@@ -74,5 +74,5 @@ namespace rdata
     };
 
 // Implementation of templated functions
-#include "RDataNode.tpp"
+#include "rdata_node.tpp"
 }

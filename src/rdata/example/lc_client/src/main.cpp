@@ -10,7 +10,7 @@
 #include "lifecycle_msgs/srv/change_state.hpp"
 #include "lifecycle_msgs/srv/get_state.hpp"
 
-#include <RDataIFace.hpp>
+#include <rdata_iface.hpp>
 
 template <typename FutureT, typename WaitTimeT>
 std::future_status wait_for_result(FutureT &future, WaitTimeT time_to_wait)

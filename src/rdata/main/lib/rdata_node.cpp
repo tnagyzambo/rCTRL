@@ -1,4 +1,4 @@
-#include <RDataNode.hpp>
+#include <rdata_node.hpp>
 
 rdata::Node::Node() : rclcpp_lifecycle::LifecycleNode(iface::nodeName)
 {

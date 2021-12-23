@@ -29,22 +29,22 @@ rosidl_generate_interfaces(${PROJECT_NAME}
 # Utilities library
 add_library(rctrl_util INTERFACE)
 
-target_sources(rctrl_util INTERFACE ${CMAKE_CURRENT_SOURCE_DIR} rctrl/util/lib/Util.hpp)
+target_sources(rctrl_util INTERFACE ${CMAKE_CURRENT_SOURCE_DIR} rctrl/util/lib/util.hpp)
 
 target_include_directories(rctrl_util INTERFACE rctrl/util/lib) 
 
 # rockerDATA interface library
 add_library(rdata_iface INTERFACE)
 
-target_sources(rdata_iface INTERFACE ${CMAKE_CURRENT_SOURCE_DIR} rdata/iface/lib/RDataIFace.hpp)
+target_sources(rdata_iface INTERFACE ${CMAKE_CURRENT_SOURCE_DIR} rdata/iface/lib/rdata_iface.hpp)
 
 target_include_directories(rdata_iface INTERFACE rdata/iface/lib)
 
 # rocketDATA executable
 add_executable(rdata_main rdata/main/src/main.cpp 
-                          rdata/main/lib/RDataNode.cpp
-                          rdata/main/lib/InfluxClient.cpp
-                          rdata/main/lib/InfluxClientException.cpp)
+                          rdata/main/lib/rdata_node.cpp
+                          rdata/main/lib/influx_client.cpp
+                          rdata/main/lib/influx_client_exception.cpp)
 
 target_include_directories(rdata_main PRIVATE rdata/main/lib)
 target_link_libraries(rdata_main CURL::libcurl) 
@@ -59,7 +59,7 @@ rosidl_target_interfaces(rdata_main ${PROJECT_NAME} "rosidl_typesupport_cpp")
 
 # rocketDATA Virtual Sensor executable
 add_executable(rdata_vsensor rdata/example/vsensor/src/main.cpp
-                             rdata/example/vsensor/lib/VSensorNode.cpp)
+                             rdata/example/vsensor/lib/vsensor_node.cpp)
 
 target_include_directories(rdata_vsensor PRIVATE rdata/example/vsensor/lib)
 target_link_libraries(rdata_vsensor rdata_iface)

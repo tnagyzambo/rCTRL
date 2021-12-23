@@ -1,4 +1,4 @@
-#include <InfluxClient.hpp>
+#include <influx_client.hpp>
 
 influxclient::Client::Client()
 {

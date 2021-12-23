@@ -1,4 +1,4 @@
-#include <InfluxClientException.hpp>
+#include <influx_client_exception.hpp>
 
 influxclient::PostRequestException::PostRequestException(std::string response) : std::runtime_error(buildMessage(response))
 {

@@ -1,4 +1,4 @@
-#include <VSensorNode.hpp>
+#include <vsensor_node.hpp>
 
 // Base class
 // VSensorNode::VSensorNode(std::string nodeName, std::chrono::milliseconds period) : Node(nodeName)

@@ -5,7 +5,7 @@
 #include <memory>
 #include <string>
 #include <rclcpp/rclcpp.hpp>
-#include <RDataIFace.hpp>
+#include <rdata_iface.hpp>
 
 #include <rdata/srv/create_logger.hpp>
 
@@ -108,5 +108,5 @@ namespace rdata::vsensor
 // };
 
 // Implementation of templated functions
-#include "VSensorNode.tpp"
+#include "vsensor_node.tpp"
 }

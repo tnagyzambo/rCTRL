@@ -1,4 +1,4 @@
-#include <VSensorNode.hpp>
+#include <vsensor_node.hpp>
 
 int main(int argc, char *argv[])
 {

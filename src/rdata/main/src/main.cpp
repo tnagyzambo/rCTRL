@@ -1,4 +1,4 @@
-#include <RDataNode.hpp>
+#include <rdata_node.hpp>
 
 // The rocketDATA node listens to the topics found in '../msg'. Each topic has its own multi threaded listener.
 // This necessitates the use of the multi threaded executor.
