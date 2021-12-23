@@ -36,14 +36,6 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy wget libssl-dev
 # Install libcurl dev dependencies
 RUN apt-get update
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy libcurl4-openssl-dev
-# ARG CURL_RELEASE=curl-7.80.0
-# RUN wget https://github.com/curl/curl/releases/download/curl-7_80_0/${CURL_RELEASE}.tar.gz
-# RUN tar -xf ${CURL_RELEASE}.tar.gz -C /lib
-# RUN rm ${CURL_RELEASE}.tar.gz
-# RUN mkdir /lib/${CURL_RELEASE}/build
-# RUN cd /lib/${CURL_RELEASE} && cmake -S . -B build
-# RUN cd /lib/${CURL_RELEASE} && cmake --build build
-# RUN cd /lib/${CURL_RELEASE} && cmake --install build
 
 # Install toml++ dev dependencies
 ARG TOML11_RELEASE=2.5.0
@@ -68,13 +60,13 @@ RUN rm ${INFLUX_RELEASE}
 
 # Add influx credentials file
 USER ros
-RUN mkdir /home/ros/rocketDATA
-RUN mkdir /home/ros/rocketDATA/influx
-COPY resources/influx/credentials.toml /home/ros/rocketDATA/influx/credentials.toml
+RUN mkdir /home/ros/rdata
+RUN mkdir /home/ros/rdata/influx
+COPY resources/influx/credentials.toml /home/ros/rdata/influx/credentials.toml
 
 # Add influx configuration file
-COPY resources/influx/config.toml /home/ros/rocketDATA/influx/config.toml
-ENV INFLUXD_CONFIG_PATH = "/home/ros/rocketDATA/influx"
+COPY resources/influx/config.toml /home/ros/rdata/influx/config.toml
+ENV INFLUXD_CONFIG_PATH = "/home/ros/rdata/influx"
 
 # TLS
 # REFERENCE: https://docs.influxdata.com/influxdb/v2.0/security/enable-tls/

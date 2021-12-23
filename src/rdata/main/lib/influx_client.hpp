@@ -6,7 +6,7 @@
 #include <toml++/toml.h>
 #include "influx_client_exception.hpp"
 
-#define CREDENTIALS_FILE "/home/ros/rocketDATA/influx/credentials.toml"
+#define CREDENTIALS_FILE "/home/ros/rdata/influx/credentials.toml"
 
 namespace influxclient
 {
