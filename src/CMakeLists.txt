@@ -29,7 +29,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
 # Utilities library
 add_library(rctrl_util INTERFACE)
 
-target_sources(rctrl_util INTERFACE ${CMAKE_CURRENT_SOURCE_DIR} rctrl/util/lib/util.hpp)
+target_sources(rctrl_util INTERFACE ${CMAKE_CURRENT_SOURCE_DIR} rctrl/util/lib/rctrl_util.hpp)
 
 target_include_directories(rctrl_util INTERFACE rctrl/util/lib) 
 

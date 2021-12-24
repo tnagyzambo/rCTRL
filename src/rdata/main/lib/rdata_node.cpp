@@ -1,16 +1,26 @@
 #include <rdata_node.hpp>
 
+// Node will construct and immediately enter the unconfigured state
 rdata::Node::Node() : rclcpp_lifecycle::LifecycleNode(iface::nodeName)
 {
+    RCLCPP_INFO(this->get_logger(), "\033[0;32mNode successfully constructed\033[0m");
+
+    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::state::unconfigured);
 }
 
 rdata::Node::~Node()
 {
-    RCLCPP_INFO(this->get_logger(), "\033[1;31mDestroying RocketDATA node.\033[0m");
+    RCLCPP_INFO(this->get_logger(), "\033[1;31mDestroying node\033[0m");
 }
 
+// Callback to execute upon receiving configure command
+// If this returns SUCCESS the node will enter the inactive state
+// If this returns FAILURE the node will return to the unconfigured state
+// If this returns ERROR the node run the errorProcessing callback
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn rdata::Node::on_configure(const rclcpp_lifecycle::State &)
 {
+    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::transition::configuring);
+
     this->srvCreateLoggerF64 = this->create_service<rdata::srv::CreateLogger>(iface::srv_create_logger_f64,
                                                                               std::bind(&rdata::Node::createLoggerF64,
                                                                                         this,
@@ -27,36 +37,67 @@ rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn rdata:
 
     RCLCPP_INFO(this->get_logger(), "\033[1;32mCreated service: %s\033[0m", iface::srv_remove_logger_f64);
 
+    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::state::inactive);
+
     return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 
+// Callback to execute upon receiving activate command
+// If this returns SUCCESS the node will enter the active state
+// If this returns FAILURE the node will return to the inactive state
+// If this returns ERROR the node run the errorProcessing callback
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn rdata::Node::on_activate(const rclcpp_lifecycle::State &)
 {
+    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::transition::activating);
     // Cannot activate subscribers
     // REFERENCE: https://github.com/ros2/demos/issues/488
+
+    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::state::active);
+
     return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 
+// Callback to execute upon receiving deactivate command
+// If this returns SUCCESS the node will enter the inactive state
+// FAILURE is not a valid return during this transition
+// If this returns ERROR the node run the errorProcessing callback
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn rdata::Node::on_deactivate(const rclcpp_lifecycle::State &)
 {
+    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::transition::deactivating);
     // Cannot deactivate subscribers
     // REFERENCE: https://github.com/ros2/demos/issues/488
+
+    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::state::inactive);
+
     return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 
-// Return to unitialized state
+// Callback to execute upon receiving cleanup command
+// If this returns SUCCESS the node will enter the unconfigured state
+// FAILURE is not a valid return during this transition
+// If this returns ERROR the node run the errorProcessing callback
 // Drop all smart pointers and reset influx client
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn rdata::Node::on_cleanup(const rclcpp_lifecycle::State &)
 {
+    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::transition::cleaningUp);
     this->deleteAllPointers();
+
+    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::state::unconfigured);
 
     return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 
-// Clean up on exit
+// Callback to execute upon receiving cleanup command
+// If this returns SUCCESS the node will enter the finalized state
+// FAILURE is not a valid return during this transition
+// If this returns ERROR the node run the errorProcessing callback
+// Drop all smart pointers
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn rdata::Node::on_shutdown(const rclcpp_lifecycle::State &)
 {
+    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::transition::shuttingDown);
     this->deleteAllPointers();
+
+    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::state::finalized);
 
     return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
