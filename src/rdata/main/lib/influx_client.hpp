@@ -4,7 +4,7 @@
 #include <iostream>
 #include <curl/curl.h>
 #include <toml++/toml.h>
-#include "influx_client_exception.hpp"
+#include <influx_client_exception.hpp>
 
 #define CREDENTIALS_FILE "/home/ros/rdata/influx/credentials.toml"
 
