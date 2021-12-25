@@ -5,21 +5,13 @@ influx::Client::Client()
     this->credentials = getCredentials();
 
     // The POST url defines all the parameters for the current datalogging session
-    this->url = constructInfluxURL();
+    this->urlWrite = constructInfluxURL();
 
     // The autorization must be sent as a POST header
     this->authorization = constructInfluxAuthorization();
-    this->headers = curl_slist_append(this->headers, this->authorization.c_str());
 
     // Initialize and configure curl to be able to write to InfluxDB
     curl_global_init(CURL_GLOBAL_ALL);
-    this->curl = curl_easy_init();
-    curl_easy_setopt(this->curl, CURLOPT_URL, this->url.c_str());
-    curl_easy_setopt(this->curl, CURLOPT_HTTPHEADER, this->headers);
-    curl_easy_setopt(this->curl, CURLOPT_POST, 1L);
-    //curl_easy_setopt(this->curl, CURLOPT_VERBOSE, 1L);
-    curl_easy_setopt(this->curl, CURLOPT_WRITEFUNCTION, influx::Client::writeCallback);
-    curl_easy_setopt(this->curl, CURLOPT_WRITEDATA, &this->curlReadBuffer);
 }
 
 influx::Client::~Client()
@@ -96,6 +88,49 @@ std::string influx::Client::promptForBucket(std::string bucket)
     std::cout << std::endl;
 
     return bucket;
+}
+
+long influx::Client::postRequest(std::string &url, struct curl_slist *header, std::string &body, std::string &responeBuffer)
+{
+    CURL *curl = curl_easy_init();
+    CURLcode curlResponse;
+
+    if (curl)
+    {
+        curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+        curl_easy_setopt(curl, CURLOPT_HTTPHEADER, header);
+        curl_easy_setopt(curl, CURLOPT_POST, 1L);
+        //curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, influx::Client::writeCallback);
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &responeBuffer);
+        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, body.c_str());
+
+        long responseCode;
+
+        // Perform the POST request and get the response
+        curlResponse = curl_easy_perform(curl);
+
+        curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &responseCode);
+
+        if (curlResponse != CURLE_OK)
+        {
+            std::string error = curl_easy_strerror(curlResponse);
+
+            curl_easy_cleanup(curl);
+
+            throw influx::except::Curl(error);
+        }
+
+        curl_easy_cleanup(curl);
+
+        return responseCode;
+    }
+    else
+    {
+        curl_easy_cleanup(curl);
+
+        throw influx::except::Curl("CURL object does not exist.");
+    }
 }
 
 // Use the toml++ librarty to parse a .toml file

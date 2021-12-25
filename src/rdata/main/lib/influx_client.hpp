@@ -25,9 +25,8 @@ namespace influx
     {
     public:
         Credentials credentials;
-        std::string url;
+        std::string urlWrite;
         std::string authorization;
-        struct curl_slist *headers = NULL;
 
         Client();
         ~Client();
@@ -40,10 +39,7 @@ namespace influx
         void writeToInflux(std::string, std::string, T);
 
     private:
-        CURL *curl;
-        std::string curlReadBuffer;
-        CURLcode curlResponse;
-
+        long postRequest(std::string &, struct curl_slist *, std::string &, std::string &);
         static size_t writeCallback(char *, size_t, size_t, void *);
 
         Credentials getCredentials();

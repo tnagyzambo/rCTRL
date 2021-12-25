@@ -5,36 +5,16 @@
 template <typename T>
 void influx::Client::writeToInflux(std::string measurment, std::string sensor, T value)
 {
-    if (curl)
+    struct curl_slist *header = NULL;
+    header = curl_slist_append(header, this->authorization.c_str());
+
+    std::string body = constructInfluxPostBody(measurment, sensor, constructInfluxValueString(value));
+    std::string responeBuffer;
+
+    long responseCode = this->postRequest(this->urlWrite, header, body, responeBuffer);
+
+    if (responseCode != 204)
     {
-        long curlResponseCode;
-
-        std::string postBody = constructInfluxPostBody(measurment, sensor, constructInfluxValueString(value));
-        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, postBody.c_str());
-
-        // Perform the POST request and get the response
-        this->curlReadBuffer.clear();
-        this->curlResponse = curl_easy_perform(curl);
-
-        curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &curlResponseCode);
-
-        if (this->curlResponse == CURLE_OK)
-        {
-            if (curlResponseCode != 204)
-            {
-                throw influx::except::PostReq(this->curlReadBuffer);
-            }
-        }
-        else
-        {
-            std::string error = curl_easy_strerror(this->curlResponse);
-            throw influx::except::Curl(error);
-        }
+        throw influx::except::PostReq(responeBuffer);
     }
-    else
-    {
-        throw influx::except::Curl("CURL object does not exist.");
-    }
-
-    return;
 }
