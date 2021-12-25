@@ -3,7 +3,7 @@
 // The POST request can fail and should be regarded as a non critical error
 // If CURL is incorrectly configured at runtime it should be considered and unrecoverable error
 template <typename T>
-void influxclient::Client::writeToInflux(std::string measurment, std::string sensor, T value)
+void influx::Client::writeToInflux(std::string measurment, std::string sensor, T value)
 {
     if (curl)
     {
@@ -22,18 +22,18 @@ void influxclient::Client::writeToInflux(std::string measurment, std::string sen
         {
             if (curlResponseCode != 204)
             {
-                throw influxclient::PostRequestException(this->curlReadBuffer);
+                throw influx::except::PostReq(this->curlReadBuffer);
             }
         }
         else
         {
             std::string error = curl_easy_strerror(this->curlResponse);
-            throw influxclient::CurlException(error);
+            throw influx::except::Curl(error);
         }
     }
     else
     {
-        throw influxclient::CurlException("CURL object does not exist.");
+        throw influx::except::Curl("CURL object does not exist.");
     }
 
     return;

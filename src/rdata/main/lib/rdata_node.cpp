@@ -21,6 +21,12 @@ rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn rdata:
 {
     RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::transition::configuring);
 
+    // Maintain a unique pointer to the influx client class
+    // This lets us delay initialization of the influx client to the configure transition
+    // It also lets us easily delete the influx client during the clean up transistion to return to the unconfigured state
+    // This call will block until user input
+    this->influxClient = std::make_unique<influx::Client>();
+
     this->srvCreateLoggerF64 = this->create_service<rdata::srv::CreateLogger>(iface::srv_create_logger_f64,
                                                                               std::bind(&rdata::Node::createLoggerF64,
                                                                                         this,
@@ -80,6 +86,7 @@ rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn rdata:
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn rdata::Node::on_cleanup(const rclcpp_lifecycle::State &)
 {
     RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::transition::cleaningUp);
+
     this->deleteAllPointers();
 
     RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::state::unconfigured);
@@ -95,6 +102,7 @@ rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn rdata:
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn rdata::Node::on_shutdown(const rclcpp_lifecycle::State &)
 {
     RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::transition::shuttingDown);
+
     this->deleteAllPointers();
 
     RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::state::finalized);
@@ -104,6 +112,8 @@ rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn rdata:
 
 void rdata::Node::deleteAllPointers()
 {
+    this->influxClient.reset();
+
     this->srvCreateLoggerF64.reset();
 
     this->srvRemoveLoggerF64.reset();

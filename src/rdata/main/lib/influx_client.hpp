@@ -4,11 +4,11 @@
 #include <iostream>
 #include <curl/curl.h>
 #include <toml++/toml.h>
-#include <influx_client_exception.hpp>
+#include <influx_exception.hpp>
 
 #define CREDENTIALS_FILE "/home/ros/rdata/influx/credentials.toml"
 
-namespace influxclient
+namespace influx
 {
     // Structure to hold the basic info required to make post requests to InfluxDB
     struct Credentials

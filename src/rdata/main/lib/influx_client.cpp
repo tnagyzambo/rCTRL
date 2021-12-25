@@ -1,6 +1,6 @@
 #include <influx_client.hpp>
 
-influxclient::Client::Client()
+influx::Client::Client()
 {
     this->credentials = getCredentials();
 
@@ -18,17 +18,17 @@ influxclient::Client::Client()
     curl_easy_setopt(this->curl, CURLOPT_HTTPHEADER, this->headers);
     curl_easy_setopt(this->curl, CURLOPT_POST, 1L);
     //curl_easy_setopt(this->curl, CURLOPT_VERBOSE, 1L);
-    curl_easy_setopt(this->curl, CURLOPT_WRITEFUNCTION, influxclient::Client::writeCallback);
+    curl_easy_setopt(this->curl, CURLOPT_WRITEFUNCTION, influx::Client::writeCallback);
     curl_easy_setopt(this->curl, CURLOPT_WRITEDATA, &this->curlReadBuffer);
 }
 
-influxclient::Client::~Client()
+influx::Client::~Client()
 {
     // Must clean up curl on deconstruction of class
     curl_global_cleanup();
 }
 
-size_t influxclient::Client::writeCallback(char *contents, size_t size, size_t nmemb, void *userp)
+size_t influx::Client::writeCallback(char *contents, size_t size, size_t nmemb, void *userp)
 {
     ((std::string *)userp)->append((char *)contents, size * nmemb);
 
@@ -38,7 +38,7 @@ size_t influxclient::Client::writeCallback(char *contents, size_t size, size_t n
 // Poplate credentials sructure by reading .toml file on the system
 // InfluxDB buckets allow for the user to segregate different data logging sessions within a single database
 // As such the user should be prompted to allow for overiding of the default bucket
-influxclient::Credentials influxclient::Client::getCredentials()
+influx::Credentials influx::Client::getCredentials()
 {
     Credentials credentials;
     toml::table tbl = getToml(CREDENTIALS_FILE);
@@ -57,7 +57,7 @@ influxclient::Credentials influxclient::Client::getCredentials()
 
 // Print the current credentials
 // Used for debugging
-void influxclient::Client::printCredentials()
+void influx::Client::printCredentials()
 {
     std::cout << std::endl;
     std::cout << "\033[1mUser: \033[0m" << this->credentials.user << std::endl;
@@ -71,7 +71,7 @@ void influxclient::Client::printCredentials()
 }
 
 // Prompt the user for the name of the bucket that they would like to use
-std::string influxclient::Client::promptForBucket(std::string bucket)
+std::string influx::Client::promptForBucket(std::string bucket)
 {
     std::string input;
 
@@ -101,7 +101,7 @@ std::string influxclient::Client::promptForBucket(std::string bucket)
 // Use the toml++ librarty to parse a .toml file
 // Returns a toml table class with built in methods to access data
 // REFERENCE: https://marzer.github.io/tomlplusplus/
-toml::table influxclient::Client::getToml(std::string path)
+toml::table influx::Client::getToml(std::string path)
 {
     toml::table tbl;
 
@@ -127,7 +127,7 @@ toml::table influxclient::Client::getToml(std::string path)
 // toml sections are denoted within the file as '[section]'
 // toml key value pairs are denoted within the file as 'key = "value"'
 // Failure to parse the credentials .toml should result in an unrecoverable error
-std::string influxclient::Client::getTomlEntryBySectionKey(toml::table tbl, std::string section, std::string key)
+std::string influx::Client::getTomlEntryBySectionKey(toml::table tbl, std::string section, std::string key)
 {
     std::optional<std::string> entry = tbl[section][key].value<std::string>();
 
@@ -154,7 +154,7 @@ std::string influxclient::Client::getTomlEntryBySectionKey(toml::table tbl, std:
 }
 
 // Construct the InfluxDB POST url
-std::string influxclient::Client::constructInfluxURL()
+std::string influx::Client::constructInfluxURL()
 {
     std::string url = "http://localhost:8086/api/v2/write?org=";
     url.append(this->credentials.org);
@@ -166,7 +166,7 @@ std::string influxclient::Client::constructInfluxURL()
 }
 
 // Contsruct the authorization string needed in the header of the POST request for InlfuxDB
-std::string influxclient::Client::constructInfluxAuthorization()
+std::string influx::Client::constructInfluxAuthorization()
 {
     std::string authorization = "Authorization: Token ";
     authorization.append(this->credentials.token);
@@ -177,7 +177,7 @@ std::string influxclient::Client::constructInfluxAuthorization()
 // Construct the value string of the InfluxDB POST request
 // Various overloads are impleneted for the different types of data that InfluxDB can store
 // REFERENCE: https://docs.influxdata.com/influxdb/v2.0/reference/syntax/line-protocol/
-std::string influxclient::Client::constructInfluxValueString(bool value)
+std::string influx::Client::constructInfluxValueString(bool value)
 {
     std::string influxValueString;
     if (value == true)
@@ -192,14 +192,14 @@ std::string influxclient::Client::constructInfluxValueString(bool value)
     return influxValueString;
 }
 
-std::string influxclient::Client::constructInfluxValueString(double value)
+std::string influx::Client::constructInfluxValueString(double value)
 {
     std::string influxValueString = std::to_string(value);
 
     return influxValueString;
 }
 
-std::string influxclient::Client::constructInfluxValueString(std::string value)
+std::string influx::Client::constructInfluxValueString(std::string value)
 {
     std::string influxValueString = "\"";
     influxValueString.append(value);
@@ -208,7 +208,7 @@ std::string influxclient::Client::constructInfluxValueString(std::string value)
     return influxValueString;
 }
 
-std::string influxclient::Client::constructInfluxValueString(int64_t value)
+std::string influx::Client::constructInfluxValueString(int64_t value)
 {
     std::string influxValueString = std::to_string(value);
     influxValueString.append("i");
@@ -216,7 +216,7 @@ std::string influxclient::Client::constructInfluxValueString(int64_t value)
     return influxValueString;
 }
 
-std::string influxclient::Client::constructInfluxValueString(uint64_t value)
+std::string influx::Client::constructInfluxValueString(uint64_t value)
 {
     std::string influxValueString = std::to_string(value);
     influxValueString.append("u");
@@ -228,7 +228,7 @@ std::string influxclient::Client::constructInfluxValueString(uint64_t value)
 // The 'measurment' field indicated the class/category/grouping of the measurment being written
 // The 'sensor' field allows for naming of the specific sensor or origin of the data being written
 // The 'value' feild is the actual data bein logged
-std::string influxclient::Client::constructInfluxPostBody(std::string measurment, std::string sensor, std::string value)
+std::string influx::Client::constructInfluxPostBody(std::string measurment, std::string sensor, std::string value)
 {
     std::string influxPostBody = measurment;
 

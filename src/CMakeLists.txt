@@ -44,7 +44,7 @@ target_include_directories(rdata_iface INTERFACE rdata/iface/lib)
 add_executable(rdata_main rdata/main/src/main.cpp 
                           rdata/main/lib/rdata_node.cpp
                           rdata/main/lib/influx_client.cpp
-                          rdata/main/lib/influx_client_exception.cpp)
+                          rdata/main/lib/influx_exception.cpp)
 
 target_include_directories(rdata_main PRIVATE rdata/main/lib)
 target_link_libraries(rdata_main CURL::libcurl) 

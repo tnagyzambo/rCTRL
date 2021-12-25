@@ -3,13 +3,13 @@ void rdata::Node::tryToWriteToInfluxDB(T msg)
 {
     try
     {
-        this->influxClient.writeToInflux(msg->measurment, msg->sensor, msg->value);
+        this->influxClient->writeToInflux(msg->measurment, msg->sensor, msg->value);
     }
-    catch (influxclient::PostRequestException &e)
+    catch (influx::except::PostReq &e)
     {
         RCLCPP_ERROR(this->get_logger(), "%s", e.what());
     }
-    catch (influxclient::CurlException &e)
+    catch (influx::except::Curl &e)
     {
         RCLCPP_FATAL(this->get_logger(), "%s", e.what());
         exit(1);

@@ -67,7 +67,7 @@ namespace rdata
 
         void deleteAllPointers();
 
-        influxclient::Client influxClient;
+        std::unique_ptr<influx::Client> influxClient;
         std::string readBuffer;
 
         template <typename T>

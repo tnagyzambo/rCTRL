@@ -4,21 +4,21 @@
 #include <sstream>
 #include <stdexcept>
 
-namespace influxclient
+namespace influx::except
 {
-    class PostRequestException : public std::runtime_error
+    class PostReq : public std::runtime_error
     {
     public:
-        PostRequestException(std::string);
+        PostReq(std::string);
 
     private:
         std::string buildMessage(std::string);
     };
 
-    class CurlException : public std::runtime_error
+    class Curl : public std::runtime_error
     {
     public:
-        CurlException(std::string);
+        Curl(std::string);
 
     private:
         std::string buildMessage(std::string);
