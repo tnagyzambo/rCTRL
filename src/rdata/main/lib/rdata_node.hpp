@@ -12,7 +12,6 @@
 #include <rctrl_util.hpp>
 
 #include <rdata/srv/create_logger.hpp>
-
 #include <rdata/srv/remove_logger.hpp>
 
 #include <rdata/msg/log_bool.hpp>
@@ -44,9 +43,17 @@ namespace rdata
         rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_cleanup(const rclcpp_lifecycle::State &);
         rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_shutdown(const rclcpp_lifecycle::State &state);
 
+        rclcpp::Service<rdata::srv::CreateLogger>::SharedPtr srvCreateLoggerBool;
         rclcpp::Service<rdata::srv::CreateLogger>::SharedPtr srvCreateLoggerF64;
+        rclcpp::Service<rdata::srv::CreateLogger>::SharedPtr srvCreateLoggerI64;
+        rclcpp::Service<rdata::srv::CreateLogger>::SharedPtr srvCreateLoggerStr;
+        rclcpp::Service<rdata::srv::CreateLogger>::SharedPtr srvCreateLoggerU64;
 
+        rclcpp::Service<rdata::srv::RemoveLogger>::SharedPtr srvRemoveLoggerBool;
         rclcpp::Service<rdata::srv::RemoveLogger>::SharedPtr srvRemoveLoggerF64;
+        rclcpp::Service<rdata::srv::RemoveLogger>::SharedPtr srvRemoveLoggerI64;
+        rclcpp::Service<rdata::srv::RemoveLogger>::SharedPtr srvRemoveLoggerStr;
+        rclcpp::Service<rdata::srv::RemoveLogger>::SharedPtr srvRemoveLoggerU64;
 
         std::vector<rdata::Logger<rdata::msg::LogBool>> loggersBool;
         std::vector<rdata::Logger<rdata::msg::LogF64>> loggersF64;
@@ -54,12 +61,32 @@ namespace rdata
         std::vector<rdata::Logger<rdata::msg::LogStr>> loggersStr;
         std::vector<rdata::Logger<rdata::msg::LogU64>> loggersU64;
 
+        void callbackLogBool(const rdata::msg::LogBool::SharedPtr);
         void callbackLogF64(const rdata::msg::LogF64::SharedPtr);
+        void callbackLogI64(const rdata::msg::LogI64::SharedPtr);
+        void callbackLogStr(const rdata::msg::LogStr::SharedPtr);
+        void callbackLogU64(const rdata::msg::LogU64::SharedPtr);
 
+        void createLoggerBool(const std::shared_ptr<rdata::srv::CreateLogger::Request>,
+                              std::shared_ptr<rdata::srv::CreateLogger::Response>);
         void createLoggerF64(const std::shared_ptr<rdata::srv::CreateLogger::Request>,
                              std::shared_ptr<rdata::srv::CreateLogger::Response>);
+        void createLoggerI64(const std::shared_ptr<rdata::srv::CreateLogger::Request>,
+                             std::shared_ptr<rdata::srv::CreateLogger::Response>);
+        void createLoggerStr(const std::shared_ptr<rdata::srv::CreateLogger::Request>,
+                             std::shared_ptr<rdata::srv::CreateLogger::Response>);
+        void createLoggerU64(const std::shared_ptr<rdata::srv::CreateLogger::Request>,
+                             std::shared_ptr<rdata::srv::CreateLogger::Response>);
 
+        void removeLoggerBool(const std::shared_ptr<rdata::srv::RemoveLogger::Request>,
+                              std::shared_ptr<rdata::srv::RemoveLogger::Response>);
         void removeLoggerF64(const std::shared_ptr<rdata::srv::RemoveLogger::Request>,
+                             std::shared_ptr<rdata::srv::RemoveLogger::Response>);
+        void removeLoggerI64(const std::shared_ptr<rdata::srv::RemoveLogger::Request>,
+                             std::shared_ptr<rdata::srv::RemoveLogger::Response>);
+        void removeLoggerStr(const std::shared_ptr<rdata::srv::RemoveLogger::Request>,
+                             std::shared_ptr<rdata::srv::RemoveLogger::Response>);
+        void removeLoggerU64(const std::shared_ptr<rdata::srv::RemoveLogger::Request>,
                              std::shared_ptr<rdata::srv::RemoveLogger::Response>);
 
         template <typename T>

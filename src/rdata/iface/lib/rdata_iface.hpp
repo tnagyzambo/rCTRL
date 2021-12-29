@@ -1,46 +1,30 @@
 #pragma once
 
+#include <rctrl_except.hpp>
+
 #include <rdata/srv/create_logger.hpp>
 #include <rdata/srv/remove_logger.hpp>
 
 using namespace std::chrono_literals;
 
-// https://www.learncpp.com/cpp-tutorial/sharing-global-constants-across-multiple-files-using-inline-variables/
 namespace rdata::iface
 {
-    inline constexpr const char *nodeName{"rdata"};
+    static constexpr std::string_view nodeName = "rdata";
 
-    inline constexpr const char *srv_get_state{"rdata/get_state"};
-    inline constexpr const char *srv_change_state{"rdata/change_state"};
+    static constexpr std::string_view srv_get_state = "rdata/get_state";
+    static constexpr std::string_view srv_change_state = "rdata/change_state";
 
-    inline constexpr const char *srv_create_logger_bool{"rdata_srv_create_logger_bool"};
-    inline constexpr const char *srv_create_logger_f64{"rdata_srv_create_logger_f64"};
-    inline constexpr const char *srv_create_logger_i64{"rdata_srv_create_logger_i64"};
-    inline constexpr const char *srv_create_logger_str{"rdata_srv_create_logger_str"};
-    inline constexpr const char *srv_create_logger_u64{"rdata_srv_create_logger_u64"};
+    static constexpr std::string_view srv_create_logger_bool = "rdata/srv/create_logger_bool";
+    static constexpr std::string_view srv_create_logger_f64 = "rdata/srv/create_logger_f64";
+    static constexpr std::string_view srv_create_logger_i64 = "rdata/srv/create_logger_i64";
+    static constexpr std::string_view srv_create_logger_str = "rdata/srv/create_logger_str";
+    static constexpr std::string_view srv_create_logger_u64 = "rdata/srv/create_logger_u64";
 
-    inline constexpr const char *srv_remove_logger_bool{"rdata_srv_remove_logger_bool"};
-    inline constexpr const char *srv_remove_logger_f64{"rdata_srv_remove_logger_f64"};
-    inline constexpr const char *srv_remove_logger_i64{"rdata_srv_remove_logger_i64"};
-    inline constexpr const char *srv_remove_logger_str{"rdata_srv_remove_logger_str"};
-    inline constexpr const char *srv_remove_logger_u64{"rdata_srv_remove_logger_u64"};
-
-    class service_error : public std::runtime_error
-    {
-    public:
-        service_error(const char *serviceName) : std::runtime_error(buildMessage(serviceName)) {}
-
-    private:
-        std::string buildMessage(const char *serviceName)
-        {
-            std::stringstream error;
-            error << "\033[1;31mFailed to request service '";
-            error << serviceName;
-            error << "'.\033[0m";
-
-            return error.str();
-        }
-    };
+    static constexpr std::string_view srv_remove_logger_bool = "rdata/srv/remove_logger_bool";
+    static constexpr std::string_view srv_remove_logger_f64 = "rdata/srv/remove_logger_f64";
+    static constexpr std::string_view srv_remove_logger_i64 = "rdata/srv/remove_logger_i64";
+    static constexpr std::string_view srv_remove_logger_str = "rdata/srv/remove_logger_str";
+    static constexpr std::string_view srv_remove_logger_u64 = "rdata/srv/remove_logger_u64";
 
     inline void createLogger(const char *serviceName,
                              rclcpp::node_interfaces::NodeBaseInterface::SharedPtr callingNode,
@@ -59,7 +43,7 @@ namespace rdata::iface
                 // Just have to live with this for now, exiting anyway
                 // REFERENCE: https://github.com/ros2/rclcpp/issues/1139
                 RCLCPP_ERROR(rclcpp::get_logger(callingNode->get_name()), "\033[1;31mInterupted while waiting for '%s'!, exiting\033[0m", serviceName);
-                throw service_error(serviceName);
+                throw rctrl::util::except::service_error(serviceName);
             }
             RCLCPP_INFO(rclcpp::get_logger(callingNode->get_name()), "Service '%s' not available, waiting", serviceName);
         }

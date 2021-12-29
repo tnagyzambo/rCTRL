@@ -29,7 +29,9 @@ rosidl_generate_interfaces(${PROJECT_NAME}
 # Utilities library
 add_library(rctrl_util INTERFACE)
 
-target_sources(rctrl_util INTERFACE ${CMAKE_CURRENT_SOURCE_DIR} rctrl/util/lib/rctrl_util.hpp)
+target_sources(rctrl_util INTERFACE ${CMAKE_CURRENT_SOURCE_DIR} rctrl/util/lib/rctrl_util.hpp
+                                                                rctrl/util/lib/rctrl_fmt.hpp
+                                                                rctrl/util/lib/rctrl_except.hpp)
 
 target_include_directories(rctrl_util INTERFACE rctrl/util/lib) 
 
@@ -65,11 +67,14 @@ target_include_directories(rdata_vsensor PRIVATE rdata/example/vsensor/lib)
 target_link_libraries(rdata_vsensor rdata_iface)
 target_link_libraries(rdata_vsensor rctrl_util)
 
-ament_target_dependencies(rdata_vsensor rclcpp)
+ament_target_dependencies(rdata_vsensor rclcpp
+                                        rclcpp_lifecycle
+                                        lifecycle_msgs)
 rosidl_target_interfaces(rdata_vsensor ${PROJECT_NAME} "rosidl_typesupport_cpp")
 
 # rocketDATA minimal example executable
-add_executable(rdata_example rdata/example/lc_client/src/main.cpp)
+add_executable(rdata_example rdata/example/lc_client/src/main.cpp
+                             rdata/example/lc_client/lib/lc_client_node.cpp)
 
 target_include_directories(rdata_example PRIVATE rdata/example/lc_client/lib)
 target_link_libraries(rdata_example rdata_iface)
