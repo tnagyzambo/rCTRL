@@ -47,6 +47,10 @@ RUN cd /lib/tomlplusplus-${TOML11_RELEASE} && cmake -S . -B build
 RUN cd /lib/tomlplusplus-${TOML11_RELEASE} && cmake --build build
 RUN cd /lib/tomlplusplus-${TOML11_RELEASE} && cmake --install build
 
+# Install rosbridge
+RUN apt-get update
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy ros-galactic-rosbridge-suite
+
 # Pull in ROS2 application dependancies
 FROM base AS depends
 
@@ -81,3 +85,8 @@ ENV INFLUXD_CONFIG_PATH = "/home/ros/rdata/influx"
 COPY resources/setup.sh /home/ros/setup.sh
 USER root
 RUN chmod +x /home/ros/setup.sh
+
+# Rust
+USER ros
+RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
+RUN bash --login
