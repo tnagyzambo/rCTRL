@@ -4,11 +4,14 @@
 #include <functional>
 #include <memory>
 #include <string>
+
 #include <rclcpp/rclcpp.hpp>
+#include <rclcpp_lifecycle/lifecycle_node.hpp>
+
 #include <rdata_iface.hpp>
+#include <rctrl_util.hpp>
 
 #include <rdata/srv/create_logger.hpp>
-
 #include <rdata/srv/remove_logger.hpp>
 
 #include <rdata/msg/log_bool.hpp>
@@ -22,10 +25,11 @@ using namespace std::chrono_literals;
 namespace rdata::vsensor
 {
     template <typename T>
-    class Node : public rclcpp::Node
+    class Node : public rclcpp_lifecycle::LifecycleNode
     {
     public:
         Node(const char *, std::chrono::milliseconds);
+        ~Node();
 
         const char *nodeName;
         std::string loggerTopicName;
@@ -39,6 +43,12 @@ namespace rdata::vsensor
         uint calcElapsedTime();
 
     private:
+        rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_configure(const rclcpp_lifecycle::State &);
+        rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_activate(const rclcpp_lifecycle::State &);
+        rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_deactivate(const rclcpp_lifecycle::State &);
+        rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_cleanup(const rclcpp_lifecycle::State &);
+        rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_shutdown(const rclcpp_lifecycle::State &state);
+
         std::chrono::high_resolution_clock::time_point startTime = std::chrono::high_resolution_clock::now();
 
         // Virtual callback function so superclasses can overide implementation
