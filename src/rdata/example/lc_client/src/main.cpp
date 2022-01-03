@@ -1,325 +1,41 @@
-#include <rclcpp/rclcpp.hpp>
-
-#include <chrono>
-#include <memory>
-#include <string>
-#include <thread>
-
-#include "lifecycle_msgs/msg/state.hpp"
-#include "lifecycle_msgs/msg/transition.hpp"
-#include "lifecycle_msgs/srv/change_state.hpp"
-#include "lifecycle_msgs/srv/get_state.hpp"
-
-#include <rdata_iface.hpp>
-
-template <typename FutureT, typename WaitTimeT>
-std::future_status wait_for_result(FutureT &future, WaitTimeT time_to_wait)
+#include <lc_client_node.hpp>
+#include <fstream>
+void test(const rcutils_log_location_t *a, int b, const char *c, long d, const char *e, va_list *f)
 {
-    auto end = std::chrono::steady_clock::now() + time_to_wait;
-    std::chrono::milliseconds wait_period(100);
-    std::future_status status = std::future_status::timeout;
-    do
-    {
-        auto now = std::chrono::steady_clock::now();
-        auto time_left = end - now;
-        if (time_left <= std::chrono::seconds(0))
-        {
-            break;
-        }
-        status = future.wait_for((time_left < wait_period) ? time_left : wait_period);
-    } while (rclcpp::ok() && status != std::future_status::ready);
-    return status;
+
+    (void)b;
+    (void)c;
+    (void)d;
+    (void)e;
+    (void)f;
+
+    // std::fstream file;
+    // file.open(a->file_name, std::fstream::out);
+    // file << "fuuuuck dude \n";
+    std::cout << a->file_name << "\n";
+    std::cout << a->function_name << "\n";
+    std::cout << a->line_number << "\n";
+    std::cout << b << "\n";
+    std::cout << c << "\n";
+    std::cout << d << "\n";
+    std::cout << e << "\n";
 }
 
-class LifecycleServiceClient : public rclcpp::Node
+int main(int argc, char *argv[])
 {
-public:
-    explicit LifecycleServiceClient(const std::string &node_name) : Node(node_name)
-    {
-    }
-
-    void init()
-    {
-        // Every lifecycle node spawns automatically a couple
-        // of services which allow an external interaction with
-        // these nodes.
-        // The two main important ones are GetState and ChangeState.
-        client_get_state_ = this->create_client<lifecycle_msgs::srv::GetState>(rdata::iface::srv_get_state);
-        client_change_state_ = this->create_client<lifecycle_msgs::srv::ChangeState>(rdata::iface::srv_change_state);
-    }
-
-    /// Requests the current state of the node
-    /**
-   * In this function, we send a service request
-   * asking for the current state of the node
-   * lc_talker.
-   * If it does return within the given time_out,
-   * we return the current state of the node, if
-   * not, we return an unknown state.
-   * \param time_out Duration in seconds specifying
-   * how long we wait for a response before returning
-   * unknown state
-   */
-    unsigned int get_state(std::chrono::seconds time_out = 3s)
-    {
-        auto request = std::make_shared<lifecycle_msgs::srv::GetState::Request>();
-
-        if (!client_get_state_->wait_for_service(time_out))
-        {
-            RCLCPP_ERROR(get_logger(), "Service %s is not available.", client_get_state_->get_service_name());
-            return lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN;
-        }
-
-        // We send the service request for asking the current
-        // state of the lc_talker node.
-        auto future_result = client_get_state_->async_send_request(request);
-
-        // Let's wait until we have the answer from the node.
-        // If the request times out, we return an unknown state.
-        auto future_status = wait_for_result(future_result, time_out);
-
-        if (future_status != std::future_status::ready)
-        {
-            RCLCPP_ERROR(get_logger(), "Server time out while getting current state for node %s", rdata::iface::nodeName);
-            return lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN;
-        }
-
-        // We have an succesful answer. So let's print the current state.
-        if (future_result.get())
-        {
-            RCLCPP_INFO(get_logger(), "Node %s has current state %s.", rdata::iface::nodeName, future_result.get()->current_state.label.c_str());
-            return future_result.get()->current_state.id;
-        }
-        else
-        {
-            RCLCPP_ERROR(get_logger(), "Failed to get current state for node %s", rdata::iface::nodeName);
-            return lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN;
-        }
-    }
-
-    /// Invokes a transition
-    /**
-   * We send a Service request and indicate
-   * that we want to invoke transition with
-   * the id "transition".
-   * By default, these transitions are
-   * - configure
-   * - activate
-   * - cleanup
-   * - shutdown
-   * \param transition id specifying which
-   * transition to invoke
-   * \param time_out Duration in seconds specifying
-   * how long we wait for a response before returning
-   * unknown state
-   */
-    bool change_state(std::uint8_t transition, std::chrono::seconds time_out = 3s)
-    {
-        auto request = std::make_shared<lifecycle_msgs::srv::ChangeState::Request>();
-        request->transition.id = transition;
-
-        if (!client_change_state_->wait_for_service(time_out))
-        {
-            RCLCPP_ERROR(get_logger(), "Service %s is not available.", client_change_state_->get_service_name());
-            return false;
-        }
-
-        // We send the request with the transition we want to invoke.
-        auto future_result = client_change_state_->async_send_request(request);
-
-        // Let's wait until we have the answer from the node.
-        // If the request times out, we return an unknown state.
-        auto future_status = wait_for_result(future_result, time_out);
-
-        if (future_status != std::future_status::ready)
-        {
-            RCLCPP_ERROR(get_logger(), "Server time out while getting current state for node %s", rdata::iface::nodeName);
-            return false;
-        }
-
-        // We have an answer, let's print our success.
-        if (future_result.get()->success)
-        {
-            RCLCPP_INFO(get_logger(), "Transition %d successfully triggered.", static_cast<int>(transition));
-            return true;
-        }
-        else
-        {
-            RCLCPP_WARN(get_logger(), "Failed to trigger transition %u", static_cast<unsigned int>(transition));
-            return false;
-        }
-    }
-
-private:
-    std::shared_ptr<rclcpp::Client<lifecycle_msgs::srv::GetState>> client_get_state_;
-    std::shared_ptr<rclcpp::Client<lifecycle_msgs::srv::ChangeState>> client_change_state_;
-};
-
-/**
- * This is a little independent
- * script which triggers the
- * default lifecycle of a node.
- * It starts with configure, activate,
- * deactivate, activate, deactivate,
- * cleanup and finally shutdown
- */
-void callee_script(std::shared_ptr<LifecycleServiceClient> lc_client)
-{
-    rclcpp::WallRate time_between_state_changes(0.1); // 10s
-
-    // configure
-    {
-        if (!lc_client->change_state(lifecycle_msgs::msg::Transition::TRANSITION_CONFIGURE))
-        {
-            return;
-        }
-        if (!lc_client->get_state())
-        {
-            return;
-        }
-    }
-
-    // activate
-    {
-        time_between_state_changes.sleep();
-        if (!rclcpp::ok())
-        {
-            return;
-        }
-        if (!lc_client->change_state(lifecycle_msgs::msg::Transition::TRANSITION_ACTIVATE))
-        {
-            return;
-        }
-        if (!lc_client->get_state())
-        {
-            return;
-        }
-    }
-
-    // deactivate
-    {
-        time_between_state_changes.sleep();
-        if (!rclcpp::ok())
-        {
-            return;
-        }
-        if (!lc_client->change_state(lifecycle_msgs::msg::Transition::TRANSITION_DEACTIVATE))
-        {
-            return;
-        }
-        if (!lc_client->get_state())
-        {
-            return;
-        }
-    }
-
-    // activate it again
-    {
-        time_between_state_changes.sleep();
-        if (!rclcpp::ok())
-        {
-            return;
-        }
-        if (!lc_client->change_state(lifecycle_msgs::msg::Transition::TRANSITION_ACTIVATE))
-        {
-            return;
-        }
-        if (!lc_client->get_state())
-        {
-            return;
-        }
-    }
-
-    // and deactivate it again
-    {
-        time_between_state_changes.sleep();
-        if (!rclcpp::ok())
-        {
-            return;
-        }
-        if (!lc_client->change_state(lifecycle_msgs::msg::Transition::TRANSITION_DEACTIVATE))
-        {
-            return;
-        }
-        if (!lc_client->get_state())
-        {
-            return;
-        }
-    }
-
-    // we cleanup
-    {
-        time_between_state_changes.sleep();
-        if (!rclcpp::ok())
-        {
-            return;
-        }
-        if (!lc_client->change_state(lifecycle_msgs::msg::Transition::TRANSITION_CLEANUP))
-        {
-            return;
-        }
-        if (!lc_client->get_state())
-        {
-            return;
-        }
-    }
-
-    {
-        time_between_state_changes.sleep();
-        if (!rclcpp::ok())
-        {
-            return;
-        }
-        if (!lc_client->change_state(lifecycle_msgs::msg::Transition::TRANSITION_CONFIGURE))
-        {
-            return;
-        }
-        if (!lc_client->get_state())
-        {
-            return;
-        }
-    }
-
-    // and finally shutdown
-    // Note: We have to be precise here on which shutdown transition id to call
-    // We are currently in the unconfigured state and thus have to call
-    // TRANSITION_UNCONFIGURED_SHUTDOWN
-    {
-        time_between_state_changes.sleep();
-        if (!rclcpp::ok())
-        {
-            return;
-        }
-        if (!lc_client->change_state(lifecycle_msgs::msg::Transition::TRANSITION_UNCONFIGURED_SHUTDOWN))
-        {
-            return;
-        }
-        if (!lc_client->get_state())
-        {
-            return;
-        }
-    }
-}
-
-int main(int argc, char **argv)
-{
-    // force flush of the stdout buffer.
-    // this ensures a correct sync of all prints
-    // even when executed simultaneously within the launch file.
-    setvbuf(stdout, NULL, _IONBF, BUFSIZ);
-
     rclcpp::init(argc, argv);
+    //rcutils_logging_set_output_handler(&test);
+    rclcpp::executors::MultiThreadedExecutor executor;
 
-    auto lc_client = std::make_shared<LifecycleServiceClient>("lc_client");
-    lc_client->init();
+    auto lcClient = std::make_shared<rdata::lc_client::Node>("lcClient");
 
-    rclcpp::executors::SingleThreadedExecutor exe;
-    exe.add_node(lc_client);
-
-    std::shared_future<void> script = std::async(std::launch::async, std::bind(callee_script, lc_client));
-    exe.spin_until_future_complete(script);
+    executor.add_node(lcClient);
+    executor.spin();
 
     rclcpp::shutdown();
 
     return 0;
 }
+
+//void (*)(const rcutils_log_location_t *, int, const char *, const char *, __builtin_va_list *)
+//void (*)(const rcutils_log_location_t *, int, const char *, long, const char *, __builtin_va_list *)

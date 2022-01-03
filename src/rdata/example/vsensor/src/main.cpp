@@ -15,7 +15,7 @@ int main(int argc, char *argv[])
     // auto vU64 = std::make_shared<VirtualSensorNodeUInt64>("vU64", period);
 
     // executor.add_node(vBool);
-    executor.add_node(vF64);
+    executor.add_node(vF64->get_node_base_interface());
     // executor.add_node(vI64);
     // executor.add_node(vStr);
     // executor.add_node(vU64);

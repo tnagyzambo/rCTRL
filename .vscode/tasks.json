@@ -7,6 +7,26 @@
             "command": "colcon build --cmake-args '-DCMAKE_BUILD_TYPE=Debug'",
         },
         {
+            "label": "build rust",
+            "type": "shell",
+            "command": "cargo build --manifest-path=src/rdata/example/gui/Cargo.toml",
+        },
+        {
+            "label": "test rust",
+            "type": "shell",
+            "command": "cargo test --manifest-path=src/rdata/example/gui/Cargo.toml",
+        },
+        {
+            "label": "docs rust",
+            "type": "shell",
+            "command": "cargo doc --manifest-path=src/rdata/example/gui/Cargo.toml",
+        },
+        {
+            "label": "run rust",
+            "type": "shell",
+            "command": "cargo run --manifest-path=src/rdata/example/gui/Cargo.toml",
+        },
+        {
             "label": "run rdata",
             "type": "shell",
             "command": "source install/setup.bash; ros2 run rdata rdata_main",

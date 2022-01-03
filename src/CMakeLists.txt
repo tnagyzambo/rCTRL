@@ -13,8 +13,9 @@ find_package(rclcpp REQUIRED)
 find_package(rclcpp_lifecycle REQUIRED)
 find_package(lifecycle_msgs REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
-find_package(tomlplusplus REQUIRED)
 find_package(CURL REQUIRED)
+find_package(tomlplusplus REQUIRED)
+
 
 # Create ros2 interfaces
 rosidl_generate_interfaces(${PROJECT_NAME}
@@ -26,6 +27,14 @@ rosidl_generate_interfaces(${PROJECT_NAME}
                            "rdata/iface/srv/CreateLogger.srv"
                            "rdata/iface/srv/RemoveLogger.srv")
 
+# Lifecycle node handle library
+add_library(rctrl_lc_client STATIC rctrl/lc_client/lib/rctrl_lc_client.cpp)
+
+target_include_directories(rctrl_lc_client PUBLIC rctrl/lc_client/lib) 
+
+ament_target_dependencies(rctrl_lc_client rclcpp
+                                          lifecycle_msgs)
+
 # Utilities library
 add_library(rctrl_util INTERFACE)
 
@@ -33,7 +42,7 @@ target_sources(rctrl_util INTERFACE ${CMAKE_CURRENT_SOURCE_DIR} rctrl/util/lib/r
                                                                 rctrl/util/lib/rctrl_fmt.hpp
                                                                 rctrl/util/lib/rctrl_except.hpp)
 
-target_include_directories(rctrl_util INTERFACE rctrl/util/lib) 
+target_include_directories(rctrl_util INTERFACE rctrl/util/lib)
 
 # rockerDATA interface library
 add_library(rdata_iface INTERFACE)
@@ -49,10 +58,10 @@ add_executable(rdata_main rdata/main/src/main.cpp
                           rdata/main/lib/influx_exception.cpp)
 
 target_include_directories(rdata_main PRIVATE rdata/main/lib)
-target_link_libraries(rdata_main CURL::libcurl) 
-target_link_libraries(rdata_main tomlplusplus::tomlplusplus)
-target_link_libraries(rdata_main rdata_iface)
-target_link_libraries(rdata_main rctrl_util)
+target_link_libraries(rdata_main CURL::libcurl
+                                 tomlplusplus::tomlplusplus
+                                 rctrl_util
+                                 rdata_iface)
 
 ament_target_dependencies(rdata_main rclcpp
                                      rclcpp_lifecycle
@@ -64,8 +73,8 @@ add_executable(rdata_vsensor rdata/example/vsensor/src/main.cpp
                              rdata/example/vsensor/lib/vsensor_node.cpp)
 
 target_include_directories(rdata_vsensor PRIVATE rdata/example/vsensor/lib)
-target_link_libraries(rdata_vsensor rdata_iface)
-target_link_libraries(rdata_vsensor rctrl_util)
+target_link_libraries(rdata_vsensor rctrl_util
+                                    rdata_iface)
 
 ament_target_dependencies(rdata_vsensor rclcpp
                                         rclcpp_lifecycle
@@ -77,8 +86,9 @@ add_executable(rdata_example rdata/example/lc_client/src/main.cpp
                              rdata/example/lc_client/lib/lc_client_node.cpp)
 
 target_include_directories(rdata_example PRIVATE rdata/example/lc_client/lib)
-target_link_libraries(rdata_example rdata_iface)
-target_link_libraries(rdata_example rctrl_util)
+target_link_libraries(rdata_example rctrl_lc_client
+                                    rctrl_util
+                                    rdata_iface)
 
 ament_target_dependencies(rdata_example rclcpp
                                         rclcpp_lifecycle
