@@ -7,6 +7,7 @@ log/*
 #### Rust ####
 src/rdata/example/gui/debug/
 src/rdata/example/gui/target/
+src/rdata/example/gui/dist/
 
 src/rdata/example/gui/Cargo.lock
 **/*.rs.bk
