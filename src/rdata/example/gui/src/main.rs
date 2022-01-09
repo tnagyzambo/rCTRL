@@ -1,60 +1,129 @@
-// use std::time::Duration;
+use reqwasm::websocket::{Message, futures::WebSocket};
+use gloo_console::log;
+use gloo::timers::future::TimeoutFuture;
+use wasm_bindgen_futures::spawn_local;
+use futures::{SinkExt, StreamExt};
+use futures::stream::{SplitSink, SplitStream};
+use futures_util::future::ready;
+use eframe::epi::App;
+use std::rc::Rc;
+use std::sync::RwLock;
+use std::{thread, time};
 
-// use actix::io::SinkWrite;
-// use actix::*;
-// use actix_codec::Framed;
-// use awc::{
-//     error::WsProtocolError,
-//     ws::{Codec, Frame, Message},
-//     BoxedSocket, Client,
-// };
-// use bytes::Bytes;
-// use futures::stream::{SplitSink, StreamExt};
+mod client;
+mod gui;
+mod rosbridge;
+
+use gui::main::RctrlGUI;
+
+fn main() -> Result<(), eframe::wasm_bindgen::JsValue> {
+    let mut ws = WebSocket::open("ws://127.0.0.1:9090").unwrap();
+    let (mut write, mut read) = ws.split();
+
+    let lock = Rc::new(RwLock::new(5.0));
+    let c_lock = Rc::clone(&lock);
+
+    let write_lock = Rc::new(RwLock::new(Vec::<f32>::new()));
+    let write_c_lock = Rc::clone(&write_lock);
+
+    spawn_local(async move {
+        loop {
+            {
+                let mut test = write_c_lock.write().unwrap();
+                match test.pop() {
+                    Some(k) => log!("{}", k),
+                    None => (),
+                };
+                write.send(Message::Text(String::from("test"))).await.unwrap();
+            }
+            log!("hi!");
+            TimeoutFuture::new(1_000).await;
+        }
+    });
+
+    spawn_local(async move {
+        {
+            let mut w = lock.write().unwrap();
+            *w = 6.0;
+        }
+        while let Some(msg) = read.next().await {
+            log!(format!("1. {:?}", msg))
+        }
+        log!("WebSocket Closed");
+    });
+    
+    let gui = RctrlGUI::new(c_lock, write_lock);
+    
+    eframe::start_web("the_canvas_id", Box::new(gui))
+}
+
+// // When compiling natively:
+// #[cfg(not(target_arch = "wasm32"))]
+// fn main() {
+//     let app = hello_world::TemplateApp::default();
+//     let native_options = eframe::NativeOptions::default();
+//     eframe::run_native(Box::new(app), native_options);
+// }
 
 // use yew::prelude::*;
 
-mod rosbridge;
 
-use yew::prelude::*;
+// use wasm_bindgen_futures::spawn_local;
+// use futures::{SinkExt, StreamExt};
 
-enum Msg {
-    AddOne,
-}
 
-struct Model {
-    value: i64,
-}
+// enum Msg {
+//     AddOne,
+// }
 
-impl Component for Model {
-    type Message = Msg;
-    type Properties = ();
+// struct Model {
+//     value: i64,
+// }
 
-    fn create(ctx: &Context<Self>) -> Self {
-        Self { value: 0 }
-    }
+// impl Component for Model {
+//     type Message = Msg;
+//     type Properties = ();
 
-    fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
-        match msg {
-            Msg::AddOne => {
-                self.value += 1;
-                true
-            }
-        }
-    }
+//     fn create(ctx: &Context<Self>) -> Self {
+//         Self { value: 0 }
+//     }
 
-    fn view(&self, ctx: &Context<Self>) -> Html {
-        html! {
-            <div>
-                <button onclick={ctx.link().callback(|_| Msg::AddOne)}>{ "+1" }</button>
-                <p>{ self.value }</p>
-            </div>
-        }
-    }
-}
+//     fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
+//         match msg {
+//             Msg::AddOne => {
+//                 self.value += 1;
+//                 true
+//             }
+//         }
+//     }
 
-fn main() {
-    yew::start_app::<Model>();
-}
+//     fn view(&self, ctx: &Context<Self>) -> Html {
+//         html! {
+//             <div>
+//                 <button onclick={ctx.link().callback(|_| Msg::AddOne)}>{ "+1" }</button>
+//                 <p>{ self.value }</p>
+//             </div>
+//         }
+//     }
+// }
+
+// fn main() {
+//     let mut ws = WebSocket::open("ws://127.0.0.1:9090").unwrap();
+//     let (mut write, mut read) = ws.split();
+    
+//     spawn_local(async move {
+//         write.send(Message::Text(String::from("test"))).await.unwrap();
+//     });
+    
+//     spawn_local(async move {
+//         while let Some(msg) = read.next().await {
+//             log!(format!("1. {:?}", msg))
+//         }
+//         log!("WebSocket Closed")
+//     });
+
+//     yew::start_app::<Model>();
+// }
 
 // fn main() {
 //     ::std::env::set_var("RUST_LOG", "actix_web=info");
