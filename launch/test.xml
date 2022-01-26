@@ -57,10 +57,14 @@
       <param name="bson_only_mode" value="$(var bson_only_mode)"/>
     </node>
   </group>
+  
 
   <node name="rosapi" pkg="rosapi" exec="rosapi_node">
     <param name="topics_glob" value="$(var topics_glob)"/>
     <param name="services_glob" value="$(var services_glob)"/>
     <param name="params_glob" value="$(var params_glob)"/>
   </node>
+
+
+  <node name="rdata" pkg="rdata" exec="rdata_main"/>
 </launch>

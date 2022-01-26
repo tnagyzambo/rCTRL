@@ -9,51 +9,79 @@ use eframe::epi::App;
 use std::rc::Rc;
 use std::sync::RwLock;
 use std::{thread, time};
+use std::collections::HashMap;
+use std::any::Any;
 
 mod client;
 mod gui;
 mod rosbridge;
 
-use gui::main::RctrlGUI;
+use gui::main::{GuiThing, GuiThot, RctrlGUI, MyTrait};
 
 fn main() -> Result<(), eframe::wasm_bindgen::JsValue> {
     let mut ws = WebSocket::open("ws://127.0.0.1:9090").unwrap();
-    let (mut write, mut read) = ws.split();
+    let (mut ws_write, mut ws_read) = ws.split();
 
-    let lock = Rc::new(RwLock::new(5.0));
-    let c_lock = Rc::clone(&lock);
+    // vars mutable from websocket
+    let ws_read_lock = Rc::new(RwLock::new(HashMap::<String, Box<MyTrait>>::new()));
+    let ws_read_lock_c = Rc::clone(&ws_read_lock);
 
-    let write_lock = Rc::new(RwLock::new(Vec::<f32>::new()));
-    let write_c_lock = Rc::clone(&write_lock);
+    // Websocket write buffer
+    let ws_write_lock = Rc::new(RwLock::new(Vec::<String>::new()));
+    let ws_write_lock_c = Rc::clone(&ws_write_lock);
 
+    {
+        let mut hash_map = ws_read_lock.write().unwrap();
+        hash_map.insert(String::from("this"), Box::new(GuiThing::new()));
+        hash_map.insert(String::from("that"), Box::new(GuiThot::new()));
+    }
+
+    // Async read loop
+    // spawn_local reaches out from wasm to the javascript glue code to execute a rust future on the current thread
+    // Continually processes any messages recieved over the websocket
+    // Does not block while waiting for messages
     spawn_local(async move {
-        loop {
-            {
-                let mut test = write_c_lock.write().unwrap();
-                match test.pop() {
-                    Some(k) => log!("{}", k),
-                    None => (),
-                };
-                write.send(Message::Text(String::from("test"))).await.unwrap();
+        log!("starting...");
+        while let Some(msg) = ws_read.next().await {
+            let mut hash_map = ws_read_lock.write().unwrap();
+
+            match hash_map.get_mut(&String::from("this")) {
+                Some(thing) => thing.up(9.0),
+                None => println!("elem does not exist.")
             }
-            log!("hi!");
-            TimeoutFuture::new(1_000).await;
-        }
-    });
 
-    spawn_local(async move {
-        {
-            let mut w = lock.write().unwrap();
-            *w = 6.0;
-        }
-        while let Some(msg) = read.next().await {
             log!(format!("1. {:?}", msg))
         }
         log!("WebSocket Closed");
     });
-    
-    let gui = RctrlGUI::new(c_lock, write_lock);
-    
+
+    {
+        let cmd = rosbridge::protocol::Subscribe::new("/rosout");
+        let mut test = ws_write_lock.write().unwrap();
+        test.push(serde_json::to_string(&cmd).expect("Failed to serialise"));
+    }
+
+    // Async write loop
+    // spawn_local reaches out from wasm to the javascript glue code to execute a rust future on the current thread
+    // TimeoutFuture::new().await reaches out to javascript to run a timer on a new thread that will return a future on the current thread
+    // Periodically writes all the messages in the write queue to the websocket
+    spawn_local(async move {
+        loop {
+            {
+                let mut test = ws_write_lock.write().unwrap();
+                match test.pop() {
+                    Some(k) => {
+                        log!(&k);
+                        ws_write.send(Message::Text(k)).await.unwrap();
+                    }
+                    None => (),
+                };
+            }
+            TimeoutFuture::new(1_000).await;
+        }
+    });
+
+    let gui = RctrlGUI::new(ws_read_lock_c, ws_write_lock_c);    
     eframe::start_web("the_canvas_id", Box::new(gui))
 }
 

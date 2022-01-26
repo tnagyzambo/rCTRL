@@ -17,6 +17,11 @@
             "command": "cargo test --manifest-path=src/rdata/example/gui/Cargo.toml",
         },
         {
+            "label": "run trunk",
+            "type": "shell",
+            "command": "cd src/rdata/example/gui && trunk serve",
+        },
+        {
             "label": "docs rust",
             "type": "shell",
             "command": "cargo doc --manifest-path=src/rdata/example/gui/Cargo.toml",
@@ -44,7 +49,7 @@
         {
             "label": "run launch",
             "type": "shell",
-            "command": "ros2 launch launch/test.xml",
+            "command": "source install/setup.bash; ros2 launch launch/test.xml",
         },
         {
             "label": "run",
