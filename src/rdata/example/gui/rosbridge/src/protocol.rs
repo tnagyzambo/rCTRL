@@ -10,7 +10,7 @@ use strum_macros::AsRefStr;
 // Serde untagged makes this enum transparent and hides Ref and Owned from the serialised output
 #[derive(Serialize, Debug)]
 #[serde(untagged)]
-enum Ptr<'a, T: 'a + ?Sized> {
+pub enum Ptr<'a, T: 'a + ?Sized> {
     #[allow(dead_code)]
     Ref(&'a T),
     Owned(Box<T>),

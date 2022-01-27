@@ -1,29 +1,24 @@
-use reqwasm::websocket::{Message, futures::WebSocket};
-use gloo_console::log;
-use gloo::timers::future::TimeoutFuture;
-use wasm_bindgen_futures::spawn_local;
+use futures::stream::SplitSink;
 use futures::{SinkExt, StreamExt};
-use futures::stream::{SplitSink, SplitStream};
-use futures_util::future::ready;
-use eframe::epi::App;
+use gloo::timers::future::TimeoutFuture;
+use gloo_console::log;
+use reqwasm::websocket::{futures::WebSocket, Message, WebSocketError};
+use std::collections::HashMap;
 use std::rc::Rc;
 use std::sync::RwLock;
-use std::{thread, time};
-use std::collections::HashMap;
-use std::any::Any;
+use wasm_bindgen_futures::spawn_local;
 
 mod client;
 mod gui;
-mod rosbridge;
 
-use gui::main::{GuiThing, GuiThot, RctrlGUI, MyTrait};
+use gui::main::{GuiThing, GuiThot, MyTrait, RctrlGUI};
 
 fn main() -> Result<(), eframe::wasm_bindgen::JsValue> {
-    let mut ws = WebSocket::open("ws://127.0.0.1:9090").unwrap();
+    let ws = WebSocket::open("ws://127.0.0.1:9090").unwrap();
     let (mut ws_write, mut ws_read) = ws.split();
 
     // vars mutable from websocket
-    let ws_read_lock = Rc::new(RwLock::new(HashMap::<String, Box<MyTrait>>::new()));
+    let ws_read_lock = Rc::new(RwLock::new(HashMap::<String, Box<dyn MyTrait>>::new()));
     let ws_read_lock_c = Rc::clone(&ws_read_lock);
 
     // Websocket write buffer
@@ -43,18 +38,12 @@ fn main() -> Result<(), eframe::wasm_bindgen::JsValue> {
     spawn_local(async move {
         log!("starting...");
         while let Some(msg) = ws_read.next().await {
-            let mut hash_map = ws_read_lock.write().unwrap();
-
-            match hash_map.get_mut(&String::from("this")) {
-                Some(thing) => thing.up(9.0),
-                None => println!("elem does not exist.")
-            }
-
-            log!(format!("1. {:?}", msg))
+            ws_read_msg(msg, &ws_read_lock);
         }
         log!("WebSocket Closed");
     });
 
+    // this is needed to subscribe to logging
     {
         let cmd = rosbridge::protocol::Subscribe::new("/rosout");
         let mut test = ws_write_lock.write().unwrap();
@@ -67,188 +56,41 @@ fn main() -> Result<(), eframe::wasm_bindgen::JsValue> {
     // Periodically writes all the messages in the write queue to the websocket
     spawn_local(async move {
         loop {
-            {
-                let mut test = ws_write_lock.write().unwrap();
-                match test.pop() {
-                    Some(k) => {
-                        log!(&k);
-                        ws_write.send(Message::Text(k)).await.unwrap();
-                    }
-                    None => (),
-                };
-            }
+            ws_write_msg_queue(&mut ws_write, &ws_write_lock).await;
             TimeoutFuture::new(1_000).await;
         }
     });
 
-    let gui = RctrlGUI::new(ws_read_lock_c, ws_write_lock_c);    
-    eframe::start_web("the_canvas_id", Box::new(gui))
+    let gui = RctrlGUI::new(ws_read_lock_c, ws_write_lock_c);
+    eframe::start_web("rctrl_canvas", Box::new(gui))
 }
 
-// // When compiling natively:
-// #[cfg(not(target_arch = "wasm32"))]
-// fn main() {
-//     let app = hello_world::TemplateApp::default();
-//     let native_options = eframe::NativeOptions::default();
-//     eframe::run_native(Box::new(app), native_options);
-// }
+fn ws_read_msg(
+    msg: Result<Message, WebSocketError>,
+    ws_read_lock: &Rc<RwLock<HashMap<String, Box<dyn MyTrait>>>>,
+) {
+    let mut hash_map = ws_read_lock.write().unwrap();
+    match hash_map.get_mut(&String::from("this")) {
+        Some(thing) => thing.up(9.0),
+        None => println!("elem does not exist."),
+    }
 
-// use yew::prelude::*;
+    // Message is an enum that can either represent a String of a vector of Bytes
+    // For now we only care about String messages
+    if let Message::Text(msg_text) = msg.unwrap() {
+        log!(msg_text)
+    }
+}
 
-
-// use wasm_bindgen_futures::spawn_local;
-// use futures::{SinkExt, StreamExt};
-
-
-// enum Msg {
-//     AddOne,
-// }
-
-// struct Model {
-//     value: i64,
-// }
-
-// impl Component for Model {
-//     type Message = Msg;
-//     type Properties = ();
-
-//     fn create(ctx: &Context<Self>) -> Self {
-//         Self { value: 0 }
-//     }
-
-//     fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
-//         match msg {
-//             Msg::AddOne => {
-//                 self.value += 1;
-//                 true
-//             }
-//         }
-//     }
-
-//     fn view(&self, ctx: &Context<Self>) -> Html {
-//         html! {
-//             <div>
-//                 <button onclick={ctx.link().callback(|_| Msg::AddOne)}>{ "+1" }</button>
-//                 <p>{ self.value }</p>
-//             </div>
-//         }
-//     }
-// }
-
-// fn main() {
-//     let mut ws = WebSocket::open("ws://127.0.0.1:9090").unwrap();
-//     let (mut write, mut read) = ws.split();
-    
-//     spawn_local(async move {
-//         write.send(Message::Text(String::from("test"))).await.unwrap();
-//     });
-    
-//     spawn_local(async move {
-//         while let Some(msg) = read.next().await {
-//             log!(format!("1. {:?}", msg))
-//         }
-//         log!("WebSocket Closed")
-//     });
-
-//     yew::start_app::<Model>();
-// }
-
-// fn main() {
-//     ::std::env::set_var("RUST_LOG", "actix_web=info");
-//     env_logger::init();
-
-//     let sys = System::new("rosbridge_client");
-
-//     yew::start_app::<Model>();
-
-//     Arbiter::spawn(async {
-//         let (response, framed) = Client::new()
-//             .ws("ws://127.0.0.1:9090")
-//             .connect()
-//             .await
-//             .map_err(|e| {
-//                 println!("Error: {}", e);
-//             })
-//             .unwrap();
-
-//         println!("{:?}", response);
-//         let (sink, stream) = framed.split();
-//         let addr = RosbridgeClient::create(|ctx| {
-//             RosbridgeClient::add_stream(stream, ctx);
-//             RosbridgeClient(SinkWrite::new(sink, ctx))
-//         });
-
-//         let transition = rosbridge::lifecycle_msgs::msg::Transition::new(1, "configure");
-//         let msg = rosbridge::lifecycle_msgs::srv::ChangeStateRequest::new(&transition);
-
-//         let cmd = rosbridge::protocol::CallService::new("rdata/change_state").with_args(&msg).cmd();
-//         let cmd_json = serde_json::to_string(&cmd).expect("Failed to serialise");
-//         println!("{}", cmd_json);
-//         addr.do_send(ClientCommand(cmd_json));
-//         return;
-//     });
-//     sys.run().unwrap();
-// }
-
-// struct RosbridgeClient(SinkWrite<Message, SplitSink<Framed<BoxedSocket, Codec>, Message>>);
-
-// #[derive(Message)]
-// #[rtype(result = "()")]
-// struct ClientCommand(String);
-
-// impl Actor for RosbridgeClient {
-//     type Context = Context<Self>;
-
-//     fn started(&mut self, ctx: &mut Context<Self>) {
-//         // start heartbeats otherwise server will disconnect after 10 seconds
-//         self.hb(ctx)
-//     }
-
-//     fn stopped(&mut self, _: &mut Context<Self>) {
-//         println!("Disconnected");
-
-//         // Stop application on disconnect
-//         System::current().stop();
-//     }
-// }
-
-// impl RosbridgeClient {
-//     fn hb(&self, ctx: &mut Context<Self>) {
-//         ctx.run_later(Duration::new(1, 0), |act, ctx| {
-//             act.0.write(Message::Ping(Bytes::from_static(b"")));
-//             act.hb(ctx);
-
-//             // client should also check for a timeout here, similar to the
-//             // server code
-//         });
-//     }
-// }
-
-// /// Handle stdin commands
-// impl Handler<ClientCommand> for RosbridgeClient {
-//     type Result = ();
-
-//     fn handle(&mut self, msg: ClientCommand, _ctx: &mut Context<Self>) {
-//         self.0.write(Message::Text(msg.0));
-//     }
-// }
-
-// /// Handle server websocket messages
-// impl StreamHandler<Result<Frame, WsProtocolError>> for RosbridgeClient {
-//     fn handle(&mut self, msg: Result<Frame, WsProtocolError>, _: &mut Context<Self>) {
-//         if let Ok(Frame::Text(txt)) = msg {
-//             println!("Server: {:?}", txt)
-//         }
-//     }
-
-//     fn started(&mut self, _ctx: &mut Context<Self>) {
-//         println!("Connected");
-//     }
-
-//     fn finished(&mut self, ctx: &mut Context<Self>) {
-//         println!("Server disconnected");
-//         ctx.stop()
-//     }
-// }
-
-// impl actix::io::WriteHandler<WsProtocolError> for RosbridgeClient {}
+async fn ws_write_msg_queue(
+    ws_write: &mut SplitSink<WebSocket, Message>,
+    ws_write_lock: &Rc<RwLock<Vec<String>>>,
+) {
+    let mut msg_queue = ws_write_lock.write().unwrap();
+    match msg_queue.pop() {
+        Some(msg) => {
+            ws_write.send(Message::Text(msg)).await.unwrap();
+        }
+        None => (),
+    };
+}

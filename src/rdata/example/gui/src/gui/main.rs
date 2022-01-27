@@ -1,21 +1,14 @@
-use reqwasm::websocket::{Message, futures::WebSocket};
 use gloo_console::log;
-use wasm_bindgen_futures::spawn_local;
-use futures::{SinkExt, StreamExt};
-use futures::stream::{SplitSink, SplitStream};
+use std::collections::HashMap;
 use std::rc::Rc;
 use std::sync::RwLock;
-use std::collections::HashMap;
-use std::any::Any;
 
 use eframe::{egui, epi};
-
-use crate::rosbridge;
 
 pub trait MyTrait {
     fn update(&self, ctx: &egui::CtxRef, frame: &epi::Frame);
     fn up(&mut self, value: f32);
-  }
+}
 
 pub struct GuiThing {
     pub value: f32,
@@ -27,9 +20,7 @@ pub struct GuiThot {
 
 impl GuiThing {
     pub fn new() -> Self {
-        Self {
-            value: 6.0,
-        }
+        Self { value: 6.0 }
     }
 }
 
@@ -57,19 +48,16 @@ impl GuiThot {
 }
 
 impl MyTrait for GuiThot {
-    fn update(&self, ctx: &egui::CtxRef, frame: &epi::Frame) {
-    }
-    fn up(&mut self, value: f32) {
-    }
+    fn update(&self, ctx: &egui::CtxRef, frame: &epi::Frame) {}
+    fn up(&mut self, value: f32) {}
 }
-
 
 /// We derive Deserialize/Serialize so we can persist app state on shutdown.
 #[cfg_attr(feature = "persistence", derive(serde::Deserialize, serde::Serialize))]
 #[cfg_attr(feature = "persistence", serde(default))] // if we add new fields, give them default values when deserializing old state
 pub struct RctrlGUI {
     label: String,
-    ws_read_lock: Rc<RwLock<HashMap<String, Box<MyTrait>>>>,
+    ws_read_lock: Rc<RwLock<HashMap<String, Box<dyn MyTrait>>>>,
     ws_write_lock: Rc<RwLock<Vec<String>>>,
 
     // this how you opt-out of serialization of a member
@@ -78,7 +66,10 @@ pub struct RctrlGUI {
 }
 
 impl RctrlGUI {
-    pub fn new(ws_read_lock: Rc<RwLock<HashMap<String, Box<MyTrait>>>>, ws_write_lock: Rc<RwLock<Vec<String>>>) -> Self {
+    pub fn new(
+        ws_read_lock: Rc<RwLock<HashMap<String, Box<dyn MyTrait>>>>,
+        ws_write_lock: Rc<RwLock<Vec<String>>>,
+    ) -> Self {
         Self {
             label: "Hello World!".to_owned(),
             ws_read_lock: ws_read_lock,
@@ -118,7 +109,12 @@ impl epi::App for RctrlGUI {
     /// Called each time the UI needs repainting, which may be many times per second.
     /// Put your widgets into a `SidePanel`, `TopPanel`, `CentralPanel`, `Window` or `Area`.
     fn update(&mut self, ctx: &egui::CtxRef, frame: &epi::Frame) {
-        let Self { label, value, ws_read_lock, ws_write_lock } = self;
+        let Self {
+            label,
+            value,
+            ws_read_lock,
+            ws_write_lock,
+        } = self;
 
         // Examples of how to create different panels and windows.
         // Pick whichever suits you.
@@ -146,8 +142,6 @@ impl epi::App for RctrlGUI {
 
             ui.add(egui::Slider::new(value, 0.0..=10.0).text("value"));
             if ui.button("Increment").clicked() {
-                
-
                 //*value = gui_things.value;
 
                 {

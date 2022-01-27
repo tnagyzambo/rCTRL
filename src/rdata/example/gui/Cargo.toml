@@ -1,9 +1,13 @@
 [package]
-name = "hello_world"
+name = "rctrl"
 version = "0.1.0"
 edition = "2018"
 
+[workspace]
+
 [dependencies]
+rosbridge = { path = "rosbridge" }
+
 eframe = "0.16.0"
 reqwasm = { version = "0.4.0", features = ["websocket"] }
 wasm-bindgen-futures = "0.4.28"

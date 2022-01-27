@@ -1,6 +1,6 @@
-use serde::Serialize;
+use serde_derive::Serialize;
 
-use crate::rosbridge::lifecycle_msgs::msg::transition::Transition;
+use crate::lifecycle_msgs::msg::transition::Transition;
 
 #[derive(Serialize)]
 pub struct ChangeStateRequest<'a> {
