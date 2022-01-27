@@ -2,8 +2,27 @@
 //! REFERENCE: <https://github.com/biobotus/rosbridge_suite/blob/master/ROSBRIDGE_PROTOCOL.md>
 
 use serde_derive::{Deserialize, Serialize};
+use std::collections::BTreeMap;
+use serde_json::Value;
 use std::convert::AsRef;
 use strum_macros::AsRefStr;
+
+// Struct to hold incoming rosbridge message
+// Further deserialization can be done based on "op" field
+// As the rosbridge protocol has a flat heirachy, most of the methods that are easily found for partial deserialization do not work
+// REFERENCE: <https://github.com/serde-rs/serde/issues/941>
+#[derive(Deserialize, Debug)]
+pub struct Message {
+    pub op: String,
+    #[serde(flatten)]
+    pub other: BTreeMap<String, Value>,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct MessagePublish {
+    pub topic: String,
+    pub msg: Value,
+}
 
 // Enum to provide distinction between owned and referenced pointers
 // A pointer to `T` which may or may not own the data. When deserializing we always want to produce owned data.

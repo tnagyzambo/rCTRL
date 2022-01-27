@@ -8,6 +8,9 @@ use std::rc::Rc;
 use std::sync::RwLock;
 use wasm_bindgen_futures::spawn_local;
 
+use serde::de::Deserialize;
+use serde::de::value::MapDeserializer;
+
 mod client;
 mod gui;
 
@@ -75,10 +78,31 @@ fn ws_read_msg(
         None => println!("elem does not exist."),
     }
 
+
+
+
+
     // Message is an enum that can either represent a String of a vector of Bytes
     // For now we only care about String messages
+    // REFERENCE <https://github.com/serde-rs/serde/issues/1739>
     if let Message::Text(msg_text) = msg.unwrap() {
-        log!(msg_text)
+        log!(&msg_text);
+        let msg_t: rosbridge::protocol::Message = serde_json::from_str(&msg_text).unwrap();
+        match msg_t.op.as_ref() {
+            "publish" => {
+                log!(format!("{:?}", &msg_t.other));
+                let msg_publish_t = rosbridge::protocol::MessagePublish::deserialize(MapDeserializer::new(msg_t.other.into_iter())).unwrap();
+                match msg_publish_t.topic.as_ref() {
+                    "/rosout" => {
+                        log!(format!("{:?}", &msg_publish_t.msg));
+                        let test: rosbridge::rosout::msg::Log = serde_json::from_value(msg_publish_t.msg).unwrap();
+                        log!(format!("{:?}", test));
+                    },
+                    _ => log!("Unrecognized topic"),
+                }
+            },
+            _ => log!("Unrecognized operation"),
+        }
     }
 }
 
