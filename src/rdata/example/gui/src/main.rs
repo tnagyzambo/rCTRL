@@ -48,6 +48,12 @@ fn main() -> Result<(), eframe::wasm_bindgen::JsValue> {
 
     // this is needed to subscribe to logging
     {
+        let cmd = rosbridge::protocol::Subscribe::new("/rdata/transition_event");
+        let mut test = ws_write_lock.write().unwrap();
+        test.push(serde_json::to_string(&cmd).expect("Failed to serialise"));
+    }
+
+    {
         let cmd = rosbridge::protocol::Subscribe::new("/rosout");
         let mut test = ws_write_lock.write().unwrap();
         test.push(serde_json::to_string(&cmd).expect("Failed to serialise"));
@@ -90,13 +96,13 @@ fn ws_read_msg(
         let msg_t: rosbridge::protocol::Message = serde_json::from_str(&msg_text).unwrap();
         match msg_t.op.as_ref() {
             "publish" => {
-                log!(format!("{:?}", &msg_t.other));
+                //log!(format!("{:?}", &msg_t.other));
                 let msg_publish_t = rosbridge::protocol::MessagePublish::deserialize(MapDeserializer::new(msg_t.other.into_iter())).unwrap();
                 match msg_publish_t.topic.as_ref() {
                     "/rosout" => {
-                        log!(format!("{:?}", &msg_publish_t.msg));
+                        //log!(format!("{:?}", &msg_publish_t.msg));
                         let test: rosbridge::rosout::msg::Log = serde_json::from_value(msg_publish_t.msg).unwrap();
-                        log!(format!("{:?}", test));
+                        //log!(format!("{:?}", test));
                     },
                     _ => log!("Unrecognized topic"),
                 }
