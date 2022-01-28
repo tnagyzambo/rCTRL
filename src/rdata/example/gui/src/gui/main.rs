@@ -2,6 +2,7 @@ use gloo_console::log;
 use std::collections::HashMap;
 use std::rc::Rc;
 use std::sync::RwLock;
+use std::collections::VecDeque;
 
 use eframe::{egui, epi};
 
@@ -58,7 +59,7 @@ impl MyTrait for GuiThot {
 pub struct RctrlGUI {
     label: String,
     ws_read_lock: Rc<RwLock<HashMap<String, Box<dyn MyTrait>>>>,
-    ws_write_lock: Rc<RwLock<Vec<String>>>,
+    ws_write_lock: Rc<RwLock<VecDeque<String>>>,
 
     // this how you opt-out of serialization of a member
     #[cfg_attr(feature = "persistence", serde(skip))]
@@ -68,7 +69,7 @@ pub struct RctrlGUI {
 impl RctrlGUI {
     pub fn new(
         ws_read_lock: Rc<RwLock<HashMap<String, Box<dyn MyTrait>>>>,
-        ws_write_lock: Rc<RwLock<Vec<String>>>,
+        ws_write_lock: Rc<RwLock<VecDeque<String>>>,
     ) -> Self {
         Self {
             label: "Hello World!".to_owned(),
@@ -149,7 +150,23 @@ impl epi::App for RctrlGUI {
                     let args = rosbridge::lifecycle_msgs::srv::ChangeStateRequest::new(&transition);
                     let cmd = rosbridge::protocol::CallService::new("/rdata/change_state").with_args(&args).cmd();
                     let mut w = ws_write_lock.write().unwrap();
-                    w.push(serde_json::to_string(&cmd).unwrap());
+                    w.push_back(serde_json::to_string(&cmd).unwrap());
+                }
+
+                {
+                    let transition = rosbridge::lifecycle_msgs::msg::Transition::activate();
+                    let args = rosbridge::lifecycle_msgs::srv::ChangeStateRequest::new(&transition);
+                    let cmd = rosbridge::protocol::CallService::new("/rdata/change_state").with_args(&args).cmd();
+                    let mut w = ws_write_lock.write().unwrap();
+                    w.push_back(serde_json::to_string(&cmd).unwrap());
+                }
+
+                {
+                    let transition = rosbridge::lifecycle_msgs::msg::Transition::inactive_shudown();
+                    let args = rosbridge::lifecycle_msgs::srv::ChangeStateRequest::new(&transition);
+                    let cmd = rosbridge::protocol::CallService::new("/rdata/change_state").with_args(&args).cmd();
+                    let mut w = ws_write_lock.write().unwrap();
+                    w.push_back(serde_json::to_string(&cmd).unwrap());
                 }
             }
 
