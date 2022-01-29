@@ -9,10 +9,12 @@ edition = "2018"
 rosbridge = { path = "rosbridge" }
 
 eframe = "0.16.0"
-reqwasm = { version = "0.4.0", features = ["websocket"] }
-wasm-bindgen-futures = "0.4.28"
+
 futures = "0.3.19"
 futures-util = "0.3"
+reqwasm = { version = "0.4.0", features = ["websocket"] }
+wasm-bindgen-futures = "0.4.28"
+
 gloo-console = "0.2.1"
 gloo = { version = "0.6.0", features = ["futures"] }
 

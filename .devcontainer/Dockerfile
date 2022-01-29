@@ -93,7 +93,7 @@ ENV RUSTUP_HOME=/usr/local/rustup \
 RUN curl https://sh.rustup.rs -sSf | bash -s -- -y
 RUN chmod -R a+w $RUSTUP_HOME $CARGO_HOME;
 
-# Rust/Yew dependencies
+# Rust/WASM dependencies
 USER ros
 RUN rustup target add wasm32-unknown-unknown
 RUN cargo install trunk
