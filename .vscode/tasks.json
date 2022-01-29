@@ -14,7 +14,7 @@
         {
             "label": "test rust",
             "type": "shell",
-            "command": "cargo test --manifest-path=src/rdata/example/gui/Cargo.toml",
+            "command": "cargo test --manifest-path=src/rdata/example/gui/rosbridge/Cargo.toml",
         },
         {
             "label": "run trunk",

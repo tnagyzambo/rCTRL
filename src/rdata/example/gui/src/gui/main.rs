@@ -146,24 +146,21 @@ impl epi::App for RctrlGUI {
                 //*value = gui_things.value;
 
                 {
-                    let transition = rosbridge::lifecycle_msgs::msg::Transition::configure();
-                    let args = rosbridge::lifecycle_msgs::srv::ChangeStateRequest::new(&transition);
+                    let args = rosbridge::lifecycle_msgs::srv::ChangeStateRequest::configure();
                     let cmd = rosbridge::protocol::CallService::new("/rdata/change_state").with_args(&args).cmd();
                     let mut w = ws_write_lock.write().unwrap();
                     w.push_back(serde_json::to_string(&cmd).unwrap());
                 }
 
                 {
-                    let transition = rosbridge::lifecycle_msgs::msg::Transition::activate();
-                    let args = rosbridge::lifecycle_msgs::srv::ChangeStateRequest::new(&transition);
+                    let args = rosbridge::lifecycle_msgs::srv::ChangeStateRequest::activate();
                     let cmd = rosbridge::protocol::CallService::new("/rdata/change_state").with_args(&args).cmd();
                     let mut w = ws_write_lock.write().unwrap();
                     w.push_back(serde_json::to_string(&cmd).unwrap());
                 }
 
                 {
-                    let transition = rosbridge::lifecycle_msgs::msg::Transition::inactive_shudown();
-                    let args = rosbridge::lifecycle_msgs::srv::ChangeStateRequest::new(&transition);
+                    let args = rosbridge::lifecycle_msgs::srv::ChangeStateRequest::shutdown();
                     let cmd = rosbridge::protocol::CallService::new("/rdata/change_state").with_args(&args).cmd();
                     let mut w = ws_write_lock.write().unwrap();
                     w.push_back(serde_json::to_string(&cmd).unwrap());

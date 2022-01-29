@@ -47,21 +47,23 @@ impl<'a> Transition<'a> {
         Transition::new(4, "deactivate")
     }
 
+    // I'm pretty sure that these three different shutdowns are all treated equally
+    // Looking at the ROS2 lifecycle design doc there is only one possible shutdown event
     // This signals shutdown during an unconfigured state, the node's callback
     // onShutdown will be executed to do any cleanup necessary before destruction.
-    pub fn unconfigured_shudown() -> Transition<'a> {
+    pub fn unconfigured_shutdown() -> Transition<'a> {
         Transition::new(5, "shutdown")
     }
 
     // This signals shutdown during an inactive state, the node's callback onShutdown
     // will be executed to do any cleanup necessary before destruction.
-    pub fn inactive_shudown() -> Transition<'a> {
+    pub fn inactive_shutdown() -> Transition<'a> {
         Transition::new(6, "shutdown")
     }
 
     // This signals shutdown during an active state, the node's callback onShutdown
     // will be executed to do any cleanup necessary before destruction.
-    pub fn active_shudown() -> Transition<'a> {
+    pub fn active_shutdown() -> Transition<'a> {
         Transition::new(7, "shutdown")
     }
 
@@ -71,4 +73,70 @@ impl<'a> Transition<'a> {
     }
 }
 
+#[cfg(test)]
+pub mod tests {
+    use super::*;
 
+    #[test]
+    fn create() {
+        let transition = Transition::create();
+        let transition_json = serde_json::to_string(&transition).expect("Serialization failed");
+        assert_eq!(transition_json, r#"{"id":0,"label":"create"}"#);
+    }
+
+    #[test]
+    fn configure() {
+        let transition = Transition::configure();
+        let transition_json = serde_json::to_string(&transition).expect("Serialization failed");
+        assert_eq!(transition_json, r#"{"id":1,"label":"configure"}"#);
+    }
+
+    #[test]
+    fn cleanup() {
+        let transition = Transition::cleanup();
+        let transition_json = serde_json::to_string(&transition).expect("Serialization failed");
+        assert_eq!(transition_json, r#"{"id":2,"label":"cleanup"}"#);
+    }
+
+    #[test]
+    fn activate() {
+        let transition = Transition::activate();
+        let transition_json = serde_json::to_string(&transition).expect("Serialization failed");
+        assert_eq!(transition_json, r#"{"id":3,"label":"activate"}"#);
+    }
+
+    #[test]
+    fn deactivate() {
+        let transition = Transition::deactivate();
+        let transition_json = serde_json::to_string(&transition).expect("Serialization failed");
+        assert_eq!(transition_json, r#"{"id":4,"label":"deactivate"}"#);
+    }
+
+    #[test]
+    fn unconfigured_shutdown() {
+        let transition = Transition::unconfigured_shutdown();
+        let transition_json = serde_json::to_string(&transition).expect("Serialization failed");
+        assert_eq!(transition_json, r#"{"id":5,"label":"shutdown"}"#);
+    }
+
+    #[test]
+    fn inactive_shutdown() {
+        let transition = Transition::inactive_shutdown();
+        let transition_json = serde_json::to_string(&transition).expect("Serialization failed");
+        assert_eq!(transition_json, r#"{"id":6,"label":"shutdown"}"#);
+    }
+
+    #[test]
+    fn active_shutdown() {
+        let transition = Transition::active_shutdown();
+        let transition_json = serde_json::to_string(&transition).expect("Serialization failed");
+        assert_eq!(transition_json, r#"{"id":7,"label":"shutdown"}"#);
+    }
+
+    #[test]
+    fn destroy() {
+        let transition = Transition::destroy();
+        let transition_json = serde_json::to_string(&transition).expect("Serialization failed");
+        assert_eq!(transition_json, r#"{"id":8,"label":"destroy"}"#);
+    }
+}
