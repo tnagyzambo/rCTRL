@@ -96,11 +96,11 @@ impl<'a> SetLevel<'a> {
 /// 3.2.2 Status Message
 #[derive(Deserialize)]
 pub struct Status<'a> {
-    op: &'a str,
+    pub op: &'a str,
     #[serde(skip_serializing_if = "Option::is_none")]
-    id: Option<&'a str>,
-    level: &'a str,
-    msg: &'a str,
+    pub id: Option<&'a str>,
+    pub level: &'a str,
+    pub msg: &'a str,
 }
 
 /// 3.3.2 Authenticate
@@ -550,12 +550,12 @@ mod tests {
     fn set_level() {
         // Test no optional arguments
         let cmd = SetLevel::new(&Level::Info);
-        let cmd_json = serde_json::to_string(&cmd).expect("Serialization failed");
+        let cmd_json = serde_json::to_string(&cmd).unwrap();
         assert_eq!(cmd_json, r#"{"op":"set_level","level":"info"}"#);
 
         // Test all arguments
         let cmd = SetLevel::new(&Level::Info).with_id("test").cmd();
-        let cmd_json = serde_json::to_string(&cmd).expect("Serialization failed");
+        let cmd_json = serde_json::to_string(&cmd).unwrap();
         assert_eq!(cmd_json, r#"{"op":"set_level","id":"test","level":"info"}"#);
     }
 
@@ -563,7 +563,7 @@ mod tests {
     fn status() {
         let _status: Status =
             serde_json::from_str(r#"{"op":"status","id":"test","level":"info","msg":"test"}"#)
-                .expect("Deserialization failed");
+                .unwrap();
     }
 
     #[test]
@@ -578,7 +578,7 @@ mod tests {
             1,
         );
 
-        let cmd_json = serde_json::to_string(&cmd).expect("Serialization failed");
+        let cmd_json = serde_json::to_string(&cmd).unwrap();
         assert_eq!(
             cmd_json,
             r#"{"op":"auth","mac":"00:00:5e:00:53:af","client":"127.0.0.1","dest":"127.0.0.1","rand":"rand","t":1,"level":"info","end":1}"#
@@ -589,7 +589,7 @@ mod tests {
     fn advertise() {
         // Test no optional arguments
         let cmd = Advertise::new("/test/topic", "std_msgs/Example");
-        let cmd_json = serde_json::to_string(&cmd).expect("Serialization failed");
+        let cmd_json = serde_json::to_string(&cmd).unwrap();
         assert_eq!(
             cmd_json,
             r#"{"op":"advertise","topic":"/test/topic","type":"std_msgs/Example"}"#
@@ -599,7 +599,7 @@ mod tests {
         let cmd = Advertise::new("/test/topic", "std_msgs/Example")
             .with_id("test")
             .cmd();
-        let cmd_json = serde_json::to_string(&cmd).expect("Serialization failed");
+        let cmd_json = serde_json::to_string(&cmd).unwrap();
         assert_eq!(
             cmd_json,
             r#"{"op":"advertise","id":"test","topic":"/test/topic","type":"std_msgs/Example"}"#
@@ -610,12 +610,12 @@ mod tests {
     fn unadvertise() {
         // Test no optional arguments
         let cmd = Unadvertise::new("/test/topic");
-        let cmd_json = serde_json::to_string(&cmd).expect("Serialization failed");
+        let cmd_json = serde_json::to_string(&cmd).unwrap();
         assert_eq!(cmd_json, r#"{"op":"unadvertise","topic":"/test/topic"}"#);
 
         // Test all arguments
         let cmd = Unadvertise::new("/test/topic").with_id("test").cmd();
-        let cmd_json = serde_json::to_string(&cmd).expect("Serialization failed");
+        let cmd_json = serde_json::to_string(&cmd).unwrap();
         assert_eq!(
             cmd_json,
             r#"{"op":"unadvertise","id":"test","topic":"/test/topic"}"#
@@ -628,7 +628,7 @@ mod tests {
 
         // Test no optional arguments
         let cmd = Publish::new("/test/topic", &test_struct);
-        let cmd_json = serde_json::to_string(&cmd).expect("Serialization failed");
+        let cmd_json = serde_json::to_string(&cmd).unwrap();
         assert_eq!(
             cmd_json,
             r#"{"op":"publish","topic":"/test/topic","msg":{"string":"test string","int":5}}"#
@@ -638,7 +638,7 @@ mod tests {
         let cmd = Publish::new("/test/topic", &test_struct)
             .with_id("test")
             .cmd();
-        let cmd_json = serde_json::to_string(&cmd).expect("Serialization failed");
+        let cmd_json = serde_json::to_string(&cmd).unwrap();
         assert_eq!(
             cmd_json,
             r#"{"op":"publish","id":"test","topic":"/test/topic","msg":{"string":"test string","int":5}}"#
@@ -662,7 +662,7 @@ mod tests {
     fn subscribe() {
         // Test no optional arguments
         let cmd = Subscribe::new("/test/topic");
-        let cmd_json = serde_json::to_string(&cmd).expect("Serialization failed");
+        let cmd_json = serde_json::to_string(&cmd).unwrap();
         assert_eq!(cmd_json, r#"{"op":"subscribe","topic":"/test/topic"}"#);
 
         // Test all arguments
@@ -674,7 +674,7 @@ mod tests {
             .with_fragment_size(1)
             .with_compression(&Compression::None)
             .cmd();
-        let cmd_json = serde_json::to_string(&cmd).expect("Serialization failed");
+        let cmd_json = serde_json::to_string(&cmd).unwrap();
         assert_eq!(
             cmd_json,
             r#"{"op":"subscribe","id":"test","topic":"/test/topic","type":"std_msgs/Example","throttle_rate":1,"queue_length":1,"fragment_size":1,"compression":"none"}"#
@@ -685,12 +685,12 @@ mod tests {
     fn unsubscribe() {
         // Test no optional arguments
         let cmd = Unsubscribe::new("/test/topic");
-        let cmd_json = serde_json::to_string(&cmd).expect("Serialization failed");
+        let cmd_json = serde_json::to_string(&cmd).unwrap();
         assert_eq!(cmd_json, r#"{"op":"unsubscribe","topic":"/test/topic"}"#);
 
         // Test all arguments
         let cmd = Unsubscribe::new("/test/topic").with_id("test").cmd();
-        let cmd_json = serde_json::to_string(&cmd).expect("Serialization failed");
+        let cmd_json = serde_json::to_string(&cmd).unwrap();
         assert_eq!(
             cmd_json,
             r#"{"op":"unsubscribe","id":"test","topic":"/test/topic"}"#
@@ -705,7 +705,7 @@ mod tests {
         // We have to type CallService with a bogus serialisable type if providing no arguments
         // This is because serde cannot serialize on the never type <!> operator
         let cmd: CallService<TestStruct> = CallService::new("/test/srv");
-        let cmd_json = serde_json::to_string(&cmd).expect("Serialization failed");
+        let cmd_json = serde_json::to_string(&cmd).unwrap();
         assert_eq!(cmd_json, r#"{"op":"call_service","service":"/test/srv"}"#);
 
         // Test all arguments
@@ -715,7 +715,7 @@ mod tests {
             .with_fragment_size(1)
             .with_compression(&Compression::None)
             .cmd();
-        let cmd_json = serde_json::to_string(&cmd).expect("Serialization failed");
+        let cmd_json = serde_json::to_string(&cmd).unwrap();
         assert_eq!(
             cmd_json,
             r#"{"op":"call_service","id":"test","service":"/test/srv","args":{"string":"test string","int":5},"fragment_size":1,"compression":"none"}"#
@@ -724,13 +724,13 @@ mod tests {
         // Test deserialise
         let _cmd: CallService<TestStruct> =
             serde_json::from_str(r#"{"op":"call_service","id":"test","service":"/test/srv","args":{"string":"test string","int":5},"fragment_size":1,"compression":"none"}"#)
-                .expect("Deserialization failed");
+                .unwrap();
     }
 
     #[test]
     fn advertise_service() {
         let cmd = AdvertiseService::new("std_srv/Example", "/test/srv");
-        let cmd_json = serde_json::to_string(&cmd).expect("Serialization failed");
+        let cmd_json = serde_json::to_string(&cmd).unwrap();
         assert_eq!(
             cmd_json,
             r#"{"op":"advertise_service","type":"std_srv/Example","service":"/test/srv"}"#
@@ -740,7 +740,7 @@ mod tests {
     #[test]
     fn unadvertise_service() {
         let cmd = UnadvertiseService::new("/test/srv");
-        let cmd_json = serde_json::to_string(&cmd).expect("Serialization failed");
+        let cmd_json = serde_json::to_string(&cmd).unwrap();
         assert_eq!(
             cmd_json,
             r#"{"op":"unadvertise_service","service":"/test/srv"}"#
@@ -755,7 +755,7 @@ mod tests {
         // We have to type CallService with a bogus serialisable type if providing no arguments
         // This is because serde cannot serialize on the never type <!> operator
         let cmd: ServiceResponse<TestStruct> = ServiceResponse::new("/test/srv", true);
-        let cmd_json = serde_json::to_string(&cmd).expect("Serialization failed");
+        let cmd_json = serde_json::to_string(&cmd).unwrap();
         assert_eq!(
             cmd_json,
             r#"{"op":"service_response","service":"/test/srv","result":true}"#
@@ -766,7 +766,7 @@ mod tests {
             .with_id("test")
             .with_values(&test_struct)
             .cmd();
-        let cmd_json = serde_json::to_string(&cmd).expect("Serialization failed");
+        let cmd_json = serde_json::to_string(&cmd).unwrap();
         assert_eq!(
             cmd_json,
             r#"{"op":"service_response","id":"test","service":"/test/srv","values":{"string":"test string","int":5},"result":true}"#
@@ -775,6 +775,6 @@ mod tests {
         // Test deserialise
         let _cmd: ServiceResponse<TestStruct> =
             serde_json::from_str(r#"{"op":"service_response","id":"test","service":"/test/srv","values":{"string":"test string","int":5},"result":true}"#)
-                .expect("Deserialization failed");
+                .unwrap();
     }
 }

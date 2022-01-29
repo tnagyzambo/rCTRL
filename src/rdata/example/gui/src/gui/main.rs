@@ -146,25 +146,26 @@ impl epi::App for RctrlGUI {
                 //*value = gui_things.value;
 
                 {
-                    let args = rosbridge::lifecycle_msgs::srv::ChangeStateRequest::configure();
+                    let args = rosbridge::lifecycle_msgs::srv::change_state::Request::configure();
                     let cmd = rosbridge::protocol::CallService::new("/rdata/change_state").with_args(&args).cmd();
                     let mut w = ws_write_lock.write().unwrap();
                     w.push_back(serde_json::to_string(&cmd).unwrap());
                 }
 
                 {
-                    let args = rosbridge::lifecycle_msgs::srv::ChangeStateRequest::activate();
+                    let args = rosbridge::lifecycle_msgs::srv::change_state::Request::activate();
                     let cmd = rosbridge::protocol::CallService::new("/rdata/change_state").with_args(&args).cmd();
                     let mut w = ws_write_lock.write().unwrap();
                     w.push_back(serde_json::to_string(&cmd).unwrap());
                 }
 
                 {
-                    let args = rosbridge::lifecycle_msgs::srv::ChangeStateRequest::shutdown();
+                    let args = rosbridge::lifecycle_msgs::srv::change_state::Request::shutdown();
                     let cmd = rosbridge::protocol::CallService::new("/rdata/change_state").with_args(&args).cmd();
                     let mut w = ws_write_lock.write().unwrap();
                     w.push_back(serde_json::to_string(&cmd).unwrap());
                 }
+                rosbridge::lifecycle_msgs::msg::state::State
             }
 
             ui.with_layout(egui::Layout::bottom_up(egui::Align::LEFT), |ui| {

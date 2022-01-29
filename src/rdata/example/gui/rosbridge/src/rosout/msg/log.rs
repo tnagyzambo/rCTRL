@@ -2,17 +2,17 @@ use serde_derive::Deserialize;
 
 #[derive(Deserialize, Debug)]
 pub struct Log {
-    stamp: Stamp,
-    level: i64,
-    name: String,
-    msg: String,
-    file: String,
-    function: String,
-    line: i64,
+    pub stamp: Stamp,
+    pub level: i64,
+    pub name: String,
+    pub msg: String,
+    pub file: String,
+    pub function: String,
+    pub line: i64,
 }
 
 #[derive(Deserialize, Debug)]
 pub struct Stamp {
-    sec: i64,
-    nanosec: i64,
+    pub sec: i64,
+    pub nanosec: i64,
 }
