@@ -12,14 +12,14 @@ use strum_macros::AsRefStr;
 // As the rosbridge protocol has a flat heirachy, most of the methods that are easily found for partial deserialization do not work
 // REFERENCE: <https://github.com/serde-rs/serde/issues/941>
 #[derive(Deserialize, Debug)]
-pub struct Message {
+pub struct OpWrapper {
     pub op: String,
     #[serde(flatten)]
     pub other: BTreeMap<String, Value>,
 }
 
 #[derive(Deserialize, Debug)]
-pub struct MessagePublish {
+pub struct PublishWrapper {
     pub topic: String,
     pub msg: Value,
 }

@@ -1,3 +1,4 @@
+use wasm_bindgen::prelude::*;
 use gloo_console::log;
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -6,7 +7,7 @@ use std::collections::VecDeque;
 
 use eframe::{egui, epi};
 
-pub trait MyTrait {
+pub trait GuiElem {
     fn update(&self, ctx: &egui::CtxRef, frame: &epi::Frame);
     fn up(&mut self, value: f32);
 }
@@ -25,7 +26,7 @@ impl GuiThing {
     }
 }
 
-impl MyTrait for GuiThing {
+impl GuiElem for GuiThing {
     fn update(&self, ctx: &egui::CtxRef, frame: &epi::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
             // The top panel is often a good place for a menu bar:
@@ -48,7 +49,7 @@ impl GuiThot {
     }
 }
 
-impl MyTrait for GuiThot {
+impl GuiElem for GuiThot {
     fn update(&self, ctx: &egui::CtxRef, frame: &epi::Frame) {}
     fn up(&mut self, value: f32) {}
 }
@@ -58,7 +59,7 @@ impl MyTrait for GuiThot {
 #[cfg_attr(feature = "persistence", serde(default))] // if we add new fields, give them default values when deserializing old state
 pub struct RctrlGUI {
     label: String,
-    ws_read_lock: Rc<RwLock<HashMap<String, Box<dyn MyTrait>>>>,
+    ws_read_lock: Rc<RwLock<HashMap<String, Box<dyn GuiElem>>>>,
     ws_write_lock: Rc<RwLock<VecDeque<String>>>,
 
     // this how you opt-out of serialization of a member
@@ -68,7 +69,7 @@ pub struct RctrlGUI {
 
 impl RctrlGUI {
     pub fn new(
-        ws_read_lock: Rc<RwLock<HashMap<String, Box<dyn MyTrait>>>>,
+        ws_read_lock: Rc<RwLock<HashMap<String, Box<dyn GuiElem>>>>,
         ws_write_lock: Rc<RwLock<VecDeque<String>>>,
     ) -> Self {
         Self {
@@ -165,7 +166,6 @@ impl epi::App for RctrlGUI {
                     let mut w = ws_write_lock.write().unwrap();
                     w.push_back(serde_json::to_string(&cmd).unwrap());
                 }
-                rosbridge::lifecycle_msgs::msg::state::State
             }
 
             ui.with_layout(egui::Layout::bottom_up(egui::Align::LEFT), |ui| {

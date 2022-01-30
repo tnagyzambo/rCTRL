@@ -96,4 +96,17 @@ RUN chmod -R a+w $RUSTUP_HOME $CARGO_HOME;
 # Rust/WASM dependencies
 USER ros
 RUN rustup target add wasm32-unknown-unknown
-RUN cargo install trunk
+RUN cargo install wasm-bindgen-cli
+RUN cargo install basic-http-server
+
+USER root
+RUN apt-get update
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy jq
+
+ARG WASM_OPT_RELEASE=105
+RUN wget https://github.com/WebAssembly/binaryen/archive/refs/tags/version_${WASM_OPT_RELEASE}.tar.gz
+RUN tar -xf version_${WASM_OPT_RELEASE}.tar.gz -C /lib
+RUN rm version_${WASM_OPT_RELEASE}.tar.gz
+RUN mkdir /lib/binaryen-version_${WASM_OPT_RELEASE}/build
+RUN cd /lib/binaryen-version_${WASM_OPT_RELEASE} && cmake . && make
+ENV PATH="/lib/binaryen-version_${WASM_OPT_RELEASE}/bin:${PATH}"
