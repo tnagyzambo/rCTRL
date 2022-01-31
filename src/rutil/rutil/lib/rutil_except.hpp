@@ -1,9 +1,9 @@
 #pragma once
 
 #include <stdexcept>
-#include <rctrl_fmt.hpp>
+#include <rutil_fmt.hpp>
 
-namespace rctrl::util::except
+namespace rutil::except
 {
     class service_error : public std::runtime_error
     {

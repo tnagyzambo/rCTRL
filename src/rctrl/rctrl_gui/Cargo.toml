@@ -1,0 +1,10 @@
+[package]
+name = "rctrl_gui"
+version = "0.1.0"
+edition = "2018"
+
+[dependencies]
+rosbridge = { path = "../rctrl_rosbridge" }
+
+eframe = "0.16.0"
+serde_json = "1.0.13"

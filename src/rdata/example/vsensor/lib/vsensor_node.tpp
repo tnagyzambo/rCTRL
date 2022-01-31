@@ -29,7 +29,7 @@ rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn rdata:
     {
         rdata::iface::createLogger(this->clCreateLogger->get_service_name(), this->get_node_base_interface(), this->clCreateLogger, this->loggerTopicName.c_str());
     }
-    catch (const rctrl::util::except::service_error &e)
+    catch (const rutil::except::service_error &e)
     {
         // Unrecoverable error on failure to parse
         std::string error = "\033[1;31mFAILED TO CONSTRUCT NODE '";

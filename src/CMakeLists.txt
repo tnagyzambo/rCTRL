@@ -16,7 +16,6 @@ find_package(rosidl_default_generators REQUIRED)
 find_package(CURL REQUIRED)
 find_package(tomlplusplus REQUIRED)
 
-
 # Create ros2 interfaces
 rosidl_generate_interfaces(${PROJECT_NAME}
                            "rdata/iface/msg/LogBool.msg"
@@ -28,21 +27,21 @@ rosidl_generate_interfaces(${PROJECT_NAME}
                            "rdata/iface/srv/RemoveLogger.srv")
 
 # Lifecycle node handle library
-add_library(rctrl_lc_client STATIC rctrl/lc_client/lib/rctrl_lc_client.cpp)
+add_library(rutil_lc_client STATIC rutil/rutil_lc_client/lib/rutil_lc_client.cpp)
 
-target_include_directories(rctrl_lc_client PUBLIC rctrl/lc_client/lib) 
+target_include_directories(rutil_lc_client PUBLIC rutil/rutil_lc_client/lib) 
 
-ament_target_dependencies(rctrl_lc_client rclcpp
+ament_target_dependencies(rutil_lc_client rclcpp
                                           lifecycle_msgs)
 
 # Utilities library
-add_library(rctrl_util INTERFACE)
+add_library(rutil INTERFACE)
 
-target_sources(rctrl_util INTERFACE ${CMAKE_CURRENT_SOURCE_DIR} rctrl/util/lib/rctrl_util.hpp
-                                                                rctrl/util/lib/rctrl_fmt.hpp
-                                                                rctrl/util/lib/rctrl_except.hpp)
+target_sources(rutil INTERFACE ${CMAKE_CURRENT_SOURCE_DIR} rutil/rutil/lib/rutil.hpp
+                                                           rutil/rutil/lib/rutil_fmt.hpp
+                                                           rutil/rutil/lib/rutil_except.hpp)
 
-target_include_directories(rctrl_util INTERFACE rctrl/util/lib)
+target_include_directories(rutil INTERFACE rutil/rutil/lib)
 
 # rockerDATA interface library
 add_library(rdata_iface INTERFACE)
@@ -60,7 +59,7 @@ add_executable(rdata_main rdata/main/src/main.cpp
 target_include_directories(rdata_main PRIVATE rdata/main/lib)
 target_link_libraries(rdata_main CURL::libcurl
                                  tomlplusplus::tomlplusplus
-                                 rctrl_util
+                                 rutil
                                  rdata_iface)
 
 ament_target_dependencies(rdata_main rclcpp
@@ -73,7 +72,7 @@ add_executable(rdata_vsensor rdata/example/vsensor/src/main.cpp
                              rdata/example/vsensor/lib/vsensor_node.cpp)
 
 target_include_directories(rdata_vsensor PRIVATE rdata/example/vsensor/lib)
-target_link_libraries(rdata_vsensor rctrl_util
+target_link_libraries(rdata_vsensor rutil
                                     rdata_iface)
 
 ament_target_dependencies(rdata_vsensor rclcpp
@@ -86,8 +85,8 @@ add_executable(rdata_example rdata/example/lc_client/src/main.cpp
                              rdata/example/lc_client/lib/lc_client_node.cpp)
 
 target_include_directories(rdata_example PRIVATE rdata/example/lc_client/lib)
-target_link_libraries(rdata_example rctrl_lc_client
-                                    rctrl_util
+target_link_libraries(rdata_example rutil
+                                    rutil_lc_client
                                     rdata_iface)
 
 ament_target_dependencies(rdata_example rclcpp

@@ -4,27 +4,22 @@
         {
             "label": "build",
             "type": "shell",
-            "command": "colcon build --cmake-args '-DCMAKE_BUILD_TYPE=Debug'",
+            "command": "clear && colcon build --cmake-args '-DCMAKE_BUILD_TYPE=Debug'",
         },
         {
-            "label": "build rust",
+            "label": "rctrl build",
             "type": "shell",
-            "command": "cd src/rdata/example/gui && bash web_build.sh",
+            "command": "clear && cd src/rctrl && bash web_build.sh",
         },
         {
-            "label": "test rust",
+            "label": "rctrl run",
             "type": "shell",
-            "command": "cargo test --manifest-path=src/rdata/example/gui/rosbridge/Cargo.toml",
+            "command": "clear && cd src/rctrl && bash web_start.sh",
         },
         {
-            "label": "docs rust",
+            "label": "rctrl test",
             "type": "shell",
-            "command": "cargo doc --manifest-path=src/rdata/example/gui/Cargo.toml",
-        },
-        {
-            "label": "run rust",
-            "type": "shell",
-            "command": "cd src/rdata/example/gui/ && bash web_start.sh",
+            "command": "clear && cargo test --manifest-path=src/rctrl/rctrl_rosbridge/Cargo.toml",
         },
         {
             "label": "run rdata",

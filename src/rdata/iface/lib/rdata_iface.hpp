@@ -1,6 +1,6 @@
 #pragma once
 
-#include <rctrl_except.hpp>
+#include <rutil.hpp>
 
 #include <rdata/srv/create_logger.hpp>
 #include <rdata/srv/remove_logger.hpp>
@@ -43,7 +43,7 @@ namespace rdata::iface
                 // Just have to live with this for now, exiting anyway
                 // REFERENCE: https://github.com/ros2/rclcpp/issues/1139
                 RCLCPP_ERROR(rclcpp::get_logger(callingNode->get_name()), "\033[1;31mInterupted while waiting for '%s'!, exiting\033[0m", serviceName);
-                throw rctrl::util::except::service_error(serviceName);
+                throw rutil::except::service_error(serviceName);
             }
             RCLCPP_INFO(rclcpp::get_logger(callingNode->get_name()), "Service '%s' not available, waiting", serviceName);
         }

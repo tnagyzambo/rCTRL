@@ -1,0 +1,7 @@
+[workspace]
+resolver = "2"
+members = [
+    "rctrl",
+    "rctrl_gui",
+    "rctrl_rosbridge",
+]

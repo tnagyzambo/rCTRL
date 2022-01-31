@@ -9,7 +9,7 @@
 #include <rclcpp/rclcpp.hpp>
 #include <rcutils/logging.h>
 
-#include <rctrl_lc_client.hpp>
+#include <rutil_lc_client.hpp>
 #include <rdata_iface.hpp>
 
 #include <rcl_interfaces/msg/log.hpp>
@@ -36,7 +36,7 @@ namespace rdata::lc_client
         std::unique_ptr<rctrl::lc::Client> vF64;
 
         void initNcurses();
-        lifecycle_msgs::msg::Transition
+        //lifecycle_msgs::msg::Transition
 
         rclcpp::Subscription<rcl_interfaces::msg::Log>::SharedPtr subRosout;
         void callbackSubRosout(const rcl_interfaces::msg::Log::SharedPtr) const;

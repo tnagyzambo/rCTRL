@@ -9,7 +9,7 @@
 
 #include <influx_client.hpp>
 #include <rdata_iface.hpp>
-#include <rctrl_util.hpp>
+#include <rutil.hpp>
 
 #include <rdata/srv/create_logger.hpp>
 #include <rdata/srv/remove_logger.hpp>

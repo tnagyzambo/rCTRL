@@ -39,5 +39,5 @@ namespace rctrl::lc
     };
 
 // Implementation of templated functions
-#include <rctrl_lc_client.tpp>
+#include <rutil_lc_client.tpp>
 }

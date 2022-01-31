@@ -1,5 +1,3 @@
-use wasm_bindgen::prelude::*;
-use gloo_console::log;
 use std::collections::HashMap;
 use std::rc::Rc;
 use std::sync::RwLock;

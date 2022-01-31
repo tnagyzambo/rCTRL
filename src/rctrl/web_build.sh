@@ -40,7 +40,7 @@ CRATE_NAME_SNAKE_CASE="${CRATE_NAME//-/_}" # for those who name crates with-keba
 export RUSTFLAGS=--cfg=web_sys_unstable_apis
 
 # Clear output from old stuff:
-rm -f docs/${CRATE_NAME_SNAKE_CASE}_bg.wasm
+rm -f dist/${CRATE_NAME_SNAKE_CASE}_bg.wasm
 
 echo "Building rust…"
 BUILD=release
@@ -52,15 +52,17 @@ TARGET=`cargo metadata --format-version=1 | jq --raw-output .target_directory`
 echo "Generating JS bindings for wasm…"
 TARGET_NAME="${CRATE_NAME_SNAKE_CASE}.wasm"
 wasm-bindgen "${TARGET}/wasm32-unknown-unknown/${BUILD}/${TARGET_NAME}" \
-  --out-dir docs --no-modules --no-typescript
+  --out-dir dist --no-modules --no-typescript
 
 if [ "${FAST}" = false ]; then
   echo "Optimizing wasm…"
   # to get wasm-opt:  apt/brew/dnf install binaryen
-  wasm-opt docs/${CRATE_NAME}_bg.wasm -O2 --fast-math -o docs/${CRATE_NAME}_bg.wasm # add -g to get debug symbols
+  wasm-opt dist/${CRATE_NAME}_bg.wasm -O2 --fast-math -o dist/${CRATE_NAME}_bg.wasm # add -g to get debug symbols
 fi
 
-echo "Finished: docs/${CRATE_NAME_SNAKE_CASE}.wasm"
+cp index.html dist/index.html
+
+echo "Finished: dist/${CRATE_NAME_SNAKE_CASE}.wasm"
 
 if [ "${OPEN}" = true ]; then
   if [[ "$OSTYPE" == "linux-gnu"* ]]; then
@@ -74,3 +76,4 @@ if [ "${OPEN}" = true ]; then
     open http://localhost:8080/index.html
   fi
 fi
+
