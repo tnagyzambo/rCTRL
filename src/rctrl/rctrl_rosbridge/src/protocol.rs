@@ -24,6 +24,13 @@ pub struct PublishWrapper {
     pub msg: Value,
 }
 
+#[derive(Deserialize, Debug)]
+pub struct ServiceResponseWrapper {
+    pub service: String,
+    pub values: Value,
+    pub result: bool,
+}
+
 // Enum to provide distinction between owned and referenced pointers
 // A pointer to `T` which may or may not own the data. When deserializing we always want to produce owned data.
 // Serde untagged makes this enum transparent and hides Ref and Owned from the serialised output

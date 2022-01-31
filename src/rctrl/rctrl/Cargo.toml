@@ -8,7 +8,7 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 rctrl_gui = { path = "../rctrl_gui" }
-rosbridge = { path = "../rctrl_rosbridge" }
+rctrl_rosbridge = { path = "../rctrl_rosbridge" }
 
 wasm-bindgen = "0.2.79"
 eframe = "0.16.0"

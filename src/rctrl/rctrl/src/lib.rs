@@ -9,7 +9,7 @@ use std::collections::HashMap;
 use std::sync::RwLock;
 use std::rc::Rc;
 
-use rctrl_gui::main::{GuiElem, GuiThing, GuiThot, RctrlGUI};
+use rctrl_gui::{Gui, GuiElems, lc::StateDisplay};
 
 mod ws;
 
@@ -19,7 +19,7 @@ pub fn main() -> Result<(), eframe::wasm_bindgen::JsValue> {
     let (mut ws_write, mut ws_read) = ws.split();
 
     // vars mutable from websocket
-    let ws_read_lock = Rc::new(RwLock::new(HashMap::<String, Box<dyn GuiElem>>::new()));
+    let ws_read_lock = Rc::new(RwLock::new(GuiElems::<String, String>::new()));
     let ws_read_lock_c = Rc::clone(&ws_read_lock);
 
     // Websocket write buffer
@@ -28,8 +28,7 @@ pub fn main() -> Result<(), eframe::wasm_bindgen::JsValue> {
 
     {
         let mut hash_map = ws_read_lock.write().unwrap();
-        hash_map.insert(String::from("/rosout"), Box::new(GuiThing::new()));
-        hash_map.insert(String::from("that"), Box::new(GuiThot::new()));
+        hash_map.insert(String::from("service_response"), String::from("/rdata/get_state"), Box::new(StateDisplay::new()));
     }
 
     // Async read loop
@@ -46,13 +45,13 @@ pub fn main() -> Result<(), eframe::wasm_bindgen::JsValue> {
 
     // this is needed to subscribe to logging
     {
-        let cmd = rosbridge::protocol::Subscribe::new("/rdata/transition_event");
+        let cmd = rctrl_rosbridge::protocol::Subscribe::new("/rdata/transition_event");
         let mut test = ws_write_lock.write().unwrap();
         test.push_back(serde_json::to_string(&cmd).expect("Failed to serialise"));
     }
 
     {
-        let cmd = rosbridge::protocol::Subscribe::new("/rosout");
+        let cmd = rctrl_rosbridge::protocol::Subscribe::new("/rosout");
         let mut test = ws_write_lock.write().unwrap();
         test.push_back(serde_json::to_string(&cmd).expect("Failed to serialise"));
     }
@@ -64,11 +63,11 @@ pub fn main() -> Result<(), eframe::wasm_bindgen::JsValue> {
     spawn_local(async move {
         loop {
             ws::write_msg_queue(&mut ws_write, &ws_write_lock).await;
-            TimeoutFuture::new(3_000).await;
+            TimeoutFuture::new(500).await;
             log!("hi!");
         }
     });
 
-    let gui = RctrlGUI::new(ws_read_lock_c, ws_write_lock_c);
+    let gui = Gui::new(ws_read_lock_c, ws_write_lock_c);
     eframe::start_web("rctrl_canvas", Box::new(gui))
 }

@@ -1287,8 +1287,8 @@ dependencies = [
  "gloo",
  "gloo-console",
  "rctrl_gui",
+ "rctrl_rosbridge",
  "reqwasm",
- "rosbridge",
  "serde",
  "serde_derive",
  "serde_json",
@@ -1303,8 +1303,19 @@ name = "rctrl_gui"
 version = "0.1.0"
 dependencies = [
  "eframe",
- "rosbridge",
+ "rctrl_rosbridge",
  "serde_json",
+]
+
+[[package]]
+name = "rctrl_rosbridge"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_derive",
+ "serde_json",
+ "strum",
+ "strum_macros",
 ]
 
 [[package]]
@@ -1334,17 +1345,6 @@ dependencies = [
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",
-]
-
-[[package]]
-name = "rosbridge"
-version = "0.1.0"
-dependencies = [
- "serde",
- "serde_derive",
- "serde_json",
- "strum",
- "strum_macros",
 ]
 
 [[package]]

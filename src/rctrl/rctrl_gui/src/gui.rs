@@ -1,63 +1,64 @@
-use std::collections::HashMap;
-use std::rc::Rc;
-use std::sync::RwLock;
 use std::collections::VecDeque;
-
+use std::sync::RwLock;
+use std::rc::Rc;
+use serde_json::Value;
 use eframe::{egui, epi};
 
+use crate::GuiElems;
+
 pub trait GuiElem {
-    fn update(&self, ctx: &egui::CtxRef, frame: &epi::Frame);
-    fn up(&mut self, value: f32);
+    fn update_gui(&self, ctx: &egui::CtxRef, frame: &epi::Frame);
+    fn update_data(&mut self, data: Value);
 }
 
-pub struct GuiThing {
-    pub value: f32,
-}
+// pub struct GuiThing {
+//     pub value: f32,
+// }
 
-pub struct GuiThot {
-    pub value: String,
-}
+// pub struct GuiThot {
+//     pub value: String,
+// }
 
-impl GuiThing {
-    pub fn new() -> Self {
-        Self { value: 6.0 }
-    }
-}
+// impl GuiThing {
+//     pub fn new() -> Self {
+//         Self { value: 6.0 }
+//     }
+// }
 
-impl GuiElem for GuiThing {
-    fn update(&self, ctx: &egui::CtxRef, frame: &epi::Frame) {
-        egui::CentralPanel::default().show(ctx, |ui| {
-            // The top panel is often a good place for a menu bar:
-            egui::menu::bar(ui, |ui| {
-                ui.label(format!("{}", self.value));
-            });
-        });
-    }
+// impl GuiElem<f32> for GuiThing {
+//     fn update_gui(&self, ctx: &egui::CtxRef, frame: &epi::Frame) {
+//         egui::CentralPanel::default().show(ctx, |ui| {
+//             // The top panel is often a good place for a menu bar:
+//             egui::menu::bar(ui, |ui| {
+//                 ui.label(format!("{}", self.value));
+//             });
+//         });
+//     }
 
-    fn up(&mut self, value: f32) {
-        self.value = value;
-    }
-}
+//     fn update_data(&mut self, data: f32) {
+//         self.value = data;
+//     }
+// }
 
-impl GuiThot {
-    pub fn new() -> Self {
-        Self {
-            value: String::from("sheeeet"),
-        }
-    }
-}
+// impl GuiThot {
+//     pub fn new() -> Self {
+//         Self {
+//             value: String::from("sheeeet"),
+//         }
+//     }
+// }
 
-impl GuiElem for GuiThot {
-    fn update(&self, ctx: &egui::CtxRef, frame: &epi::Frame) {}
-    fn up(&mut self, value: f32) {}
-}
+// impl GuiElem<String> for GuiThot {
+//     fn update_gui(&self, ctx: &egui::CtxRef, frame: &epi::Frame) {}
+//     fn update_data(&mut self, data: String) {}
+// }
 
 /// We derive Deserialize/Serialize so we can persist app state on shutdown.
 #[cfg_attr(feature = "persistence", derive(serde::Deserialize, serde::Serialize))]
 #[cfg_attr(feature = "persistence", serde(default))] // if we add new fields, give them default values when deserializing old state
-pub struct RctrlGUI {
+pub struct Gui {
     label: String,
-    ws_read_lock: Rc<RwLock<HashMap<String, Box<dyn GuiElem>>>>,
+    ws_read_lock: Rc<RwLock<GuiElems<String, String>>>,
     ws_write_lock: Rc<RwLock<VecDeque<String>>>,
 
     // this how you opt-out of serialization of a member
@@ -65,9 +66,9 @@ pub struct RctrlGUI {
     pub value: f32,
 }
 
-impl RctrlGUI {
+impl Gui {
     pub fn new(
-        ws_read_lock: Rc<RwLock<HashMap<String, Box<dyn GuiElem>>>>,
+        ws_read_lock: Rc<RwLock<GuiElems<String, String>>>,
         ws_write_lock: Rc<RwLock<VecDeque<String>>>,
     ) -> Self {
         Self {
@@ -79,7 +80,7 @@ impl RctrlGUI {
     }
 }
 
-impl epi::App for RctrlGUI {
+impl epi::App for Gui {
     fn name(&self) -> &str {
         "eframe template"
     }
@@ -145,25 +146,24 @@ impl epi::App for RctrlGUI {
                 //*value = gui_things.value;
 
                 {
-                    let args = rosbridge::lifecycle_msgs::srv::change_state::Request::configure();
-                    let cmd = rosbridge::protocol::CallService::new("/rdata/change_state").with_args(&args).cmd();
+                    let cmd = rctrl_rosbridge::protocol::CallService::<u8>::new("/rdata/get_state");
                     let mut w = ws_write_lock.write().unwrap();
                     w.push_back(serde_json::to_string(&cmd).unwrap());
                 }
 
-                {
-                    let args = rosbridge::lifecycle_msgs::srv::change_state::Request::activate();
-                    let cmd = rosbridge::protocol::CallService::new("/rdata/change_state").with_args(&args).cmd();
-                    let mut w = ws_write_lock.write().unwrap();
-                    w.push_back(serde_json::to_string(&cmd).unwrap());
-                }
+                // {
+                //     let args = rctrl_rosbridge::lifecycle_msgs::srv::change_state::Request::activate();
+                //     let cmd = rctrl_rosbridge::protocol::CallService::new("/rdata/change_state").with_args(&args).cmd();
+                //     let mut w = ws_write_lock.write().unwrap();
+                //     w.push_back(serde_json::to_string(&cmd).unwrap());
+                // }
 
-                {
-                    let args = rosbridge::lifecycle_msgs::srv::change_state::Request::shutdown();
-                    let cmd = rosbridge::protocol::CallService::new("/rdata/change_state").with_args(&args).cmd();
-                    let mut w = ws_write_lock.write().unwrap();
-                    w.push_back(serde_json::to_string(&cmd).unwrap());
-                }
+                // {
+                //     let args = rctrl_rosbridge::lifecycle_msgs::srv::change_state::Request::shutdown();
+                //     let cmd = rctrl_rosbridge::protocol::CallService::new("/rdata/change_state").with_args(&args).cmd();
+                //     let mut w = ws_write_lock.write().unwrap();
+                //     w.push_back(serde_json::to_string(&cmd).unwrap());
+                // }
             }
 
             ui.with_layout(egui::Layout::bottom_up(egui::Align::LEFT), |ui| {
@@ -200,8 +200,8 @@ impl epi::App for RctrlGUI {
 
         let hash_map = ws_read_lock.read().unwrap();
 
-        for gui_elem in hash_map.values() {
-            gui_elem.update(ctx, frame);
+        for gui_elem in hash_map.map.values() {
+            gui_elem.update_gui(ctx, frame);
         }
     }
 }
