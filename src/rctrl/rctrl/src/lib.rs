@@ -1,15 +1,14 @@
-use wasm_bindgen::prelude::*;
-use wasm_bindgen_futures::spawn_local;
 use futures::StreamExt;
 use gloo::timers::future::TimeoutFuture;
 use gloo_console::log;
 use reqwasm::websocket::futures::WebSocket;
 use std::collections::VecDeque;
-use std::collections::HashMap;
-use std::sync::RwLock;
 use std::rc::Rc;
+use std::sync::RwLock;
+use wasm_bindgen::prelude::*;
+use wasm_bindgen_futures::spawn_local;
 
-use rctrl_gui::{Gui, GuiElems, lc::StateDisplay};
+use rctrl_gui::{lc::StateDisplay, Gui, GuiElems};
 
 mod ws;
 
@@ -28,7 +27,11 @@ pub fn main() -> Result<(), eframe::wasm_bindgen::JsValue> {
 
     {
         let mut hash_map = ws_read_lock.write().unwrap();
-        hash_map.insert(String::from("service_response"), String::from("/rdata/get_state"), Box::new(StateDisplay::new()));
+        hash_map.insert(
+            String::from("service_response"),
+            String::from("/rdata/get_state"),
+            Box::new(StateDisplay::new()),
+        );
     }
 
     // Async read loop
@@ -64,7 +67,6 @@ pub fn main() -> Result<(), eframe::wasm_bindgen::JsValue> {
         loop {
             ws::write_msg_queue(&mut ws_write, &ws_write_lock).await;
             TimeoutFuture::new(500).await;
-            log!("hi!");
         }
     });
 

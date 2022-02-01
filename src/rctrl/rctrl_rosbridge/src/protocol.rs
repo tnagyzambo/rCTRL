@@ -2,8 +2,8 @@
 //! REFERENCE: <https://github.com/biobotus/rosbridge_suite/blob/master/ROSBRIDGE_PROTOCOL.md>
 
 use serde_derive::{Deserialize, Serialize};
-use std::collections::BTreeMap;
 use serde_json::Value;
+use std::collections::BTreeMap;
 use std::convert::AsRef;
 use strum_macros::AsRefStr;
 
@@ -11,7 +11,7 @@ use strum_macros::AsRefStr;
 // Further deserialization can be done based on "op" field
 // As the rosbridge protocol has a flat heirachy, most of the methods that are easily found for partial deserialization do not work
 // REFERENCE: <https://github.com/serde-rs/serde/issues/941>
-#[derive(Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct OpWrapper {
     pub op: String,
     #[serde(flatten)]

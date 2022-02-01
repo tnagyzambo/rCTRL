@@ -1,4 +1,3 @@
-
 /// REFERENCE: <https://design.ros2.org/articles/node_lifecycle.html>
 /// REFERENCE: <https://github.com/ros2/rcl_interfaces/blob/master/lifecycle_msgs/srv/GetState.srv>
 use serde_derive::Deserialize;
