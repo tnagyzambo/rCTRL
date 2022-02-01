@@ -1,6 +1,6 @@
 mod gui;
-mod gui_elems;
+mod gui_elem;
 pub mod lc;
 
-pub use gui::{Gui, GuiElem};
-pub use gui_elems::GuiElems;
+pub use gui::Gui;
+pub use gui_elem::{GuiElem, GuiElems};

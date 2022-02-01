@@ -18,21 +18,12 @@ pub fn main() -> Result<(), eframe::wasm_bindgen::JsValue> {
     let (mut ws_write, mut ws_read) = ws.split();
 
     // vars mutable from websocket
-    let ws_read_lock = Rc::new(RwLock::new(GuiElems::<String, String>::new()));
-    let ws_read_lock_c = Rc::clone(&ws_read_lock);
+    let gui_elem_lock = Rc::new(RwLock::new(GuiElems::<String, String>::new()));
+    let gui_elem_lock_c = Rc::clone(&gui_elem_lock);
 
     // Websocket write buffer
     let ws_write_lock = Rc::new(RwLock::new(VecDeque::<String>::with_capacity(100)));
     let ws_write_lock_c = Rc::clone(&ws_write_lock);
-
-    {
-        let mut hash_map = ws_read_lock.write().unwrap();
-        hash_map.insert(
-            String::from("service_response"),
-            String::from("/rdata/get_state"),
-            Box::new(StateDisplay::new()),
-        );
-    }
 
     // Async read loop
     // spawn_local reaches out from wasm to the javascript glue code to execute a rust future on the current thread
@@ -41,18 +32,12 @@ pub fn main() -> Result<(), eframe::wasm_bindgen::JsValue> {
     spawn_local(async move {
         log!("starting...");
         while let Some(msg) = ws_read.next().await {
-            ws::read(msg, &ws_read_lock);
+            ws::read(msg, &gui_elem_lock);
         }
         log!("WebSocket Closed");
     });
 
     // this is needed to subscribe to logging
-    {
-        let cmd = rctrl_rosbridge::protocol::Subscribe::new("/rdata/transition_event");
-        let mut test = ws_write_lock.write().unwrap();
-        test.push_back(serde_json::to_string(&cmd).expect("Failed to serialise"));
-    }
-
     {
         let cmd = rctrl_rosbridge::protocol::Subscribe::new("/rosout");
         let mut test = ws_write_lock.write().unwrap();
@@ -70,6 +55,6 @@ pub fn main() -> Result<(), eframe::wasm_bindgen::JsValue> {
         }
     });
 
-    let gui = Gui::new(ws_read_lock_c, ws_write_lock_c);
+    let gui = Gui::new(gui_elem_lock_c, ws_write_lock_c);
     eframe::start_web("rctrl_canvas", Box::new(gui))
 }
