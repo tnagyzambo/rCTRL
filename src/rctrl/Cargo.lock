@@ -189,6 +189,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "console_error_panic_hook"
+version = "0.1.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a06aeb73f470f66dcdbf7223caeebb85984942f22f1adb2a088cf9668146bbbc"
+dependencies = [
+ "cfg-if 1.0.0",
+ "wasm-bindgen",
+]
+
+[[package]]
 name = "copypasta"
 version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1281,12 +1291,12 @@ dependencies = [
 name = "rctrl"
 version = "0.1.0"
 dependencies = [
+ "console_error_panic_hook",
  "eframe",
  "futures",
  "futures-util",
  "gloo",
  "gloo-console",
- "rctrl_gui",
  "rctrl_rosbridge",
  "reqwasm",
  "serde",
@@ -1296,15 +1306,6 @@ dependencies = [
  "strum_macros",
  "wasm-bindgen",
  "wasm-bindgen-futures",
-]
-
-[[package]]
-name = "rctrl_gui"
-version = "0.1.0"
-dependencies = [
- "eframe",
- "rctrl_rosbridge",
- "serde_json",
 ]
 
 [[package]]

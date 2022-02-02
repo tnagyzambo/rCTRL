@@ -1,28 +1,22 @@
-use crate::lc::LifecycleManager;
-use crate::{GuiElem, GuiElems};
+use crate::gui::lifecycle_manager::LifecycleManager;
+use crate::ws_lock::WsLock;
 use eframe::{egui, epi};
-use std::collections::VecDeque;
 use std::rc::Rc;
-use std::sync::RwLock;
 
 /// We derive Deserialize/Serialize so we can persist app state on shutdown.
 #[cfg_attr(feature = "persistence", derive(serde::Deserialize, serde::Serialize))]
 #[cfg_attr(feature = "persistence", serde(default))] // if we add new fields, give them default values when deserializing old state
 pub struct Gui {
-    ws_read_lock: Rc<RwLock<GuiElems<String, String>>>,
-    ws_write_lock: Rc<RwLock<VecDeque<String>>>,
+    ws: Rc<WsLock>,
     lifecycle_manager: LifecycleManager,
 }
 
 impl Gui {
-    pub fn new(
-        ws_read_lock: Rc<RwLock<GuiElems<String, String>>>,
-        ws_write_lock: Rc<RwLock<VecDeque<String>>>,
-    ) -> Self {
+    pub fn new(ws: Rc<WsLock>) -> Self {
+        let lifecycle_manager = LifecycleManager::new(&ws);
         Self {
-            ws_read_lock: ws_read_lock,
-            ws_write_lock: ws_write_lock,
-            lifecycle_manager: LifecycleManager::default(),
+            ws: ws,
+            lifecycle_manager: lifecycle_manager,
         }
     }
 }
@@ -39,7 +33,6 @@ impl epi::App for Gui {
         _frame: &epi::Frame,
         _storage: Option<&dyn epi::Storage>,
     ) {
-        self.lifecycle_manager.connect_to_ws(&self.ws_read_lock);
         // Load previous app state (if any).
         // Note that you must enable the `persistence` feature for this to work.
         #[cfg(feature = "persistence")]
@@ -59,8 +52,7 @@ impl epi::App for Gui {
     /// Put your widgets into a `SidePanel`, `TopPanel`, `CentralPanel`, `Window` or `Area`.
     fn update(&mut self, ctx: &egui::CtxRef, frame: &epi::Frame) {
         let Self {
-            ws_read_lock,
-            ws_write_lock,
+            ws,
             lifecycle_manager,
         } = self;
         egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
@@ -78,11 +70,8 @@ impl epi::App for Gui {
             ui.heading("Side Panel");
 
             if ui.button("Increment").clicked() {
-                {
-                    let cmd = rctrl_rosbridge::protocol::CallService::<u8>::new("/rdata/get_state");
-                    let mut w = ws_write_lock.write().unwrap();
-                    w.push_back(serde_json::to_string(&cmd).unwrap());
-                }
+                let cmd = rctrl_rosbridge::protocol::CallService::<u8>::new("/rdata/get_state");
+                self.ws.add_ws_write(serde_json::to_string(&cmd).unwrap());
 
                 // {
                 //     let args = rctrl_rosbridge::lifecycle_msgs::srv::change_state::Request::activate();
@@ -102,7 +91,6 @@ impl epi::App for Gui {
 
         egui::CentralPanel::default().show(ctx, |ui| {});
 
-        self.lifecycle_manager
-            .draw(ctx, &self.ws_read_lock, &self.ws_write_lock);
+        self.lifecycle_manager.draw(ctx);
     }
 }

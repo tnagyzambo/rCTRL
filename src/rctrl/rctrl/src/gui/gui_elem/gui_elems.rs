@@ -1,23 +1,10 @@
 /// REFERENCE: <https://stackoverflow.com/questions/45786717/how-to-implement-hashmap-with-two-keys/45795699>
-use eframe::egui::Ui;
-use serde_json::Value;
+use crate::gui::GuiElem;
 use std::borrow::Borrow;
 use std::collections::HashMap;
-use std::collections::VecDeque;
 use std::hash::{Hash, Hasher};
 use std::rc::Rc;
-use std::sync::RwLock;
-
-// Trait definition for all members referenced in the GuiElems HashMap
-pub trait GuiElem {
-    fn draw(
-        &self,
-        ui: &mut Ui,
-        ws_read_lock: &Rc<RwLock<GuiElems<String, String>>>,
-        ws_write_lock: &Rc<RwLock<VecDeque<String>>>,
-    );
-    fn update_data(&mut self, data: Value);
-}
+use std::sync::Mutex;
 
 #[derive(Eq, PartialEq, Hash)]
 struct A(&'static str);
@@ -84,7 +71,15 @@ impl<A: Eq, B: Eq> Eq for dyn KeyPair<A, B> + '_ {}
 // The value type Rc<RwLock<dyn GuiElem>> can probably be moved to a generic value argument if this two key map ever has to be reused
 // but for now this is not needed
 pub struct GuiElems<A: Eq + Hash, B: Eq + Hash> {
-    pub map: HashMap<(A, B), Rc<RwLock<dyn GuiElem>>>,
+    pub map: HashMap<(A, B), Rc<Mutex<dyn GuiElem>>>,
+}
+
+impl<A: Eq + Hash, B: Eq + Hash> Default for GuiElems<A, B> {
+    fn default() -> Self {
+        Self {
+            map: HashMap::default(),
+        }
+    }
 }
 
 // We must expose all the methods that we wish to call from the basic HashMap contained within GuiElems
@@ -98,7 +93,7 @@ impl<A: Eq + Hash, B: Eq + Hash> GuiElems<A, B> {
     // There is some issue with dereferencing the Rc<RwLock<dyn GuiElem>> when implementing get() as described in the reference material
     // The cleanest way that I've for getting an imutable reference to the underlying value is to clone the Rc<> that wraps everything
     // This makes sense as we are increasing the reference cound to the underlying RwLock<dyn GuiElem>> by one when an match is made
-    pub fn get(&self, a: &A, b: &B) -> Option<Rc<RwLock<dyn GuiElem>>> {
+    pub fn get(&self, a: &A, b: &B) -> Option<Rc<Mutex<dyn GuiElem>>> {
         match self.map.get(&(a, b) as &dyn KeyPair<A, B>) {
             Some(value) => Some(Rc::clone(&value)),
             None => None,
@@ -106,11 +101,11 @@ impl<A: Eq + Hash, B: Eq + Hash> GuiElems<A, B> {
     }
 
     // Provides a mutable reference the the Rc<> that wraps the underlying data, allowing us to point to different data
-    pub fn get_mut(&mut self, a: &A, b: &B) -> Option<&mut Rc<RwLock<dyn GuiElem>>> {
+    pub fn get_mut(&mut self, a: &A, b: &B) -> Option<&mut Rc<Mutex<dyn GuiElem>>> {
         self.map.get_mut(&(a, b) as &dyn KeyPair<A, B>)
     }
 
-    pub fn insert(&mut self, a: A, b: B, v: Rc<RwLock<dyn GuiElem>>) {
+    pub fn insert(&mut self, a: A, b: B, v: Rc<Mutex<dyn GuiElem>>) {
         self.map.insert((a, b), v);
     }
 }

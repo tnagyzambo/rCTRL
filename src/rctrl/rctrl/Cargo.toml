@@ -7,7 +7,6 @@ edition = "2018"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-rctrl_gui = { path = "../rctrl_gui" }
 rctrl_rosbridge = { path = "../rctrl_rosbridge" }
 
 wasm-bindgen = "0.2.79"
@@ -17,6 +16,7 @@ futures = "0.3.19"
 futures-util = "0.3"
 reqwasm = { version = "0.4.0", features = ["websocket"] }
 wasm-bindgen-futures = "0.4.28"
+console_error_panic_hook = "0.1.7"
 
 gloo-console = "0.2.1"
 gloo = { version = "0.6.0", features = ["futures"] }
