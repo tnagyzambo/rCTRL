@@ -95,6 +95,7 @@ RUN chmod -R a+w $RUSTUP_HOME $CARGO_HOME;
 
 # Rust/WASM dependencies
 USER ros
+RUN rustup component add rls rust-analysis rust-src
 RUN rustup target add wasm32-unknown-unknown
 RUN cargo install wasm-bindgen-cli
 RUN cargo install basic-http-server
