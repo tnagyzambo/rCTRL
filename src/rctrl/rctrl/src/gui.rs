@@ -90,6 +90,7 @@ impl epi::App for Gui {
         {
             // Need to explicitly split up the borrowing here or else the borrow checker will complain about
             // borrowing an already mutable reference to self
+            // REFERENCE: <https://doc.rust-lang.org/nomicon/borrow-splitting.html>
             let lifecycle_manager = self.lifecycle_manager.lock().unwrap();
             let mut open = lifecycle_manager.open;
             egui::Window::new("Lifecycle Manager")

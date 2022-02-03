@@ -17,6 +17,8 @@ futures-util = "0.3"
 reqwasm = { version = "0.4.0", features = ["websocket"] }
 wasm-bindgen-futures = "0.4.28"
 console_error_panic_hook = "0.1.7"
+web-sys = { version = "0.3.56", features = ['Window', 'Performance'] }
+chrono = "0.4.19"
 
 gloo-console = "0.2.1"
 gloo = { version = "0.6.0", features = ["futures"] }

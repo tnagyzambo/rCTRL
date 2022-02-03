@@ -7,19 +7,31 @@ use serde_json::Value;
 use std::collections::HashMap;
 use std::rc::Rc;
 use std::sync::Mutex;
+use web_sys::{Window, Performance};
 
 /// Main [`LifecycleManager`] structure.
 pub struct LifecycleManager {
     ws: Rc<WsLock>,
     pub open: bool,
+    window: Window,
+    performance: Performance,
+    last_refresh: Option<f64>,
     node_panels: Rc<Mutex<HashMap<String, NodePanel>>>,
 }
 
 impl LifecycleManager {
     pub fn new_shared(ws: &Rc<WsLock>) -> Rc<Mutex<Self>> {
+        let window = web_sys::window().expect("should have a window in this context");
+        let performance = window
+            .performance()
+            .expect("performance should be available");
+
         let lifcycle_manager = Self {
             ws: Rc::clone(&ws),
             open: true,
+            window: window,
+            performance: performance,
+            last_refresh: None,
             node_panels: Rc::new(Mutex::new(HashMap::new())),
         };
 
@@ -35,25 +47,42 @@ impl LifecycleManager {
 
 impl GuiElem for LifecycleManager {
     fn draw(&self, ui: &mut egui::Ui) {
-        let tooltip = "Refresh ROS2 node list";
-        if ui.button("🔄").on_hover_text(tooltip).clicked() {
-            let cmd = rctrl_rosbridge::protocol::CallService::<u8>::new("/rosapi/nodes");
-            self.ws.add_ws_write(serde_json::to_string(&cmd).unwrap());
-        }
+        ui.horizontal(|ui| {
+            let tooltip = "Refresh ROS2 node list";
+            if ui.button("🔄").on_hover_text(tooltip).clicked() {
+                let cmd = rctrl_rosbridge::protocol::CallService::<u8>::new("/rosapi/nodes");
+                self.ws.add_ws_write(serde_json::to_string(&cmd).unwrap());
+            }
 
-        for (key, value) in self.node_panels.lock().unwrap().iter() {
-            value.draw(ui);
-        }
+            let refresh_msg = match self.last_refresh {
+                Some(last_refresh) => format!("Refreshed {}ms ago", self.performance.now() - last_refresh),
+                None => "Refreshed N/A ago".to_string(),
+            };
+
+            ui.with_layout(egui::Layout::right_to_left(), |ui| {
+                ui.label(refresh_msg);
+            });
+        });
+
+        ui.separator();
+        ui.horizontal_wrapped(|ui| {
+            for (key, value) in self.node_panels.lock().unwrap().iter() {
+                value.draw(ui);
+            }
+        });
     }
 
     fn update_data(&mut self, data: Value) {
+        // Get comlete list of nodes
         let deserialized: rctrl_rosbridge::rosapi_msgs::srv::nodes::Response = serde_json::from_value(data).unwrap();
 
+        // Retain all node_panels whos names exist in the respone, drop all others
         self.node_panels
             .lock()
             .unwrap()
             .retain(|k, _| deserialized.nodes.contains(k));
 
+        // Create and insert new node_panels if they do node exist in the map
         for node in deserialized.nodes {
             self.node_panels
                 .lock()
@@ -61,10 +90,14 @@ impl GuiElem for LifecycleManager {
                 .entry(node.clone())
                 .or_insert_with(|| NodePanel::new(node.clone(), &self.ws));
 
+            // Request state of node
             let topic = node + "/get_state";
             let cmd = rctrl_rosbridge::protocol::CallService::<u8>::new(&topic);
             self.ws.add_ws_write(serde_json::to_string(&cmd).unwrap());
         }
+
+        // Update last refresh counter
+        self.last_refresh = Some(self.performance.now());
     }
 }
 
@@ -89,8 +122,10 @@ impl NodePanel {
 
 impl GuiElem for NodePanel {
     fn draw(&self, ui: &mut egui::Ui) {
-        ui.label(format!("{:?}", self.node));
-        self.state_display.lock().unwrap().draw(ui);
+        ui.vertical(|ui| {
+            ui.label(format!("{:?}", self.node));
+            self.state_display.lock().unwrap().draw(ui);
+        });
     }
 
     fn update_data(&mut self, data: Value) {}
