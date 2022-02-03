@@ -1,6 +1,7 @@
 use crate::gui::gui_elem::GuiElem;
 use crate::ws_lock::WsLock;
 use eframe::egui;
+use gloo_console::log;
 use rctrl_rosbridge::lifecycle_msgs::msg::State;
 use serde_json::Value;
 use std::collections::HashMap;
@@ -10,6 +11,7 @@ use std::sync::Mutex;
 /// Main [`LifecycleManager`] structure.
 pub struct LifecycleManager {
     ws: Rc<WsLock>,
+    pub open: bool,
     node_panels: Rc<Mutex<HashMap<String, NodePanel>>>,
 }
 
@@ -17,6 +19,7 @@ impl LifecycleManager {
     pub fn new_shared(ws: &Rc<WsLock>) -> Rc<Mutex<Self>> {
         let lifcycle_manager = Self {
             ws: Rc::clone(&ws),
+            open: true,
             node_panels: Rc::new(Mutex::new(HashMap::new())),
         };
 
@@ -52,12 +55,15 @@ impl GuiElem for LifecycleManager {
             .retain(|k, _| deserialized.nodes.contains(k));
 
         for node in deserialized.nodes {
-            let ws = &self.ws;
             self.node_panels
                 .lock()
                 .unwrap()
                 .entry(node.clone())
-                .or_insert_with(|| NodePanel::new(node, ws));
+                .or_insert_with(|| NodePanel::new(node.clone(), &self.ws));
+
+            let topic = node + "/get_state";
+            let cmd = rctrl_rosbridge::protocol::CallService::<u8>::new(&topic);
+            self.ws.add_ws_write(serde_json::to_string(&cmd).unwrap());
         }
     }
 }
@@ -119,7 +125,12 @@ impl GuiElem for StateDisplay {
     }
 
     fn update_data(&mut self, data: Value) {
-        let values: rctrl_rosbridge::lifecycle_msgs::srv::get_state::Response = serde_json::from_value(data).unwrap();
-        self.state = values.current_state;
+        match serde_json::from_value::<rctrl_rosbridge::lifecycle_msgs::srv::get_state::Response>(data) {
+            Ok(values) => self.state = values.current_state,
+            Err(e) => {
+                self.state = State::Unknown;
+                log!(format!("StateDisplay::update_data() failed: {}", e));
+            }
+        }
     }
 }

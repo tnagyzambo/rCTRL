@@ -11,7 +11,7 @@ use lifecycle_manager::LifecycleManager;
 /// Main Gui object.
 pub struct Gui {
     ws: Rc<WsLock>,
-    lifecycle_manager: Rc<Mutex<dyn GuiElem>>,
+    lifecycle_manager: Rc<Mutex<LifecycleManager>>,
 }
 
 impl Gui {
@@ -50,6 +50,7 @@ impl epi::App for Gui {
     /// Put your widgets into a `SidePanel`, `TopPanel`, `CentralPanel`, `Window` or `Area`.
     fn update(&mut self, ctx: &egui::CtxRef, frame: &epi::Frame) {
         let Self { ws, lifecycle_manager } = self;
+
         egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
             // The top panel is often a good place for a menu bar:
             egui::menu::bar(ui, |ui| {
@@ -86,10 +87,16 @@ impl epi::App for Gui {
 
         egui::CentralPanel::default().show(ctx, |ui| {});
 
-        egui::Window::new("Lifecycle Manager")
-            .open(&mut true)
-            .resizable(true)
-            .default_width(520.0)
-            .show(&ctx, |ui| self.lifecycle_manager.lock().unwrap().draw(ui));
+        {
+            // Need to explicitly split up the borrowing here or else the borrow checker will complain about
+            // borrowing an already mutable reference to self
+            let lifecycle_manager = self.lifecycle_manager.lock().unwrap();
+            let mut open = lifecycle_manager.open;
+            egui::Window::new("Lifecycle Manager")
+                .open(&mut open)
+                .resizable(true)
+                .default_width(520.0)
+                .show(&ctx, |ui| lifecycle_manager.draw(ui));
+        }
     }
 }
