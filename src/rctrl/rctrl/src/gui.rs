@@ -96,7 +96,8 @@ impl epi::App for Gui {
             egui::Window::new("Lifecycle Manager")
                 .open(&mut open)
                 .resizable(true)
-                .default_width(520.0)
+                .vscroll(true)
+                .default_width(300.0)
                 .show(&ctx, |ui| lifecycle_manager.draw(ui));
         }
     }

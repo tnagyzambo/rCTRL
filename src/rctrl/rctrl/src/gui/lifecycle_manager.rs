@@ -65,9 +65,16 @@ impl GuiElem for LifecycleManager {
         });
 
         ui.separator();
+
         ui.horizontal_wrapped(|ui| {
             for (key, value) in self.node_panels.lock().unwrap().iter() {
+                ui.label(format!(""));
                 value.draw(ui);
+
+                // Break wrap if available space is smaller than the width of the next panel
+                if ui.available_size_before_wrap().x <= 150.0 {
+                    ui.end_row();
+                }        
             }
         });
     }
@@ -122,9 +129,13 @@ impl NodePanel {
 
 impl GuiElem for NodePanel {
     fn draw(&self, ui: &mut egui::Ui) {
-        ui.vertical(|ui| {
-            ui.label(format!("{:?}", self.node));
-            self.state_display.lock().unwrap().draw(ui);
+        ui.group(|ui| {
+            ui.set_width(150.0);
+            ui.vertical_centered(|ui| {
+                ui.label(format!("{:?}", self.node));
+                self.state_display.lock().unwrap().draw(ui);
+            });
+            
         });
     }
 
