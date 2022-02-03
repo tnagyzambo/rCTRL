@@ -1,4 +1,4 @@
-use crate::gui::{GuiElem, GuiElems};
+use crate::gui::gui_elem::{GuiElem, GuiElems};
 use gloo_console::log;
 use rctrl_rosbridge::protocol::{OpWrapper, PublishWrapper, ServiceResponseWrapper};
 use reqwasm::websocket::{Message, WebSocketError};
@@ -7,8 +7,15 @@ use std::collections::VecDeque;
 use std::rc::Rc;
 use std::sync::Mutex;
 
+/// Share-able structure for message passing.
+///
+/// All Mutex acessing is done through methods that are implemented by [`WsLock`].
+/// This ensured that not deadlock conditions can be created between the acess in the
+/// WebSocket read/write loops and the [`Gui`](crate::gui::Gui) draw loop.
 pub struct WsLock {
+    /// Lock of [`GuiElems`](crate::gui::gui_elem::GuiElems) map that will be updated when an appropriate `WebSocket` read has been made.
     gui_elems_lock: Mutex<GuiElems<String, String>>,
+    /// Lock of messages waiting to be writen to the WebSocket.
     ws_write_lock: Mutex<VecDeque<String>>,
 }
 
@@ -29,11 +36,7 @@ impl WsLock {
         }
     }
 
-    pub fn add_gui_elem(&self, op: String, topic: String, gui_elem: Rc<Mutex<dyn GuiElem>>) {
-        let mut gui_elems = self.gui_elems_lock.lock().unwrap();
-        gui_elems.insert(op, topic, gui_elem);
-    }
-
+    /// Only acessed from the async read loop in [`main()`](crate::app::main).
     pub fn read(&self, msg: Result<Message, WebSocketError>) {
         match self.try_read(msg) {
             Ok(()) => (),
@@ -43,6 +46,30 @@ impl WsLock {
                 log!("read_error");
             }
         }
+    }
+
+    /// Only acessed from the async read loop in [`main()`](crate::app::main).
+    pub fn write_msg_que_pop(&self) -> Option<String> {
+        // Scoping to drop the lock as soon as possible
+        let mut msg = Option::<String>::None;
+        {
+            let mut msg_queue = self.ws_write_lock.lock().unwrap();
+            msg = msg_queue.pop_front();
+        }
+
+        return msg;
+    }
+
+    /// Given a key pair, add an object that implements the [`GuiElem`](crate::gui::gui_elem::GuiElem) to the HashMap [`GuiElems`](crate::gui::gui_elem::GuiElems).
+    pub fn add_gui_elem(&self, op: String, topic: String, gui_elem: Rc<Mutex<dyn GuiElem>>) {
+        let mut gui_elems = self.gui_elems_lock.lock().unwrap();
+        gui_elems.insert(op, topic, gui_elem);
+    }
+
+    /// Add a message to the `WebSocket` write queue.
+    pub fn add_ws_write(&self, msg: String) {
+        let mut msg_queue = self.ws_write_lock.lock().unwrap();
+        msg_queue.push_back(msg);
     }
 
     fn try_read(&self, msg: Result<Message, WebSocketError>) -> Result<(), ReadError> {
@@ -99,25 +126,20 @@ impl WsLock {
         };
     }
 
-    fn deserialize_publish(
-        &self,
-        msg_text: String,
-        op_wrapper: OpWrapper,
-    ) -> Result<(), ReadError> {
+    fn deserialize_publish(&self, msg_text: String, op_wrapper: OpWrapper) -> Result<(), ReadError> {
         // Attempt to deserialize all fields excluding op into a PublishWrapper struct
         // The PublishWrapper struct defers typecasting the generic msg field, instead leaving it as a serde Value
         // Final typecasting can then be done when the topic is known
         // REFERENCE: <https://github.com/serde-rs/serde/issues/1739>
-        let publish_wrapper =
-            match PublishWrapper::deserialize(MapDeserializer::new(op_wrapper.other.into_iter())) {
-                Ok(deserialized) => deserialized,
-                Err(_) => {
-                    return Err(ReadError::from(ParseError {
-                        reason: "failed to parse publish operation",
-                        json: Some(msg_text),
-                    }));
-                }
-            };
+        let publish_wrapper = match PublishWrapper::deserialize(MapDeserializer::new(op_wrapper.other.into_iter())) {
+            Ok(deserialized) => deserialized,
+            Err(_) => {
+                return Err(ReadError::from(ParseError {
+                    reason: "failed to parse publish operation",
+                    json: Some(msg_text),
+                }));
+            }
+        };
         let gui_elems = self.gui_elems_lock.lock().unwrap();
         // Match GuiElem with the key pair <publish, topic>
         // Final typecasting of msg field is done within GuiElem.update()
@@ -134,37 +156,26 @@ impl WsLock {
         Ok(())
     }
 
-    fn deserialize_service_response(
-        &self,
-        msg_text: String,
-        op_wrapper: OpWrapper,
-    ) -> Result<(), ReadError> {
-        let service_response_wrapper = match ServiceResponseWrapper::deserialize(
-            MapDeserializer::new(op_wrapper.other.into_iter()),
-        ) {
-            Ok(deserialized) => deserialized,
-            Err(_) => {
-                return Err(ReadError::from(ParseError {
-                    reason: "failed to parse service_response operation",
-                    json: Some(msg_text),
-                }));
-            }
-        };
+    fn deserialize_service_response(&self, msg_text: String, op_wrapper: OpWrapper) -> Result<(), ReadError> {
+        let service_response_wrapper =
+            match ServiceResponseWrapper::deserialize(MapDeserializer::new(op_wrapper.other.into_iter())) {
+                Ok(deserialized) => deserialized,
+                Err(_) => {
+                    return Err(ReadError::from(ParseError {
+                        reason: "failed to parse service_response operation",
+                        json: Some(msg_text),
+                    }));
+                }
+            };
 
         let gui_elems = self.gui_elems_lock.lock().unwrap();
         // Match GuiElem with the key pair <publish, topic>
         // Final typecasting of msg field is done within GuiElem.update()
-        match gui_elems.get(
-            &String::from("service_response"),
-            &service_response_wrapper.service,
-        ) {
+        match gui_elems.get(&String::from("service_response"), &service_response_wrapper.service) {
             Some(gui_elem) => {
                 // Must drop the lock before calling update_data() since update_data() might need to aquire the lock
                 drop(gui_elems);
-                gui_elem
-                    .lock()
-                    .unwrap()
-                    .update_data(service_response_wrapper.values);
+                gui_elem.lock().unwrap().update_data(service_response_wrapper.values);
             }
             None => log!(format!(
                 "GuiElem coresponding to keypair <service_response, {}> does not exist.",
@@ -174,29 +185,9 @@ impl WsLock {
 
         Ok(())
     }
-
-    pub fn write_msg_que_pop(&self) -> Option<String> {
-        // Scoping to drop the lock as soon as possible
-        let mut msg = Option::<String>::None;
-        {
-            let mut msg_queue = self.ws_write_lock.lock().unwrap();
-            msg = msg_queue.pop_front();
-        }
-
-        return msg;
-    }
-
-    pub fn add_ws_write(&self, msg: String) {
-        let mut msg_queue = self.ws_write_lock.lock().unwrap();
-        msg_queue.push_back(msg);
-    }
 }
 
-struct ParseError<'a> {
-    reason: &'a str,
-    json: Option<String>,
-}
-
+/// Main error structure.
 enum ReadError<'a> {
     WsError(WebSocketError),
     ParseError(ParseError<'a>),
@@ -212,4 +203,10 @@ impl<'a> From<ParseError<'a>> for ReadError<'a> {
     fn from(e: ParseError<'a>) -> Self {
         ReadError::ParseError(e)
     }
+}
+
+/// Parse errors durring `WebSocket` read.
+struct ParseError<'a> {
+    reason: &'a str,
+    json: Option<String>,
 }

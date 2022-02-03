@@ -1,10 +1,16 @@
-/// REFERENCE: <https://stackoverflow.com/questions/45786717/how-to-implement-hashmap-with-two-keys/45795699>
-use crate::gui::GuiElem;
+use eframe::egui;
+use serde_json::Value;
 use std::borrow::Borrow;
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 use std::rc::Rc;
 use std::sync::Mutex;
+
+// Trait definition for all members referenced in the GuiElems HashMap
+pub trait GuiElem {
+    fn draw(&self, ui: &mut egui::Ui);
+    fn update_data(&mut self, data: Value);
+}
 
 #[derive(Eq, PartialEq, Hash)]
 struct A(&'static str);
@@ -70,6 +76,7 @@ impl<A: Eq, B: Eq> Eq for dyn KeyPair<A, B> + '_ {}
 // The indiviual keys must implement the Eq and Hash traits
 // The value type Rc<RwLock<dyn GuiElem>> can probably be moved to a generic value argument if this two key map ever has to be reused
 // but for now this is not needed
+/// REFERENCE: <https://stackoverflow.com/questions/45786717/how-to-implement-hashmap-with-two-keys/45795699>
 pub struct GuiElems<A: Eq + Hash, B: Eq + Hash> {
     pub map: HashMap<(A, B), Rc<Mutex<dyn GuiElem>>>,
 }
@@ -85,9 +92,7 @@ impl<A: Eq + Hash, B: Eq + Hash> Default for GuiElems<A, B> {
 // We must expose all the methods that we wish to call from the basic HashMap contained within GuiElems
 impl<A: Eq + Hash, B: Eq + Hash> GuiElems<A, B> {
     pub fn new() -> Self {
-        GuiElems {
-            map: HashMap::new(),
-        }
+        GuiElems { map: HashMap::new() }
     }
 
     // There is some issue with dereferencing the Rc<RwLock<dyn GuiElem>> when implementing get() as described in the reference material

@@ -24,7 +24,7 @@
         {
             "label": "rctrl docs",
             "type": "shell",
-            "command": "clear && cargo doc --manifest-path=src/rctrl/Cargo.toml --target wasm32-unknown-unknown --workspace --verbose",
+            "command": "clear && cargo doc --manifest-path=src/rctrl/Cargo.toml --target wasm32-unknown-unknown --workspace --document-private-items",
         },
         {
             "label": "run rdata",

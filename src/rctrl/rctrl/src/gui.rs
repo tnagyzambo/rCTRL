@@ -1,21 +1,24 @@
-use crate::gui::lifecycle_manager::LifecycleManager;
 use crate::ws_lock::WsLock;
 use eframe::{egui, epi};
 use std::rc::Rc;
+use std::sync::Mutex;
 
-/// We derive Deserialize/Serialize so we can persist app state on shutdown.
-#[cfg_attr(feature = "persistence", derive(serde::Deserialize, serde::Serialize))]
-#[cfg_attr(feature = "persistence", serde(default))] // if we add new fields, give them default values when deserializing old state
+pub mod gui_elem;
+use gui_elem::GuiElem;
+pub mod lifecycle_manager;
+use lifecycle_manager::LifecycleManager;
+
+/// Main Gui object.
 pub struct Gui {
     ws: Rc<WsLock>,
-    lifecycle_manager: LifecycleManager,
+    lifecycle_manager: Rc<Mutex<dyn GuiElem>>,
 }
 
 impl Gui {
-    pub fn new(ws: Rc<WsLock>) -> Self {
-        let lifecycle_manager = LifecycleManager::new(&ws);
+    pub fn new(ws: &Rc<WsLock>) -> Self {
+        let lifecycle_manager = LifecycleManager::new_shared(&ws);
         Self {
-            ws: ws,
+            ws: Rc::clone(&ws),
             lifecycle_manager: lifecycle_manager,
         }
     }
@@ -27,12 +30,7 @@ impl epi::App for Gui {
     }
 
     /// Called once before the first frame.
-    fn setup(
-        &mut self,
-        _ctx: &egui::CtxRef,
-        _frame: &epi::Frame,
-        _storage: Option<&dyn epi::Storage>,
-    ) {
+    fn setup(&mut self, _ctx: &egui::CtxRef, _frame: &epi::Frame, _storage: Option<&dyn epi::Storage>) {
         // Load previous app state (if any).
         // Note that you must enable the `persistence` feature for this to work.
         #[cfg(feature = "persistence")]
@@ -51,10 +49,7 @@ impl epi::App for Gui {
     /// Called each time the UI needs repainting, which may be many times per second.
     /// Put your widgets into a `SidePanel`, `TopPanel`, `CentralPanel`, `Window` or `Area`.
     fn update(&mut self, ctx: &egui::CtxRef, frame: &epi::Frame) {
-        let Self {
-            ws,
-            lifecycle_manager,
-        } = self;
+        let Self { ws, lifecycle_manager } = self;
         egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
             // The top panel is often a good place for a menu bar:
             egui::menu::bar(ui, |ui| {
@@ -91,6 +86,10 @@ impl epi::App for Gui {
 
         egui::CentralPanel::default().show(ctx, |ui| {});
 
-        self.lifecycle_manager.draw(ctx);
+        egui::Window::new("Lifecycle Manager")
+            .open(&mut true)
+            .resizable(true)
+            .default_width(520.0)
+            .show(&ctx, |ui| self.lifecycle_manager.lock().unwrap().draw(ui));
     }
 }
