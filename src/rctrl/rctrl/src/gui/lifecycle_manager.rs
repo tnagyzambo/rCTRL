@@ -11,21 +11,21 @@ use web_sys::{Performance, Window};
 
 /// Main [`LifecycleManager`] structure.
 pub struct LifecycleManager {
-    ws: Rc<WsLock>,
+    ws_lock: Rc<WsLock>,
     pub open: bool,
     window: Window,
     performance: Performance,
     last_refresh: Option<f64>,
-    node_panels: Rc<Mutex<HashMap<String, NodePanel>>>,
+    node_panels: Rc<Mutex<HashMap<String, Rc<Mutex<NodePanel>>>>>,
 }
 
 impl LifecycleManager {
-    pub fn new_shared(ws: &Rc<WsLock>) -> Rc<Mutex<Self>> {
+    pub fn new_shared(ws_lock: &Rc<WsLock>) -> Rc<Mutex<Self>> {
         let window = web_sys::window().expect("should have a window in this context");
         let performance = window.performance().expect("performance should be available");
 
         let lifcycle_manager = Self {
-            ws: Rc::clone(&ws),
+            ws_lock: Rc::clone(&ws_lock),
             open: true,
             window: window,
             performance: performance,
@@ -37,7 +37,7 @@ impl LifecycleManager {
         let topic = ("/rosapi/nodes").to_owned();
         let lifcycle_manager_lock = Rc::new(Mutex::new(lifcycle_manager));
         let lifcycle_manager_lock_c = Rc::clone(&lifcycle_manager_lock);
-        ws.add_gui_elem(op, topic, lifcycle_manager_lock_c);
+        ws_lock.add_gui_elem(op, topic, lifcycle_manager_lock_c);
 
         return lifcycle_manager_lock;
     }
@@ -49,7 +49,7 @@ impl GuiElem for LifecycleManager {
             let tooltip = "Refresh ROS2 node list";
             if ui.button("🔄").on_hover_text(tooltip).clicked() {
                 let cmd = rctrl_rosbridge::protocol::CallService::<u8>::new("/rosapi/nodes");
-                self.ws.add_ws_write(serde_json::to_string(&cmd).unwrap());
+                self.ws_lock.add_ws_write(serde_json::to_string(&cmd).unwrap());
             }
 
             let refresh_msg = match self.last_refresh {
@@ -67,7 +67,7 @@ impl GuiElem for LifecycleManager {
         ui.horizontal_wrapped(|ui| {
             for (key, value) in self.node_panels.lock().unwrap().iter() {
                 ui.label(format!(""));
-                value.draw(ui);
+                value.lock().unwrap().draw(ui);
 
                 // Break wrap if available space is smaller than the width of the next panel
                 if ui.available_size_before_wrap().x <= 150.0 {
@@ -90,17 +90,17 @@ impl GuiElem for LifecycleManager {
                 .lock()
                 .unwrap()
                 .entry(node.clone())
-                .or_insert_with(|| NodePanel::new(node.clone(), &self.ws));
+                .or_insert_with(|| NodePanel::new_shared(node.clone(), &self.ws_lock));
 
             // Request state of node
             let topic = node.clone() + "/get_state";
             let cmd = rctrl_rosbridge::protocol::CallService::<u8>::new(&topic);
-            self.ws.add_ws_write(serde_json::to_string(&cmd).unwrap());
+            self.ws_lock.add_ws_write(serde_json::to_string(&cmd).unwrap());
 
             // Request available transitions of node
             let topic = node.clone() + "/get_available_transitions";
             let cmd = rctrl_rosbridge::protocol::CallService::<u8>::new(&topic);
-            self.ws.add_ws_write(serde_json::to_string(&cmd).unwrap());
+            self.ws_lock.add_ws_write(serde_json::to_string(&cmd).unwrap());
         }
 
         // Update last refresh counter
@@ -110,23 +110,35 @@ impl GuiElem for LifecycleManager {
 
 /// Wrapper structure containing all [`GuiElem`]'s needed for a single node.
 struct NodePanel {
-    ws: Rc<WsLock>,
+    ws_lock: Rc<WsLock>,
     pub node: String,
     state_display: Rc<Mutex<StateDisplay>>,
     state_transitions: Rc<Mutex<StateTransitions>>,
 }
 
 impl NodePanel {
-    pub fn new(node: String, ws: &Rc<WsLock>) -> Self {
-        let state_display = StateDisplay::new_shared(node.clone(), ws);
-        let state_transitions = StateTransitions::new_shared(node.clone(), ws);
+    pub fn new_shared(node: String, ws_lock: &Rc<WsLock>) -> Rc<Mutex<Self>> {
+        let state_display = StateDisplay::new_shared(node.clone(), ws_lock);
+        let state_transitions = StateTransitions::new_shared(node.clone(), ws_lock);
 
-        Self {
-            ws: Rc::clone(&ws),
-            node: node,
+        let node_panel = Self {
+            ws_lock: Rc::clone(&ws_lock),
+            node: node.clone(),
             state_display: state_display,
             state_transitions: state_transitions,
-        }
+        };
+
+        let op = ("publish").to_owned();
+        let topic = node + "/transition_event";
+
+        let cmd = rctrl_rosbridge::protocol::Subscribe::new(&topic);
+        ws_lock.add_ws_write(serde_json::to_string(&cmd).unwrap());
+
+        let node_panel_lock = Rc::new(Mutex::new(node_panel));
+        let node_panel_lock_c = Rc::clone(&node_panel_lock);
+        ws_lock.add_gui_elem(op, topic, node_panel_lock_c);
+
+        return node_panel_lock;
     }
 }
 
@@ -142,19 +154,29 @@ impl GuiElem for NodePanel {
         });
     }
 
-    fn update_data(&mut self, data: Value) {}
+    fn update_data(&mut self, data: Value) {
+        // Request state of node
+        let topic = self.node.clone() + "/get_state";
+        let cmd = rctrl_rosbridge::protocol::CallService::<u8>::new(&topic);
+        self.ws_lock.add_ws_write(serde_json::to_string(&cmd).unwrap());
+
+        // Request available transitions of node
+        let topic = self.node.clone() + "/get_available_transitions";
+        let cmd = rctrl_rosbridge::protocol::CallService::<u8>::new(&topic);
+        self.ws_lock.add_ws_write(serde_json::to_string(&cmd).unwrap());
+    }
 }
 
 /// Display the [`State`] of a node.
 pub struct StateDisplay {
-    ws: Rc<WsLock>,
+    ws_lock: Rc<WsLock>,
     state: State,
 }
 
 impl StateDisplay {
-    pub fn new_shared(node: String, ws: &Rc<WsLock>) -> Rc<Mutex<Self>> {
+    pub fn new_shared(node: String, ws_lock: &Rc<WsLock>) -> Rc<Mutex<Self>> {
         let state_display = Self {
-            ws: Rc::clone(&ws),
+            ws_lock: Rc::clone(&ws_lock),
             state: State::Unknown,
         };
 
@@ -162,7 +184,7 @@ impl StateDisplay {
         let topic = node + "/get_state";
         let state_display_lock = Rc::new(Mutex::new(state_display));
         let state_display_lock_c = Rc::clone(&state_display_lock);
-        ws.add_gui_elem(op, topic, state_display_lock_c);
+        ws_lock.add_gui_elem(op, topic, state_display_lock_c);
 
         return state_display_lock;
     }
@@ -186,18 +208,18 @@ impl GuiElem for StateDisplay {
 
 /// Display the [`Transitions`] of a node.
 pub struct StateTransitions {
-    ws: Rc<WsLock>,
+    ws_lock: Rc<WsLock>,
     node: String,
     topic_change_state: String,
     available_transitions: Vec<TransitionDescription>,
 }
 
 impl StateTransitions {
-    pub fn new_shared(node: String, ws: &Rc<WsLock>) -> Rc<Mutex<Self>> {
+    pub fn new_shared(node: String, ws_lock: &Rc<WsLock>) -> Rc<Mutex<Self>> {
         let topic_change_state = node.clone() + "/change_state";
 
         let state_transitions = Self {
-            ws: Rc::clone(&ws),
+            ws_lock: Rc::clone(&ws_lock),
             node: node.clone(),
             topic_change_state: topic_change_state,
             available_transitions: Vec::new(),
@@ -207,7 +229,7 @@ impl StateTransitions {
         let topic = node + "/get_available_transitions";
         let state_transitions_lock = Rc::new(Mutex::new(state_transitions));
         let state_transitions_lock_c = Rc::clone(&state_transitions_lock);
-        ws.add_gui_elem(op, topic, state_transitions_lock_c);
+        ws_lock.add_gui_elem(op, topic, state_transitions_lock_c);
 
         return state_transitions_lock;
     }
@@ -227,7 +249,7 @@ impl StateTransitions {
             let cmd = rctrl_rosbridge::protocol::CallService::new(&self.topic_change_state)
                 .with_args(&args)
                 .cmd();
-            self.ws.add_ws_write(serde_json::to_string(&cmd).unwrap());
+            self.ws_lock.add_ws_write(serde_json::to_string(&cmd).unwrap());
         }
     }
 
@@ -267,7 +289,7 @@ impl GuiElem for StateTransitions {
     }
 
     fn update_data(&mut self, data: Value) {
-        match serde_json::from_value::<rctrl_rosbridge::lifecycle_msgs::srv::get_available_transitions::Response>(data.clone()) {
+        match serde_json::from_value::<rctrl_rosbridge::lifecycle_msgs::srv::get_available_transitions::Response>(data) {
             Ok(values) => {
                 self.available_transitions = values.available_transitions;
             }

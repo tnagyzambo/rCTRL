@@ -55,7 +55,7 @@ pub fn main() -> Result<(), eframe::wasm_bindgen::JsValue> {
                 }
                 None => (),
             };
-            TimeoutFuture::new(500).await;
+            TimeoutFuture::new(50).await;
         }
     });
 
