@@ -43,7 +43,6 @@ namespace influx
         static size_t writeCallback(char *, size_t, size_t, void *);
 
         Credentials getCredentials();
-        std::string promptForBucket(std::string);
         toml::table getToml(std::string);
         std::string getTomlEntryBySectionKey(toml::table, std::string, std::string);
 

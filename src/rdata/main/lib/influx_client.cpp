@@ -40,9 +40,7 @@ influx::Credentials influx::Client::getCredentials()
     credentials.token = getTomlEntryBySectionKey(tbl, "credentials", "token");
     credentials.org = getTomlEntryBySectionKey(tbl, "credentials", "org");
     credentials.retention = getTomlEntryBySectionKey(tbl, "default-params", "retention");
-
-    std::string bucket = getTomlEntryBySectionKey(tbl, "default-params", "bucket");
-    credentials.bucket = promptForBucket(bucket);
+    credentials.bucket = getTomlEntryBySectionKey(tbl, "default-params", "bucket");
 
     return credentials;
 }
@@ -62,34 +60,6 @@ void influx::Client::printCredentials()
     return;
 }
 
-// Prompt the user for the name of the bucket that they would like to use
-std::string influx::Client::promptForBucket(std::string bucket)
-{
-    std::string input;
-
-    std::cout << std::endl;
-    std::cout << "\033[1;36mEnter bucket for current data logging session.\033[0m" << std::endl;
-    std::cout << "\033[1mLeave empty to use default bucket \"" << bucket << "\".\033[0m" << std::endl;
-    std::cout << "\033[1mBucket: \033[0m";
-    std::getline(std::cin, input);
-
-    if (input != "")
-    {
-        bucket = input;
-    }
-    else
-    {
-        std::cout << "\033[A";
-        std::cout << "\033[1mBucket: \033[0m";
-        std::cout << bucket;
-        std::cout << std::endl;
-    }
-
-    std::cout << std::endl;
-
-    return bucket;
-}
-
 long influx::Client::postRequest(std::string &url, struct curl_slist *header, std::string &body, std::string &responeBuffer)
 {
     CURL *curl = curl_easy_init();
@@ -100,7 +70,7 @@ long influx::Client::postRequest(std::string &url, struct curl_slist *header, st
         curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
         curl_easy_setopt(curl, CURLOPT_HTTPHEADER, header);
         curl_easy_setopt(curl, CURLOPT_POST, 1L);
-        //curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
+        // curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, influx::Client::writeCallback);
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, &responeBuffer);
         curl_easy_setopt(curl, CURLOPT_POSTFIELDS, body.c_str());
