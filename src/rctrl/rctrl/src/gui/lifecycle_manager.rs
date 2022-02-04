@@ -187,6 +187,7 @@ impl GuiElem for StateDisplay {
 /// Display the [`Transitions`] of a node.
 pub struct StateTransitions {
     ws: Rc<WsLock>,
+    node: String,
     topic_change_state: String,
     available_transitions: Vec<TransitionDescription>,
 }
@@ -197,6 +198,7 @@ impl StateTransitions {
 
         let state_transitions = Self {
             ws: Rc::clone(&ws),
+            node: node.clone(),
             topic_change_state: topic_change_state,
             available_transitions: Vec::new(),
         };
@@ -219,8 +221,8 @@ impl StateTransitions {
         false
     }
 
-    fn draw_state_change_button(&self, ui: &mut egui::Ui, transition: Transition, label: &str) {
-        if ui.add_enabled(self.is_enabled(&transition), egui::Button::new(label)).clicked() {
+    fn draw_state_change_button(&self, ui: &mut egui::Ui, is_enabled: bool, transition: Transition, label: &str) {
+        if ui.add_enabled(is_enabled, egui::Button::new(label)).clicked() {
             let args = rctrl_rosbridge::lifecycle_msgs::srv::change_state::Request::from(transition);
             let cmd = rctrl_rosbridge::protocol::CallService::new(&self.topic_change_state)
                 .with_args(&args)
@@ -228,28 +230,49 @@ impl StateTransitions {
             self.ws.add_ws_write(serde_json::to_string(&cmd).unwrap());
         }
     }
+
+    // I dont think there is ever a scenario where self.available_transitions can hold multiple
+    // shutdown transition so we will just grab the first one in the Vec
+    // There is a slim chance this can cause issues in the future but I doubt it
+    fn get_shutdown_type(&self) -> Option<Transition> {
+        for elem in &self.available_transitions {
+            if elem.transition == Transition::UnconfiguredShutdown
+                || elem.transition == Transition::InactiveShutdown
+                || elem.transition == Transition::ActiveShutdown
+            {
+                return Some(elem.transition.clone());
+            }
+        }
+        None
+    }
+
+    // The shutdown button must be treated differently since there are 3 different kinds of shutdowns
+    fn draw_shutdown_button(&self, ui: &mut egui::Ui) {
+        match self.get_shutdown_type() {
+            Some(transition) => self.draw_state_change_button(ui, true, transition, "Shutdown"),
+            None => if ui.add_enabled(false, egui::Button::new("Shutdown")).clicked() {},
+        }
+    }
 }
 
 impl GuiElem for StateTransitions {
     fn draw(&self, ui: &mut egui::Ui) {
-        self.draw_state_change_button(ui, Transition::Create, "Create");
-        self.draw_state_change_button(ui, Transition::Configure, "Configure");
-        self.draw_state_change_button(ui, Transition::CleanUp, "Clean Up");
-        self.draw_state_change_button(ui, Transition::Activate, "Activate");
-        self.draw_state_change_button(ui, Transition::Deactivate, "Deactivate");
-        self.draw_state_change_button(ui, Transition::Shutdown, "Shutdown");
-        self.draw_state_change_button(ui, Transition::Destroy, "Destroy");
+        self.draw_state_change_button(ui, self.is_enabled(&Transition::Create), Transition::Create, "Create");
+        self.draw_state_change_button(ui, self.is_enabled(&Transition::Configure), Transition::Configure, "Configure");
+        self.draw_state_change_button(ui, self.is_enabled(&Transition::CleanUp), Transition::CleanUp, "Clean Up");
+        self.draw_state_change_button(ui, self.is_enabled(&Transition::Activate), Transition::Activate, "Activate");
+        self.draw_state_change_button(ui, self.is_enabled(&Transition::Deactivate), Transition::Deactivate, "Deactivate");
+        self.draw_shutdown_button(ui);
+        self.draw_state_change_button(ui, self.is_enabled(&Transition::Destroy), Transition::Destroy, "Destroy");
     }
 
     fn update_data(&mut self, data: Value) {
-        match serde_json::from_value::<rctrl_rosbridge::lifecycle_msgs::srv::get_available_transitions::Response>(data) {
+        match serde_json::from_value::<rctrl_rosbridge::lifecycle_msgs::srv::get_available_transitions::Response>(data.clone()) {
             Ok(values) => {
                 self.available_transitions = values.available_transitions;
-                log!(format!("{:?}", self.available_transitions));
             }
             Err(e) => {
-                //self.state = State::Unknown;
-                log!(format!("StateTransitions::update_data() failed: {}", e));
+                log!(format!("StateTransitions::update_data() for node \"{}\" failed: {}", self.node, e));
             }
         }
     }

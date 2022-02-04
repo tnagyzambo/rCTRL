@@ -33,25 +33,19 @@ pub enum Transition {
     // executing, and reverse the onActivate changes.
     Deactivate = 4,
 
-    // These are specified in the lifecycle msgs code but I don't see them used in practice
-    // They also conflict with the ROS2 design docs
-    //
     // I'm pretty sure that these three different shutdowns are all treated equally
     // Looking at the ROS2 lifecycle design doc there is only one possible shutdown event
     // This signals shutdown during an unconfigured state, the node's callback
     // onShutdown will be executed to do any cleanup necessary before destruction.
-    // UnconfiguredShutdown = 5,
+    UnconfiguredShutdown = 5,
 
     // This signals shutdown during an inactive state, the node's callback onShutdown
     // will be executed to do any cleanup necessary before destruction.
-    // InactiveShutdown = 6,
+    InactiveShutdown = 6,
 
     // This signals shutdown during an active state, the node's callback onShutdown
     // will be executed to do any cleanup necessary before destruction.
-    // ActiveShutdown = 7,
-
-    // This seems to reflect reality
-    Shutdown = 5,
+    ActiveShutdown = 7,
 
     // This transition will simply cause the deallocation of the node.
     Destroy = 8,
@@ -65,7 +59,9 @@ impl Transition {
             Transition::CleanUp => "cleanup",
             Transition::Activate => "activate",
             Transition::Deactivate => "deactivate",
-            Transition::Shutdown => "shutdown",
+            Transition::UnconfiguredShutdown => "shutdown",
+            Transition::InactiveShutdown => "shutdown",
+            Transition::ActiveShutdown => "shutdown",
             Transition::Destroy => "destroy",
         }
     }
@@ -86,7 +82,7 @@ impl TryFrom<TransitionMsg> for Transition {
     type Error = InvalidTransitionError;
 
     fn try_from(transition_msg: TransitionMsg) -> Result<Self, Self::Error> {
-        if transition_msg.id <= 5 || transition_msg.id == 8 {
+        if transition_msg.id <= 8 {
             Ok(unsafe { std::mem::transmute(transition_msg.id) })
         } else {
             Err(InvalidTransitionError)
@@ -152,38 +148,29 @@ mod tests {
         let _transition_deserialize: Transition = serde_json::from_str(&transition_json).unwrap();
     }
 
-    // #[test]
-    // fn unconfigured_shutdown() {
-    //     let transition = Transition::UnconfiguredShutdown;
-    //     let transition_json = serde_json::to_string(&transition).unwrap();
-    //     assert_eq!(transition_json, r#"{"id":5,"label":"shutdown"}"#);
-
-    //     let _transition_deserialize: Transition = serde_json::from_str(&transition_json).unwrap();
-    // }
-
-    // #[test]
-    // fn inactive_shutdown() {
-    //     let transition = Transition::InactiveShutdown;
-    //     let transition_json = serde_json::to_string(&transition).unwrap();
-    //     assert_eq!(transition_json, r#"{"id":6,"label":"shutdown"}"#);
-
-    //     let _transition_deserialize: Transition = serde_json::from_str(&transition_json).unwrap();
-    // }
-
-    // #[test]
-    // fn active_shutdown() {
-    //     let transition = Transition::ActiveShutdown;
-    //     let transition_json = serde_json::to_string(&transition).unwrap();
-    //     assert_eq!(transition_json, r#"{"id":7,"label":"shutdown"}"#);
-
-    //     let _transition_deserialize: Transition = serde_json::from_str(&transition_json).unwrap();
-    // }
-
     #[test]
     fn unconfigured_shutdown() {
-        let transition = Transition::Shutdown;
+        let transition = Transition::UnconfiguredShutdown;
         let transition_json = serde_json::to_string(&transition).unwrap();
         assert_eq!(transition_json, r#"{"id":5,"label":"shutdown"}"#);
+
+        let _transition_deserialize: Transition = serde_json::from_str(&transition_json).unwrap();
+    }
+
+    #[test]
+    fn inactive_shutdown() {
+        let transition = Transition::InactiveShutdown;
+        let transition_json = serde_json::to_string(&transition).unwrap();
+        assert_eq!(transition_json, r#"{"id":6,"label":"shutdown"}"#);
+
+        let _transition_deserialize: Transition = serde_json::from_str(&transition_json).unwrap();
+    }
+
+    #[test]
+    fn active_shutdown() {
+        let transition = Transition::ActiveShutdown;
+        let transition_json = serde_json::to_string(&transition).unwrap();
+        assert_eq!(transition_json, r#"{"id":7,"label":"shutdown"}"#);
 
         let _transition_deserialize: Transition = serde_json::from_str(&transition_json).unwrap();
     }

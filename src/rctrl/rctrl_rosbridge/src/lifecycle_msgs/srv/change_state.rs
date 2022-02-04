@@ -61,10 +61,24 @@ mod tests {
     }
 
     #[test]
-    fn shutdown() {
-        let request = Request::from(Transition::Shutdown);
+    fn unconfigured_shutdown() {
+        let request = Request::from(Transition::UnconfiguredShutdown);
         let request_json = serde_json::to_string(&request).expect("Serialization failed");
         assert_eq!(request_json, r#"{"transition":{"id":5,"label":"shutdown"}}"#);
+    }
+
+    #[test]
+    fn inactive_shutdown() {
+        let request = Request::from(Transition::InactiveShutdown);
+        let request_json = serde_json::to_string(&request).expect("Serialization failed");
+        assert_eq!(request_json, r#"{"transition":{"id":6,"label":"shutdown"}}"#);
+    }
+
+    #[test]
+    fn active_shutdown() {
+        let request = Request::from(Transition::ActiveShutdown);
+        let request_json = serde_json::to_string(&request).expect("Serialization failed");
+        assert_eq!(request_json, r#"{"transition":{"id":7,"label":"shutdown"}}"#);
     }
 
     #[test]
