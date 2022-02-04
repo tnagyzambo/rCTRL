@@ -2,12 +2,12 @@ use crate::gui::gui_elem::GuiElem;
 use crate::ws_lock::WsLock;
 use eframe::egui;
 use gloo_console::log;
-use rctrl_rosbridge::lifecycle_msgs::msg::State;
+use rctrl_rosbridge::lifecycle_msgs::msg::{State, Transition, TransitionDescription};
 use serde_json::Value;
 use std::collections::HashMap;
 use std::rc::Rc;
 use std::sync::Mutex;
-use web_sys::{Window, Performance};
+use web_sys::{Performance, Window};
 
 /// Main [`LifecycleManager`] structure.
 pub struct LifecycleManager {
@@ -22,9 +22,7 @@ pub struct LifecycleManager {
 impl LifecycleManager {
     pub fn new_shared(ws: &Rc<WsLock>) -> Rc<Mutex<Self>> {
         let window = web_sys::window().expect("should have a window in this context");
-        let performance = window
-            .performance()
-            .expect("performance should be available");
+        let performance = window.performance().expect("performance should be available");
 
         let lifcycle_manager = Self {
             ws: Rc::clone(&ws),
@@ -74,7 +72,7 @@ impl GuiElem for LifecycleManager {
                 // Break wrap if available space is smaller than the width of the next panel
                 if ui.available_size_before_wrap().x <= 150.0 {
                     ui.end_row();
-                }        
+                }
             }
         });
     }
@@ -84,10 +82,7 @@ impl GuiElem for LifecycleManager {
         let deserialized: rctrl_rosbridge::rosapi_msgs::srv::nodes::Response = serde_json::from_value(data).unwrap();
 
         // Retain all node_panels whos names exist in the respone, drop all others
-        self.node_panels
-            .lock()
-            .unwrap()
-            .retain(|k, _| deserialized.nodes.contains(k));
+        self.node_panels.lock().unwrap().retain(|k, _| deserialized.nodes.contains(k));
 
         // Create and insert new node_panels if they do node exist in the map
         for node in deserialized.nodes {
@@ -98,7 +93,12 @@ impl GuiElem for LifecycleManager {
                 .or_insert_with(|| NodePanel::new(node.clone(), &self.ws));
 
             // Request state of node
-            let topic = node + "/get_state";
+            let topic = node.clone() + "/get_state";
+            let cmd = rctrl_rosbridge::protocol::CallService::<u8>::new(&topic);
+            self.ws.add_ws_write(serde_json::to_string(&cmd).unwrap());
+
+            // Request available transitions of node
+            let topic = node.clone() + "/get_available_transitions";
             let cmd = rctrl_rosbridge::protocol::CallService::<u8>::new(&topic);
             self.ws.add_ws_write(serde_json::to_string(&cmd).unwrap());
         }
@@ -109,20 +109,23 @@ impl GuiElem for LifecycleManager {
 }
 
 /// Wrapper structure containing all [`GuiElem`]'s needed for a single node.
-pub struct NodePanel {
+struct NodePanel {
     ws: Rc<WsLock>,
     pub node: String,
-    pub state_display: Rc<Mutex<StateDisplay>>,
+    state_display: Rc<Mutex<StateDisplay>>,
+    state_transitions: Rc<Mutex<StateTransitions>>,
 }
 
 impl NodePanel {
     pub fn new(node: String, ws: &Rc<WsLock>) -> Self {
         let state_display = StateDisplay::new_shared(node.clone(), ws);
+        let state_transitions = StateTransitions::new_shared(node.clone(), ws);
 
         Self {
             ws: Rc::clone(&ws),
             node: node,
             state_display: state_display,
+            state_transitions: state_transitions,
         }
     }
 }
@@ -131,11 +134,11 @@ impl GuiElem for NodePanel {
     fn draw(&self, ui: &mut egui::Ui) {
         ui.group(|ui| {
             ui.set_width(150.0);
-            ui.vertical_centered(|ui| {
+            ui.vertical_centered_justified(|ui| {
                 ui.label(format!("{:?}", self.node));
                 self.state_display.lock().unwrap().draw(ui);
+                self.state_transitions.lock().unwrap().draw(ui);
             });
-            
         });
     }
 
@@ -176,6 +179,77 @@ impl GuiElem for StateDisplay {
             Err(e) => {
                 self.state = State::Unknown;
                 log!(format!("StateDisplay::update_data() failed: {}", e));
+            }
+        }
+    }
+}
+
+/// Display the [`Transitions`] of a node.
+pub struct StateTransitions {
+    ws: Rc<WsLock>,
+    topic_change_state: String,
+    available_transitions: Vec<TransitionDescription>,
+}
+
+impl StateTransitions {
+    pub fn new_shared(node: String, ws: &Rc<WsLock>) -> Rc<Mutex<Self>> {
+        let topic_change_state = node.clone() + "/change_state";
+
+        let state_transitions = Self {
+            ws: Rc::clone(&ws),
+            topic_change_state: topic_change_state,
+            available_transitions: Vec::new(),
+        };
+
+        let op = ("service_response").to_owned();
+        let topic = node + "/get_available_transitions";
+        let state_transitions_lock = Rc::new(Mutex::new(state_transitions));
+        let state_transitions_lock_c = Rc::clone(&state_transitions_lock);
+        ws.add_gui_elem(op, topic, state_transitions_lock_c);
+
+        return state_transitions_lock;
+    }
+
+    fn is_enabled(&self, transition: &Transition) -> bool {
+        for elem in &self.available_transitions {
+            if &elem.transition == transition {
+                return true;
+            }
+        }
+        false
+    }
+
+    fn draw_state_change_button(&self, ui: &mut egui::Ui, transition: Transition, label: &str) {
+        if ui.add_enabled(self.is_enabled(&transition), egui::Button::new(label)).clicked() {
+            let args = rctrl_rosbridge::lifecycle_msgs::srv::change_state::Request::from(transition);
+            let cmd = rctrl_rosbridge::protocol::CallService::new(&self.topic_change_state)
+                .with_args(&args)
+                .cmd();
+            self.ws.add_ws_write(serde_json::to_string(&cmd).unwrap());
+        }
+    }
+}
+
+impl GuiElem for StateTransitions {
+    fn draw(&self, ui: &mut egui::Ui) {
+        self.draw_state_change_button(ui, Transition::Create, "Create");
+        self.draw_state_change_button(ui, Transition::Configure, "Configure");
+        self.draw_state_change_button(ui, Transition::CleanUp, "Clean Up");
+        self.draw_state_change_button(ui, Transition::Activate, "Activate");
+        self.draw_state_change_button(ui, Transition::Deactivate, "Deactivate");
+        self.draw_state_change_button(ui, Transition::Shutdown, "Shutdown");
+        self.draw_state_change_button(ui, Transition::Destroy, "Destroy");
+    }
+
+    fn update_data(&mut self, data: Value) {
+        match serde_json::from_value::<rctrl_rosbridge::lifecycle_msgs::srv::get_available_transitions::Response>(data) {
+            Ok(values) => {
+                self.available_transitions = values.available_transitions;
+                log!(format!("{:?}", self.available_transitions));
+            }
+            Err(e) => {
+                //self.state = State::Unknown;
+                log!(format!("StateTransitions::update_data() failed: {}", e));
             }
         }
     }

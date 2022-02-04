@@ -1,8 +1,7 @@
+use serde_derive::Deserialize;
 /// REFERENCE: <https://design.ros2.org/articles/node_lifecycle.html>
 /// REFERENCE: <https://github.com/ros2/rcl_interfaces/blob/master/lifecycle_msgs/msg/State.msg>
-
 use std::convert::TryFrom;
-use serde_derive::Deserialize;
 
 // Deserialization of an interally tagged enum is currently unsupported by serde-repr
 // Combination of tag = "id" and try_from = "u8" is unsupported by serde
@@ -11,7 +10,7 @@ use serde_derive::Deserialize;
 #[derive(Deserialize)]
 struct StateMsg {
     id: u8,
-    // label: String,
+    label: String,
 }
 
 #[repr(u8)]
@@ -20,10 +19,10 @@ struct StateMsg {
 pub enum State {
     // These are the primary states. State changes can only be requested when the node is in one of these states.
 
-    // # Indicates state has not yet been set.
+    // Indicates state has not yet been set.
     Unknown = 0,
-    
-    // This is the life cycle state the node is in immediately after being instantiated.
+
+    // This is the lifecycle state the node is in immediately after being instantiated.
     Unconfigured = 1,
 
     // This state represents a node that is not currently performing any processing.
@@ -88,8 +87,7 @@ mod tests {
 
     #[test]
     fn state() {
-        let msg: State =
-            serde_json::from_str(r#"{"id":1,"label":"unconfigured"}"#).unwrap();
+        let msg: State = serde_json::from_str(r#"{"id":1,"label":"unconfigured"}"#).unwrap();
 
         assert_eq!(msg, State::Unconfigured);
     }
@@ -97,7 +95,6 @@ mod tests {
     #[test]
     #[should_panic]
     fn state_out_of_bounds() {
-        let _msg: State =
-            serde_json::from_str(r#"{"id":99,"label":"should fail"}"#).unwrap();
+        let _msg: State = serde_json::from_str(r#"{"id":99,"label":"should fail"}"#).unwrap();
     }
 }
