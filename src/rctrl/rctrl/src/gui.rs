@@ -5,21 +5,25 @@ use std::sync::Mutex;
 
 pub mod gui_elem;
 use gui_elem::GuiElem;
-pub mod lifecycle_manager;
+mod lifecycle_manager;
 use lifecycle_manager::LifecycleManager;
+mod logger;
+use logger::Logger;
 
 /// Main Gui object.
 pub struct Gui {
     ws: Rc<WsLock>,
     lifecycle_manager: Rc<Mutex<LifecycleManager>>,
+    logger: Rc<Mutex<Logger>>,
 }
 
 impl Gui {
     pub fn new(ws: &Rc<WsLock>) -> Self {
-        let lifecycle_manager = LifecycleManager::new_shared(&ws);
+        //let lifecycle_manager = LifecycleManager::new_shared(&ws);
         Self {
             ws: Rc::clone(&ws),
-            lifecycle_manager: lifecycle_manager,
+            lifecycle_manager: LifecycleManager::new_shared(&ws),
+            logger: Logger::new_shared(&ws),
         }
     }
 }
@@ -49,7 +53,11 @@ impl epi::App for Gui {
     /// Called each time the UI needs repainting, which may be many times per second.
     /// Put your widgets into a `SidePanel`, `TopPanel`, `CentralPanel`, `Window` or `Area`.
     fn update(&mut self, ctx: &egui::CtxRef, frame: &epi::Frame) {
-        let Self { ws, lifecycle_manager } = self;
+        let Self {
+            ws,
+            lifecycle_manager,
+            logger,
+        } = self;
 
         egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
             // The top panel is often a good place for a menu bar:
@@ -99,6 +107,20 @@ impl epi::App for Gui {
                 .vscroll(true)
                 .default_width(300.0)
                 .show(&ctx, |ui| lifecycle_manager.draw(ui));
+        }
+
+        {
+            // Need to explicitly split up the borrowing here or else the borrow checker will complain about
+            // borrowing an already mutable reference to self
+            // REFERENCE: <https://doc.rust-lang.org/nomicon/borrow-splitting.html>
+            let logger = self.logger.lock().unwrap();
+            let mut open = logger.open;
+            egui::Window::new("Logger")
+                .open(&mut open)
+                .resizable(true)
+                .hscroll(true)
+                .default_width(600.0)
+                .show(&ctx, |ui| logger.draw(ui));
         }
     }
 }
