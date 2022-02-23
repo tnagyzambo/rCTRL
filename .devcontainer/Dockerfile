@@ -1,5 +1,10 @@
 FROM ubuntu:20.04 AS base
 
+# Fix locale issues
+RUN apt-get update
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy locales
+RUN locale-gen en_US.UTF-8
+
 # Create non-root user
 ARG USER_ID=1000
 ARG GROUP_ID=1000
@@ -8,7 +13,7 @@ RUN adduser --disabled-password --gecos '' --uid $USER_ID --gid $GROUP_ID ros
 
 # Install compile tools
 RUN apt-get update 
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy clang-12 clang-tidy gdb gdbserver python3-pip
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy clang-12 python3-pip
 ENV CC=/bin/clang-12
 ENV CXX=/bin/clang++-12
 
@@ -34,14 +39,38 @@ RUN apt-get update
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy ros-galactic-ros-base python3-colcon-common-extensions
 RUN echo "source /opt/ros/galactic/setup.bash" >> /home/ros/.bashrc
 
+# Install dev dependencies
+RUN apt-get update
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy wget libssl-dev
+
+# Install libcurl dev dependencies
+RUN apt-get update
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy libcurl4-openssl-dev
+# ARG CURL_RELEASE=curl-7.80.0
+# RUN wget https://github.com/curl/curl/releases/download/curl-7_80_0/${CURL_RELEASE}.tar.gz
+# RUN tar -xf ${CURL_RELEASE}.tar.gz -C /lib
+# RUN rm ${CURL_RELEASE}.tar.gz
+# RUN mkdir /lib/${CURL_RELEASE}/build
+# RUN cd /lib/${CURL_RELEASE} && cmake -S . -B build
+# RUN cd /lib/${CURL_RELEASE} && cmake --build build
+# RUN cd /lib/${CURL_RELEASE} && cmake --install build
+
+# Install toml++ dev dependencies
+ARG TOML11_RELEASE=2.5.0
+RUN wget https://github.com/marzer/tomlplusplus/archive/refs/tags/v${TOML11_RELEASE}.tar.gz
+RUN tar -xf v${TOML11_RELEASE}.tar.gz -C /lib
+RUN rm v${TOML11_RELEASE}.tar.gz
+RUN mkdir /lib/tomlplusplus-${TOML11_RELEASE}/build
+RUN cd /lib/tomlplusplus-${TOML11_RELEASE} && cmake -S . -B build
+RUN cd /lib/tomlplusplus-${TOML11_RELEASE} && cmake --build build
+RUN cd /lib/tomlplusplus-${TOML11_RELEASE} && cmake --install build
+
 # Pull in ROS2 application dependancies
 FROM base AS depends
 
 # influxdb
 # REFERENCE: https://docs.influxdata.com/influxdb/v2.0/install/?t=Linux
 ARG INFLUX_RELEASE=influxdb2-2.0.7-arm64.deb
-RUN apt-get update
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy wget
 RUN wget https://dl.influxdata.com/influxdb/releases/${INFLUX_RELEASE}
 RUN dpkg -i ${INFLUX_RELEASE}
 RUN rm ${INFLUX_RELEASE}
