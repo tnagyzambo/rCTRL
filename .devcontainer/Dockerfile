@@ -12,9 +12,9 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy clang-12 clang-tidy gdb g
 ENV CC=/bin/clang-12
 ENV CXX=/bin/clang++-12
 
-# Install conan
-USER ros
-RUN pip3 install conan
+# Install git
+RUN apt-get update 
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy git
 
 # Install ROS2
 USER root
