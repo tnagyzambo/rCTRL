@@ -17,9 +17,15 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy clang-12 python3-pip
 ENV CC=/bin/clang-12
 ENV CXX=/bin/clang++-12
 
-# Install git
+# Install locales
 RUN apt-get update 
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy git
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy locales
+
+# Set the locale
+RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && locale-gen
+ENV LANG en_US.UTF-8  
+ENV LANGUAGE en_US:en  
+ENV LC_ALL en_US.UTF-8  
 
 # Install ROS2
 USER root
