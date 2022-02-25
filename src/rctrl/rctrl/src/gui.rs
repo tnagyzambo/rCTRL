@@ -9,6 +9,7 @@ mod lifecycle_manager;
 use lifecycle_manager::LifecycleManager;
 mod logger;
 use logger::Logger;
+mod syntax_hl;
 
 /// Main Gui object.
 pub struct Gui {
