@@ -1,6 +1,6 @@
-use serde_derive::Deserialize;
 /// REFERENCE: <https://design.ros2.org/articles/node_lifecycle.html>
 /// REFERENCE: <https://github.com/ros2/rcl_interfaces/blob/master/lifecycle_msgs/msg/State.msg>
+use serde_derive::Deserialize;
 use std::convert::TryFrom;
 
 // Deserialization of an interally tagged enum is currently unsupported by serde-repr
