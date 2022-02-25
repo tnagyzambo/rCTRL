@@ -6,20 +6,6 @@
 // Helper library to format ROS2 logging
 namespace rctrl::util::fmt
 {
-    // Definitions of ANSI escape sequences
-    static constexpr std::string_view asciiResetFmt = "\033[0m";
-    static constexpr std::string_view asciiRed = "\033[0;31m";
-    static constexpr std::string_view asciiRedBold = "\033[1;31m";
-    static constexpr std::string_view asciiGreen = "\033[0;32m";
-    static constexpr std::string_view asciiGreenBold = "\033[1;32m";
-    static constexpr std::string_view asciiMagenta = "\033[0;35m";
-    static constexpr std::string_view asciiMagentaBold = "\033[1;35m";
-    static constexpr std::string_view asciiCyan = "\033[0;36m";
-    static constexpr std::string_view asciiCyanBold = "\033[1;36m";
-    static constexpr std::string_view asciiCursorSavePos = "\0337";
-    static constexpr std::string_view asciiCursorLoadPos = "\0338";
-    static constexpr std::string_view asciiPageFeed = "\f";
-
     // Internal namespace to hold implementations
     namespace internal
     {
@@ -69,25 +55,6 @@ namespace rctrl::util::fmt
     // Wrapper to pull out joined string_view from joinImpl
     template <std::string_view const &...STRS>
     static constexpr auto join = internal::joinImpl<STRS...>::value;
-
-    template <std::string_view const &STR>
-    constexpr auto tealBold{join<asciiCyanBold, STR, asciiResetFmt>};
-
-    namespace internal
-    {
-        // Save the cursor pos at the start of the string
-        template <std::string_view const &STR>
-        constexpr auto headerLine{join<asciiCursorSavePos, STR>};
-
-        // Return the cursor pos to the saved pos and drop down one line, save the new pos
-        template <std::string_view const &STR>
-        constexpr auto bodyLine{join<asciiCursorLoadPos, asciiPageFeed, asciiCursorSavePos, STR>};
-    }
-
-    // Multiline output, maintain output indentation
-    // Accepts one header string and an arbitrary number of body strings
-    template <std::string_view const &STR, std::string_view const &...STRS>
-    constexpr auto multiLine{join<internal::headerLine<STR>, internal::bodyLine<STRS>...>};
 }
 
 // Formatting for ROS2 lifecycle states
@@ -103,7 +70,7 @@ namespace rctrl::util::fmt::state
         static constexpr std::string_view strFinalized = "Finalized";
 
         template <std::string_view const &STR>
-        constexpr auto fmtState{join<asciiCyan, strPrepend, asciiCyanBold, STR, asciiResetFmt>};
+        constexpr auto fmtState{join<strPrepend, STR>};
     }
 
     constexpr auto unconfigured{internal::fmtState<internal::strUnconfigured>.data()};
@@ -129,7 +96,7 @@ namespace rctrl::util::fmt::transition
         static constexpr std::string_view strDestructing = "Destructing";
 
         template <std::string_view const &STR>
-        constexpr auto fmtTransition{join<asciiMagenta, strPrepend, asciiMagentaBold, STR, asciiResetFmt>};
+        constexpr auto fmtTransition{join<strPrepend, STR>};
     }
 
     constexpr auto constructing{internal::fmtTransition<internal::strConstructing>.data()};
@@ -149,7 +116,7 @@ namespace rctrl::util::fmt::srv
         static constexpr std::string_view strCreated = "Created service: ";
 
         template <std::string_view const &STR>
-        constexpr auto fmtCreated{join<strCreated, asciiGreen, STR, asciiResetFmt>};
+        constexpr auto fmtCreated{join<strCreated, STR>};
     }
 
     template <std::string_view const &STR>
@@ -166,10 +133,10 @@ namespace rctrl::util::fmt::sub
         static constexpr std::string_view strRemoved = "Removed subscription: ";
 
         template <std::string_view const &STR>
-        constexpr auto fmtCreated{join<strCreated, asciiGreen, STR, asciiResetFmt>};
+        constexpr auto fmtCreated{join<strCreated, STR>};
 
         template <std::string_view const &STR>
-        constexpr auto fmtRemoved{join<strCreated, asciiRed, STR, asciiResetFmt>};
+        constexpr auto fmtRemoved{join<strCreated, STR>};
     }
 
     // Run time formatting
@@ -178,9 +145,7 @@ namespace rctrl::util::fmt::sub
         inline std::string created(const char *topic)
         {
             std::string output = internal::strCreated.data();
-            output.append(asciiGreen.data());
             output.append(topic);
-            output.append(asciiResetFmt.data());
 
             return output;
         }
@@ -188,9 +153,7 @@ namespace rctrl::util::fmt::sub
         inline std::string removed(const char *topic)
         {
             std::string output = internal::strRemoved.data();
-            output.append(asciiRed.data());
             output.append(topic);
-            output.append(asciiResetFmt.data());
 
             return output;
         }

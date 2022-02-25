@@ -13,10 +13,8 @@ namespace rutil::except
     private:
         std::string buildMessage(const char *serviceName)
         {
-            std::string error = rctrl::util::fmt::asciiRedBold.data();
-            error.append("Failed to request service: ");
+            std::string error = "Failed to request service: ";
             error.append(serviceName);
-            error.append(rctrl::util::fmt::asciiResetFmt.data());
 
             return error;
         }
