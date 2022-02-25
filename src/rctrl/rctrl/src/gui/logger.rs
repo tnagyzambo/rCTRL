@@ -1,5 +1,5 @@
 use crate::gui::gui_elem::GuiElem;
-use crate::gui::syntax_hl::{highlight, CodeTheme};
+use crate::gui::logger_hl::{highlight, CodeTheme};
 use crate::ws_lock::WsLock;
 use eframe::egui;
 use gloo_console::log;
@@ -11,7 +11,7 @@ use std::sync::Mutex;
 pub struct Logger {
     ws_lock: Rc<WsLock>,
     pub open: bool,
-    logs: Vec<String>,
+    logs: Vec<rctrl_rosbridge::rosout::msg::log::Log>,
 }
 
 impl Logger {
@@ -34,11 +34,10 @@ impl Logger {
 
 impl GuiElem for Logger {
     fn draw(&self, ui: &mut egui::Ui) {
-        let language = "rs";
         let theme = CodeTheme::from_memory(ui.ctx());
 
         let layouter = |ui: &egui::Ui, string: &str| {
-            let layout_job = highlight(ui.ctx(), &theme, string, language);
+            let layout_job = highlight(ui.ctx(), &theme, string);
             ui.fonts().layout_job(layout_job)
         };
 
@@ -48,8 +47,27 @@ impl GuiElem for Logger {
             .stick_to_bottom()
             .show_rows(ui, row_height, self.logs.len(), |ui, row_range| {
                 for row in row_range {
-                    //ui.label(&self.logs[row]);
-                    ui.add(egui::Label::new(layouter(&ui, &self.logs[row])));
+                    let mut log = String::new();
+                    if true {
+                        log.push_str("[");
+                        log.push_str(&format!("{:?}", self.logs[row].level));
+                        log.push_str("] ");
+                    };
+
+                    if true {
+                        log.push_str("[");
+                        log.push_str(&self.logs[row].stamp.sec.to_string());
+                        log.push_str(".");
+                        log.push_str(&self.logs[row].stamp.nanosec.to_string());
+                        log.push_str("] ");
+                    };
+
+                    if true {
+                        log.push_str(&self.logs[row].msg);
+                        log.push_str(" ");
+                    };
+
+                    ui.add(egui::Label::new(layouter(&ui, &log)));
                 }
             });
 
@@ -59,11 +77,7 @@ impl GuiElem for Logger {
     fn update_data(&mut self, data: Value) {
         match serde_json::from_value::<rctrl_rosbridge::rosout::msg::log::Log>(data) {
             Ok(values) => {
-                let mut log = String::new();
-                log.push_str(&format!("{:?}", values.level));
-                log.push_str(&values.msg);
-
-                self.logs.push(log);
+                self.logs.push(values);
             }
             Err(e) => {
                 log!(format!("Logger::update_data() failed: {}", e));

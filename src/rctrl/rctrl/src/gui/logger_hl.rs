@@ -1,11 +1,12 @@
 use eframe::egui;
 use egui::text::LayoutJob;
+use gloo_console::log;
 
 /// Memoized Code highlighting
-pub fn highlight(ctx: &egui::Context, theme: &CodeTheme, code: &str, language: &str) -> LayoutJob {
-    impl egui::util::cache::ComputerMut<(&CodeTheme, &str, &str), LayoutJob> for Highligher {
-        fn compute(&mut self, (theme, code, lang): (&CodeTheme, &str, &str)) -> LayoutJob {
-            self.highlight(theme, code, lang)
+pub fn highlight(ctx: &egui::Context, theme: &CodeTheme, text: &str) -> LayoutJob {
+    impl egui::util::cache::ComputerMut<(&CodeTheme, &str), LayoutJob> for Highligher {
+        fn compute(&mut self, (theme, text): (&CodeTheme, &str)) -> LayoutJob {
+            self.highlight(theme, text)
         }
     }
 
@@ -13,7 +14,7 @@ pub fn highlight(ctx: &egui::Context, theme: &CodeTheme, code: &str, language: &
 
     let mut memory = ctx.memory();
     let highlight_cache = memory.caches.cache::<HighlightCache<'_>>();
-    highlight_cache.get((theme, code, language))
+    highlight_cache.get((theme, text))
 }
 
 #[derive(Clone, Copy, Hash, PartialEq)]
@@ -147,8 +148,15 @@ struct Highligher {
 
 impl Default for Highligher {
     fn default() -> Self {
+        let mut syntax_builder = syntect::parsing::SyntaxSetBuilder::new();
+
+        match syntect::parsing::syntax_definition::SyntaxDefinition::load_from_str(include_str!("log.sublime-syntax"), true, None) {
+            Ok(syntax_definition) => syntax_builder.add(syntax_definition),
+            Err(e) => log!(format!("Failed to load sytnax highlighting: {}", e)),
+        }
+
         Self {
-            ps: syntect::parsing::SyntaxSet::load_defaults_newlines(),
+            ps: syntax_builder.build(),
             ts: syntect::highlighting::ThemeSet::load_defaults(),
         }
     }
@@ -156,11 +164,11 @@ impl Default for Highligher {
 
 impl Highligher {
     #[allow(clippy::unused_self, clippy::unnecessary_wraps)]
-    fn highlight(&self, theme: &CodeTheme, code: &str, lang: &str) -> LayoutJob {
-        self.highlight_impl(theme, code, lang).unwrap_or_else(|| {
+    fn highlight(&self, theme: &CodeTheme, text: &str) -> LayoutJob {
+        self.highlight_impl(theme, text).unwrap_or_else(|| {
             // Fallback:
             LayoutJob::simple(
-                code.into(),
+                text.into(),
                 egui::FontId::monospace(14.0),
                 if theme.dark_mode {
                     egui::Color32::LIGHT_GRAY
@@ -172,15 +180,12 @@ impl Highligher {
         })
     }
 
-    fn highlight_impl(&self, theme: &CodeTheme, text: &str, language: &str) -> Option<LayoutJob> {
+    fn highlight_impl(&self, theme: &CodeTheme, text: &str) -> Option<LayoutJob> {
         use syntect::easy::HighlightLines;
         use syntect::highlighting::FontStyle;
         use syntect::util::LinesWithEndings;
 
-        let syntax = self
-            .ps
-            .find_syntax_by_name(language)
-            .or_else(|| self.ps.find_syntax_by_extension(language))?;
+        let syntax = self.ps.find_syntax_by_name("log").unwrap();
 
         let theme = theme.syntect_theme.syntect_key_name();
         let mut h = HighlightLines::new(syntax, &self.ts.themes[theme]);
