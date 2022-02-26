@@ -47,27 +47,41 @@ impl GuiElem for Logger {
             .stick_to_bottom()
             .show_rows(ui, row_height, self.logs.len(), |ui, row_range| {
                 for row in row_range {
-                    let mut log = String::new();
-                    if true {
-                        log.push_str("[");
-                        log.push_str(&format!("{:?}", self.logs[row].level));
-                        log.push_str("] ");
-                    };
+                    ui.horizontal(|ui| {
+                        let mut log = String::new();
+                        if true {
+                            log.push_str("[");
+                            log.push_str(&format!("{:?}", self.logs[row].level));
+                            log.push_str("] ");
+                        };
 
-                    if true {
-                        log.push_str("[");
-                        log.push_str(&self.logs[row].stamp.sec.to_string());
-                        log.push_str(".");
-                        log.push_str(&self.logs[row].stamp.nanosec.to_string());
-                        log.push_str("] ");
-                    };
+                        if true {
+                            log.push_str("[");
+                            log.push_str(&self.logs[row].stamp.sec.to_string());
+                            log.push_str(".");
+                            log.push_str(&self.logs[row].stamp.nanosec.to_string());
+                            log.push_str("] ");
+                        };
 
-                    if true {
-                        log.push_str(&self.logs[row].msg);
-                        log.push_str(" ");
-                    };
+                        if true {
+                            log.push_str("[");
+                            log.push_str(&self.logs[row].name.to_string());
+                            log.push_str("]:");
+                        };
 
-                    ui.add(egui::Label::new(layouter(&ui, &log)));
+                        ui.add(egui::Label::new(layouter(&ui, &log)));
+
+                        // Seperate widget to allow linebreaks in log messages
+
+                        let mut log = String::new();
+
+                        if true {
+                            log.push_str(&self.logs[row].msg);
+                            log.push_str(" ");
+                        };
+
+                        ui.add(egui::Label::new(layouter(&ui, &log)));
+                    });
                 }
             });
 
