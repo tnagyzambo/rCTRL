@@ -100,7 +100,7 @@ rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn rdata:
     RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::srv::created<iface::srv_remove_logger_str>);
 
     // U64
-    this->srvRemoveLoggerF64 = this->create_service<rdata::srv::RemoveLogger>(iface::srv_remove_logger_u64.data(),
+    this->srvRemoveLoggerU64 = this->create_service<rdata::srv::RemoveLogger>(iface::srv_remove_logger_u64.data(),
                                                                               std::bind(&rdata::Node::removeLoggerU64,
                                                                                         this,
                                                                                         std::placeholders::_1,

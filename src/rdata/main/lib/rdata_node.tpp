@@ -29,7 +29,8 @@ std::vector<typename rdata::Logger<T>> rdata::Node::removeLoggerByTopic(std::vec
 
     for (typename rdata::Logger<T> logger : loggers)
     {
-        if ((*logger.subPtr).get_topic_name() != topicName)
+        // Need to prepend topicName with leading "/" to match format of get_topic_name()
+        if ((*logger.subPtr).get_topic_name() != (std::string("/") + topicName))
         {
             loggersTransformed.push_back(logger);
         }

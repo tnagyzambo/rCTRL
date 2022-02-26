@@ -38,7 +38,7 @@ namespace rdata::vsensor
 
         rclcpp::Client<rdata::srv::CreateLogger>::SharedPtr clCreateLogger;
         rclcpp::Client<rdata::srv::RemoveLogger>::SharedPtr clRemoveLogger;
-        typename rclcpp::Publisher<T>::SharedPtr logger;
+        typename rclcpp_lifecycle::LifecyclePublisher<T>::SharedPtr logger;
 
         uint calcElapsedTime();
 

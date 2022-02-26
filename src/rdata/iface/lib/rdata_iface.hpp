@@ -71,6 +71,8 @@ namespace rdata::iface
 
         while (!clRemoveLogger->wait_for_service(1s))
         {
+            // NEED TO PROVIDE ESCAPE MECHANISM!!!
+            // Currently blocks responses to lifecycle transistions
             if (!rclcpp::ok())
             {
                 RCLCPP_ERROR(rclcpp::get_logger(callingNode->get_name()), "\033[1;31mInterupted while waiting for '%s'!, exiting\033[0m", serviceName);
@@ -83,7 +85,6 @@ namespace rdata::iface
         auto responseReceivedCallback = [callingNode](ServiceResponseFuture future)
         {
             auto result = future.get();
-            RCLCPP_INFO(rclcpp::get_logger(callingNode->get_name()), "hello");
             return;
         };
         auto futureResult = clRemoveLogger->async_send_request(request, responseReceivedCallback);

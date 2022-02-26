@@ -32,9 +32,9 @@ rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn rdata:
     catch (const rutil::except::service_error &e)
     {
         // Unrecoverable error on failure to parse
-        std::string error = "\033[1;31mFAILED TO CONSTRUCT NODE '";
+        std::string error = "FAILED TO CONSTRUCT NODE '";
         error.append(nodeName);
-        error.append("'!\033[0m");
+        error.append("'!");
 
         RCLCPP_FATAL(this->get_logger(), "%s", error.c_str());
 
@@ -53,8 +53,9 @@ template <typename T>
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn rdata::vsensor::Node<T>::on_activate(const rclcpp_lifecycle::State &)
 {
     RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::transition::activating);
-    // Cannot activate subscribers
-    // REFERENCE: https://github.com/ros2/demos/issues/488
+
+    // Activate publisher
+    this->logger->on_activate();
 
     // Start timer
     this->timer->reset();
@@ -72,8 +73,9 @@ template <typename T>
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn rdata::vsensor::Node<T>::on_deactivate(const rclcpp_lifecycle::State &)
 {
     RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::transition::deactivating);
-    // Cannot deactivate subscribers
-    // REFERENCE: https://github.com/ros2/demos/issues/488
+
+    // Deactivate publisher
+    this->logger->on_deactivate();
 
     // Stop timer
     this->timer->cancel();
@@ -92,6 +94,22 @@ template <typename T>
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn rdata::vsensor::Node<T>::on_cleanup(const rclcpp_lifecycle::State &)
 {
     RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::transition::cleaningUp);
+
+    try
+    {
+        rdata::iface::removeLogger(this->clRemoveLogger->get_service_name(), this->get_node_base_interface(), this->clRemoveLogger, this->loggerTopicName.c_str());
+    }
+    catch (const rutil::except::service_error &e)
+    {
+        // Unrecoverable error on failure to parse
+        std::string error = "FAILED TO CLEANUP NODE '";
+        error.append(nodeName);
+        error.append("'!");
+
+        RCLCPP_FATAL(this->get_logger(), "%s", error.c_str());
+
+        throw std::runtime_error(error);
+    }
 
     RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::state::unconfigured);
 

@@ -36,34 +36,16 @@
 rdata::vsensor::F64::F64(const char *nodeName, std::chrono::milliseconds period) : rdata::vsensor::Node<rdata::msg::LogF64>(nodeName, period)
 {
     this->clCreateLogger = this->create_client<rdata::srv::CreateLogger>(rdata::iface::srv_create_logger_f64.data());
-
+    this->clRemoveLogger = this->create_client<rdata::srv::RemoveLogger>(rdata::iface::srv_remove_logger_f64.data());
     this->logger = this->create_publisher<rdata::msg::LogF64>(this->loggerTopicName, 10);
     this->sinPeriod = 2 * 3.14 / (100 * period.count());
 
-    RCLCPP_INFO(this->get_logger(), "\033[1;32mCreated virtual f64 sensor with period \"%sms\"\033[0m", std::to_string(period.count()).c_str());
+    RCLCPP_INFO(this->get_logger(), "Created virtual f64 sensor with period '%sms'", std::to_string(period.count()).c_str());
 }
 
 rdata::vsensor::F64::~F64()
 {
-    this->clRemoveLogger = this->create_client<rdata::srv::RemoveLogger>(rdata::iface::srv_remove_logger_f64.data());
-
-    // try
-    // {
-    //     rdata::iface::removeLogger(rdata::iface::srv_remove_logger_f64.data(), this->clRemoveLogger, this->loggerTopicName.c_str());
-    // }
-    // catch (const rctrl::util::except::service_error &e)
-    // {
-    //     // Unrecoverable error on failure to parse
-    //     std::string error = "\033[1;31mFAILED TO DESTRUCT NODE '";
-    //     error.append(nodeName);
-    //     error.append("'!\033[0m");
-
-    //     RCLCPP_FATAL(this->get_logger(), "%s", error.c_str());
-
-    //     throw std::runtime_error(error);
-    // }
-
-    RCLCPP_INFO(this->get_logger(), "Destroyed virtual f64 sensor with period \"%sms\".", std::to_string(period.count()).c_str());
+    RCLCPP_INFO(this->get_logger(), "Destroyed virtual f64 sensor with period '%sms'", std::to_string(period.count()).c_str());
 }
 
 void rdata::vsensor::F64::timerCallback()
