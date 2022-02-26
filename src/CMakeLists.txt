@@ -1,4 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
+set(CMAKE_C_COMPILER /bin/clang-14)
+set(CMAKE_CXX_COMPILER /bin/clang++-14)
+
 project(rdata)
 
 # Set compiler options
@@ -15,6 +18,7 @@ find_package(lifecycle_msgs REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 find_package(CURL REQUIRED)
 find_package(tomlplusplus REQUIRED)
+find_package(fmt REQUIRED)
 
 # Create ros2 interfaces
 rosidl_generate_interfaces(${PROJECT_NAME}
@@ -42,6 +46,7 @@ target_sources(rutil INTERFACE ${CMAKE_CURRENT_SOURCE_DIR} rutil/rutil/lib/rutil
                                                            rutil/rutil/lib/rutil_except.hpp)
 
 target_include_directories(rutil INTERFACE rutil/rutil/lib)
+target_link_libraries(rutil INTERFACE fmt::fmt)
 
 # rockerDATA interface library
 add_library(rdata_iface INTERFACE)
