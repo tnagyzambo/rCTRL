@@ -13,7 +13,7 @@ rdata::vsensor::Node<T>::Node(const char *nodeName, std::chrono::milliseconds pe
 template <typename T>
 rdata::vsensor::Node<T>::~Node<T>()
 {
-    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::transition::destructing);
+    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::transition::destructing().c_str());
 }
 
 // Callback to execute upon receiving configure command
@@ -23,7 +23,7 @@ rdata::vsensor::Node<T>::~Node<T>()
 template <typename T>
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn rdata::vsensor::Node<T>::on_configure(const rclcpp_lifecycle::State &)
 {
-    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::transition::configuring);
+    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::transition::configuring().c_str());
 
     try
     {
@@ -31,17 +31,12 @@ rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn rdata:
     }
     catch (const rutil::except::service_error &e)
     {
-        // Unrecoverable error on failure to parse
-        std::string error = "FAILED TO CONSTRUCT NODE '";
-        error.append(nodeName);
-        error.append("'!");
+        RCLCPP_ERROR(this->get_logger(), "Failed to configure node\nWhat: %s", e.what());
 
-        RCLCPP_FATAL(this->get_logger(), "%s", error.c_str());
-
-        throw std::runtime_error(error);
+        return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::FAILURE;
     }
 
-    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::state::inactive);
+    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::state::inactive().c_str());
     return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 
@@ -52,7 +47,7 @@ rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn rdata:
 template <typename T>
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn rdata::vsensor::Node<T>::on_activate(const rclcpp_lifecycle::State &)
 {
-    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::transition::activating);
+    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::transition::activating().c_str());
 
     // Activate publisher
     this->logger->on_activate();
@@ -60,7 +55,7 @@ rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn rdata:
     // Start timer
     this->timer->reset();
 
-    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::state::active);
+    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::state::active().c_str());
 
     return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
@@ -72,7 +67,7 @@ rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn rdata:
 template <typename T>
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn rdata::vsensor::Node<T>::on_deactivate(const rclcpp_lifecycle::State &)
 {
-    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::transition::deactivating);
+    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::transition::deactivating().c_str());
 
     // Deactivate publisher
     this->logger->on_deactivate();
@@ -80,7 +75,7 @@ rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn rdata:
     // Stop timer
     this->timer->cancel();
 
-    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::state::inactive);
+    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::state::inactive().c_str());
 
     return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
@@ -93,7 +88,7 @@ rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn rdata:
 template <typename T>
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn rdata::vsensor::Node<T>::on_cleanup(const rclcpp_lifecycle::State &)
 {
-    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::transition::cleaningUp);
+    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::transition::cleaningUp().c_str());
 
     try
     {
@@ -101,17 +96,12 @@ rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn rdata:
     }
     catch (const rutil::except::service_error &e)
     {
-        // Unrecoverable error on failure to parse
-        std::string error = "FAILED TO CLEANUP NODE '";
-        error.append(nodeName);
-        error.append("'!");
+        RCLCPP_ERROR(this->get_logger(), "Failed to cleanup node\nWhat: %s", e.what());
 
-        RCLCPP_FATAL(this->get_logger(), "%s", error.c_str());
-
-        throw std::runtime_error(error);
+        return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::FAILURE;
     }
 
-    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::state::unconfigured);
+    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::state::unconfigured().c_str());
 
     return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
@@ -124,12 +114,12 @@ rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn rdata:
 template <typename T>
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn rdata::vsensor::Node<T>::on_shutdown(const rclcpp_lifecycle::State &)
 {
-    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::transition::shuttingDown);
+    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::transition::shuttingDown().c_str());
 
     // Stop timer
     this->timer->cancel();
 
-    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::state::finalized);
+    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::state::finalized().c_str());
 
     return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }

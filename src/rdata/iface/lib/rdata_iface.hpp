@@ -9,22 +9,22 @@ using namespace std::chrono_literals;
 
 namespace rdata::iface
 {
-    static constexpr std::string_view nodeName = "rdata";
+    static std::string nodeName = "rdata";
 
-    static constexpr std::string_view srv_get_state = "rdata/get_state";
-    static constexpr std::string_view srv_change_state = "rdata/change_state";
+    static std::string srv_get_state = "rdata/get_state";
+    static std::string srv_change_state = "rdata/change_state";
 
-    static constexpr std::string_view srv_create_logger_bool = "rdata/srv/create_logger_bool";
-    static constexpr std::string_view srv_create_logger_f64 = "rdata/srv/create_logger_f64";
-    static constexpr std::string_view srv_create_logger_i64 = "rdata/srv/create_logger_i64";
-    static constexpr std::string_view srv_create_logger_str = "rdata/srv/create_logger_str";
-    static constexpr std::string_view srv_create_logger_u64 = "rdata/srv/create_logger_u64";
+    static std::string srv_create_logger_bool = "rdata/srv/create_logger_bool";
+    static std::string srv_create_logger_f64 = "rdata/srv/create_logger_f64";
+    static std::string srv_create_logger_i64 = "rdata/srv/create_logger_i64";
+    static std::string srv_create_logger_str = "rdata/srv/create_logger_str";
+    static std::string srv_create_logger_u64 = "rdata/srv/create_logger_u64";
 
-    static constexpr std::string_view srv_remove_logger_bool = "rdata/srv/remove_logger_bool";
-    static constexpr std::string_view srv_remove_logger_f64 = "rdata/srv/remove_logger_f64";
-    static constexpr std::string_view srv_remove_logger_i64 = "rdata/srv/remove_logger_i64";
-    static constexpr std::string_view srv_remove_logger_str = "rdata/srv/remove_logger_str";
-    static constexpr std::string_view srv_remove_logger_u64 = "rdata/srv/remove_logger_u64";
+    static std::string srv_remove_logger_bool = "rdata/srv/remove_logger_bool";
+    static std::string srv_remove_logger_f64 = "rdata/srv/remove_logger_f64";
+    static std::string srv_remove_logger_i64 = "rdata/srv/remove_logger_i64";
+    static std::string srv_remove_logger_str = "rdata/srv/remove_logger_str";
+    static std::string srv_remove_logger_u64 = "rdata/srv/remove_logger_u64";
 
     inline void createLogger(const char *serviceName,
                              rclcpp::node_interfaces::NodeBaseInterface::SharedPtr callingNode,
@@ -34,18 +34,12 @@ namespace rdata::iface
         auto request = std::make_shared<rdata::srv::CreateLogger::Request>();
         request->topic = topicName;
 
-        while (!clCreateLogger->wait_for_service(1s))
+        // It is required to properly coordinate the various lifecycle nodes to avoid waiting for a service that does not exist
+        // DO NOT USE wait_for_service()
+        // It will block all lifecycle transitions of the calling node
+        if (!clCreateLogger->service_is_ready())
         {
-            if (!rclcpp::ok())
-            {
-                // This will throw an rcl exception
-                // Im pretty sure this is a ROS2 issue resulting from a race condition on shutdown
-                // Just have to live with this for now, exiting anyway
-                // REFERENCE: https://github.com/ros2/rclcpp/issues/1139
-                RCLCPP_ERROR(rclcpp::get_logger(callingNode->get_name()), "\033[1;31mInterupted while waiting for '%s'!, exiting\033[0m", serviceName);
-                throw rutil::except::service_error(serviceName);
-            }
-            RCLCPP_INFO(rclcpp::get_logger(callingNode->get_name()), "Service '%s' not available, waiting", serviceName);
+            throw rutil::except::service_error(serviceName);
         }
 
         // We give the async_send_request() method a callback that will get executed once the response
@@ -55,6 +49,8 @@ namespace rdata::iface
         using ServiceResponseFuture = rclcpp::Client<rdata::srv::CreateLogger>::SharedFuture;
         auto responseReceivedCallback = [callingNode](ServiceResponseFuture future)
         {
+            // Handle service response here
+            // Currently I don't think this service call can fail so this is mostly placeholder
             auto result = future.get();
             return;
         };
@@ -69,16 +65,12 @@ namespace rdata::iface
         auto request = std::make_shared<rdata::srv::RemoveLogger::Request>();
         request->topic = topicName;
 
-        while (!clRemoveLogger->wait_for_service(1s))
+        // It is required to properly coordinate the various lifecycle nodes to avoid waiting for a service that does not exist
+        // DO NOT USE wait_for_service()
+        // It will block all lifecycle transitions of the calling node
+        if (!clRemoveLogger->service_is_ready())
         {
-            // NEED TO PROVIDE ESCAPE MECHANISM!!!
-            // Currently blocks responses to lifecycle transistions
-            if (!rclcpp::ok())
-            {
-                RCLCPP_ERROR(rclcpp::get_logger(callingNode->get_name()), "\033[1;31mInterupted while waiting for '%s'!, exiting\033[0m", serviceName);
-                return;
-            }
-            RCLCPP_INFO(rclcpp::get_logger(callingNode->get_name()), "Service '%s' not available, waiting", serviceName);
+            throw rutil::except::service_error(serviceName);
         }
 
         using ServiceResponseFuture = rclcpp::Client<rdata::srv::RemoveLogger>::SharedFuture;

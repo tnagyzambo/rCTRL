@@ -1,7 +1,7 @@
 #pragma once
 
 #include <stdexcept>
-#include <rutil_fmt.hpp>
+#include <fmt/core.h>
 
 namespace rutil::except
 {
@@ -13,9 +13,8 @@ namespace rutil::except
     private:
         std::string buildMessage(const char *serviceName)
         {
-            std::string error = "Failed to request service: ";
-            error.append(serviceName);
-
+            std::string error = fmt::format("Failed to request service '%s'", serviceName);
+            
             return error;
         }
     };

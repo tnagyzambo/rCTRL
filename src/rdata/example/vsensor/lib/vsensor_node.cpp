@@ -35,8 +35,8 @@
 // Virtual float sensor
 rdata::vsensor::F64::F64(const char *nodeName, std::chrono::milliseconds period) : rdata::vsensor::Node<rdata::msg::LogF64>(nodeName, period)
 {
-    this->clCreateLogger = this->create_client<rdata::srv::CreateLogger>(rdata::iface::srv_create_logger_f64.data());
-    this->clRemoveLogger = this->create_client<rdata::srv::RemoveLogger>(rdata::iface::srv_remove_logger_f64.data());
+    this->clCreateLogger = this->create_client<rdata::srv::CreateLogger>(rdata::iface::srv_create_logger_f64);
+    this->clRemoveLogger = this->create_client<rdata::srv::RemoveLogger>(rdata::iface::srv_remove_logger_f64);
     this->logger = this->create_publisher<rdata::msg::LogF64>(this->loggerTopicName, 10);
     this->sinPeriod = 2 * 3.14 / (100 * period.count());
 

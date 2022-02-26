@@ -1,16 +1,16 @@
 #include <rdata_node.hpp>
 
 // Node will construct and immediately enter the unconfigured state
-rdata::Node::Node() : rclcpp_lifecycle::LifecycleNode(iface::nodeName.data())
+rdata::Node::Node() : rclcpp_lifecycle::LifecycleNode(iface::nodeName)
 {
-    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::transition::constructing);
+    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::transition::constructing().c_str());
 
-    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::state::unconfigured);
+    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::state::unconfigured().c_str());
 }
 
 rdata::Node::~Node()
 {
-    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::transition::destructing);
+    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::transition::destructing().c_str());
 }
 
 // Callback to execute upon receiving configure command
@@ -19,7 +19,7 @@ rdata::Node::~Node()
 // If this returns ERROR the node run the errorProcessing callback
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn rdata::Node::on_configure(const rclcpp_lifecycle::State &)
 {
-    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::transition::configuring);
+    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::transition::configuring().c_str());
 
     // Maintain a unique pointer to the influx client class
     // This lets us delay initialization of the influx client to the configure transition
@@ -28,86 +28,86 @@ rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn rdata:
     this->influxClient = std::make_unique<influx::Client>();
 
     // Bool
-    this->srvCreateLoggerBool = this->create_service<rdata::srv::CreateLogger>(iface::srv_create_logger_bool.data(),
+    this->srvCreateLoggerBool = this->create_service<rdata::srv::CreateLogger>(iface::srv_create_logger_bool,
                                                                                std::bind(&rdata::Node::createLoggerBool,
                                                                                          this,
                                                                                          std::placeholders::_1,
                                                                                          std::placeholders::_2));
-    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::srv::created<iface::srv_create_logger_bool>);
+    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::srv::created(iface::srv_create_logger_bool).c_str());
 
     // F64
-    this->srvCreateLoggerF64 = this->create_service<rdata::srv::CreateLogger>(iface::srv_create_logger_f64.data(),
+    this->srvCreateLoggerF64 = this->create_service<rdata::srv::CreateLogger>(iface::srv_create_logger_f64,
                                                                               std::bind(&rdata::Node::createLoggerF64,
                                                                                         this,
                                                                                         std::placeholders::_1,
                                                                                         std::placeholders::_2));
-    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::srv::created<iface::srv_create_logger_f64>);
+    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::srv::created(iface::srv_create_logger_f64).c_str());
 
     // I64
-    this->srvCreateLoggerI64 = this->create_service<rdata::srv::CreateLogger>(iface::srv_create_logger_i64.data(),
+    this->srvCreateLoggerI64 = this->create_service<rdata::srv::CreateLogger>(iface::srv_create_logger_i64,
                                                                               std::bind(&rdata::Node::createLoggerI64,
                                                                                         this,
                                                                                         std::placeholders::_1,
                                                                                         std::placeholders::_2));
-    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::srv::created<iface::srv_create_logger_i64>);
+    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::srv::created(iface::srv_create_logger_i64).c_str());
 
     // Str
-    this->srvCreateLoggerStr = this->create_service<rdata::srv::CreateLogger>(iface::srv_create_logger_str.data(),
+    this->srvCreateLoggerStr = this->create_service<rdata::srv::CreateLogger>(iface::srv_create_logger_str,
                                                                               std::bind(&rdata::Node::createLoggerStr,
                                                                                         this,
                                                                                         std::placeholders::_1,
                                                                                         std::placeholders::_2));
-    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::srv::created<iface::srv_create_logger_str>);
+    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::srv::created(iface::srv_create_logger_str).c_str());
 
     // U64
-    this->srvCreateLoggerU64 = this->create_service<rdata::srv::CreateLogger>(iface::srv_create_logger_u64.data(),
+    this->srvCreateLoggerU64 = this->create_service<rdata::srv::CreateLogger>(iface::srv_create_logger_u64,
                                                                               std::bind(&rdata::Node::createLoggerU64,
                                                                                         this,
                                                                                         std::placeholders::_1,
                                                                                         std::placeholders::_2));
-    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::srv::created<iface::srv_create_logger_u64>);
+    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::srv::created(iface::srv_create_logger_u64).c_str());
 
     // Bool
-    this->srvRemoveLoggerBool = this->create_service<rdata::srv::RemoveLogger>(iface::srv_remove_logger_bool.data(),
+    this->srvRemoveLoggerBool = this->create_service<rdata::srv::RemoveLogger>(iface::srv_remove_logger_bool,
                                                                                std::bind(&rdata::Node::removeLoggerBool,
                                                                                          this,
                                                                                          std::placeholders::_1,
                                                                                          std::placeholders::_2));
-    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::srv::created<iface::srv_remove_logger_bool>);
+    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::srv::created(iface::srv_remove_logger_bool).c_str());
 
     // F64
-    this->srvRemoveLoggerF64 = this->create_service<rdata::srv::RemoveLogger>(iface::srv_remove_logger_f64.data(),
+    this->srvRemoveLoggerF64 = this->create_service<rdata::srv::RemoveLogger>(iface::srv_remove_logger_f64,
                                                                               std::bind(&rdata::Node::removeLoggerF64,
                                                                                         this,
                                                                                         std::placeholders::_1,
                                                                                         std::placeholders::_2));
-    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::srv::created<iface::srv_remove_logger_f64>);
+    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::srv::created(iface::srv_remove_logger_f64).c_str());
 
     // I64
-    this->srvRemoveLoggerI64 = this->create_service<rdata::srv::RemoveLogger>(iface::srv_remove_logger_i64.data(),
+    this->srvRemoveLoggerI64 = this->create_service<rdata::srv::RemoveLogger>(iface::srv_remove_logger_i64,
                                                                               std::bind(&rdata::Node::removeLoggerI64,
                                                                                         this,
                                                                                         std::placeholders::_1,
                                                                                         std::placeholders::_2));
-    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::srv::created<iface::srv_remove_logger_i64>);
+    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::srv::created(iface::srv_remove_logger_i64).c_str());
 
     // Str
-    this->srvRemoveLoggerStr = this->create_service<rdata::srv::RemoveLogger>(iface::srv_remove_logger_str.data(),
+    this->srvRemoveLoggerStr = this->create_service<rdata::srv::RemoveLogger>(iface::srv_remove_logger_str,
                                                                               std::bind(&rdata::Node::removeLoggerStr,
                                                                                         this,
                                                                                         std::placeholders::_1,
                                                                                         std::placeholders::_2));
-    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::srv::created<iface::srv_remove_logger_str>);
+    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::srv::created(iface::srv_remove_logger_str).c_str());
 
     // U64
-    this->srvRemoveLoggerU64 = this->create_service<rdata::srv::RemoveLogger>(iface::srv_remove_logger_u64.data(),
+    this->srvRemoveLoggerU64 = this->create_service<rdata::srv::RemoveLogger>(iface::srv_remove_logger_u64,
                                                                               std::bind(&rdata::Node::removeLoggerU64,
                                                                                         this,
                                                                                         std::placeholders::_1,
                                                                                         std::placeholders::_2));
-    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::srv::created<iface::srv_remove_logger_u64>);
+    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::srv::created(iface::srv_remove_logger_u64).c_str());
 
-    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::state::inactive);
+    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::state::inactive().c_str());
     return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 
@@ -117,11 +117,11 @@ rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn rdata:
 // If this returns ERROR the node run the errorProcessing callback
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn rdata::Node::on_activate(const rclcpp_lifecycle::State &)
 {
-    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::transition::activating);
+    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::transition::activating().c_str());
     // Cannot activate subscribers
     // REFERENCE: https://github.com/ros2/demos/issues/488
 
-    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::state::active);
+    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::state::active().c_str());
 
     return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
@@ -132,11 +132,11 @@ rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn rdata:
 // If this returns ERROR the node run the errorProcessing callback
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn rdata::Node::on_deactivate(const rclcpp_lifecycle::State &)
 {
-    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::transition::deactivating);
+    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::transition::deactivating().c_str());
     // Cannot deactivate subscribers
     // REFERENCE: https://github.com/ros2/demos/issues/488
 
-    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::state::inactive);
+    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::state::inactive().c_str());
 
     return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
@@ -148,11 +148,11 @@ rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn rdata:
 // Drop all smart pointers and reset influx client
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn rdata::Node::on_cleanup(const rclcpp_lifecycle::State &)
 {
-    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::transition::cleaningUp);
+    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::transition::cleaningUp().c_str());
 
     this->deleteAllPointers();
 
-    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::state::unconfigured);
+    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::state::unconfigured().c_str());
 
     return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
@@ -164,11 +164,11 @@ rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn rdata:
 // Drop all smart pointers
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn rdata::Node::on_shutdown(const rclcpp_lifecycle::State &)
 {
-    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::transition::shuttingDown);
+    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::transition::shuttingDown().c_str());
 
     this->deleteAllPointers();
 
-    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::state::finalized);
+    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::state::finalized().c_str());
 
     return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
@@ -214,7 +214,7 @@ void rdata::Node::createLoggerBool(const std::shared_ptr<rdata::srv::CreateLogge
     this->loggersBool.push_back(logger);
 
     const char *topic = this->loggersBool.back().subPtr->get_topic_name();
-    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::sub::rt::created(topic).c_str());
+    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::sub::created(topic).c_str());
 
     response->completed = true;
 }
@@ -240,7 +240,7 @@ void rdata::Node::createLoggerF64(const std::shared_ptr<rdata::srv::CreateLogger
     this->loggersF64.push_back(logger);
 
     const char *topic = this->loggersF64.back().subPtr->get_topic_name();
-    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::sub::rt::created(topic).c_str());
+    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::sub::created(topic).c_str());
 
     response->completed = true;
 }
@@ -266,7 +266,7 @@ void rdata::Node::createLoggerI64(const std::shared_ptr<rdata::srv::CreateLogger
     this->loggersI64.push_back(logger);
 
     const char *topic = this->loggersI64.back().subPtr->get_topic_name();
-    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::sub::rt::created(topic).c_str());
+    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::sub::created(topic).c_str());
 
     response->completed = true;
 }
@@ -292,7 +292,7 @@ void rdata::Node::createLoggerStr(const std::shared_ptr<rdata::srv::CreateLogger
     this->loggersStr.push_back(logger);
 
     const char *topic = this->loggersStr.back().subPtr->get_topic_name();
-    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::sub::rt::created(topic).c_str());
+    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::sub::created(topic).c_str());
 
     response->completed = true;
 }
@@ -318,7 +318,7 @@ void rdata::Node::createLoggerU64(const std::shared_ptr<rdata::srv::CreateLogger
     this->loggersU64.push_back(logger);
 
     const char *topic = this->loggersU64.back().subPtr->get_topic_name();
-    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::sub::rt::created(topic).c_str());
+    RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::sub::created(topic).c_str());
 
     response->completed = true;
 }
@@ -336,7 +336,7 @@ void rdata::Node::removeLoggerBool(const std::shared_ptr<rdata::srv::RemoveLogge
     for (int i = 0; i < loggersRemoved; i++)
     {
         const char *topic = request->topic.c_str();
-        RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::sub::rt::removed(topic).c_str());
+        RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::sub::removed(topic).c_str());
     };
 
     response->completed = true;
@@ -354,7 +354,7 @@ void rdata::Node::removeLoggerF64(const std::shared_ptr<rdata::srv::RemoveLogger
     for (int i = 0; i < loggersRemoved; i++)
     {
         const char *topic = request->topic.c_str();
-        RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::sub::rt::removed(topic).c_str());
+        RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::sub::removed(topic).c_str());
     };
 
     response->completed = true;
@@ -372,7 +372,7 @@ void rdata::Node::removeLoggerI64(const std::shared_ptr<rdata::srv::RemoveLogger
     for (int i = 0; i < loggersRemoved; i++)
     {
         const char *topic = request->topic.c_str();
-        RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::sub::rt::removed(topic).c_str());
+        RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::sub::removed(topic).c_str());
     };
 
     response->completed = true;
@@ -390,7 +390,7 @@ void rdata::Node::removeLoggerStr(const std::shared_ptr<rdata::srv::RemoveLogger
     for (int i = 0; i < loggersRemoved; i++)
     {
         const char *topic = request->topic.c_str();
-        RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::sub::rt::removed(topic).c_str());
+        RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::sub::removed(topic).c_str());
     };
 
     response->completed = true;
@@ -408,7 +408,7 @@ void rdata::Node::removeLoggerU64(const std::shared_ptr<rdata::srv::RemoveLogger
     for (int i = 0; i < loggersRemoved; i++)
     {
         const char *topic = request->topic.c_str();
-        RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::sub::rt::removed(topic).c_str());
+        RCLCPP_INFO(this->get_logger(), "%s", rctrl::util::fmt::sub::removed(topic).c_str());
     };
 
     response->completed = true;
