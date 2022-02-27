@@ -1,36 +1,30 @@
 #include <vsensor_node.hpp>
 
 // Virtual boolean sensor
-// VirtualSensorNodeBool::VirtualSensorNodeBool(std::string nodeName, std::chrono::milliseconds period) : VirtualSensorNode(nodeName, period)
-// {
-//     this->publisher = this->create_publisher<rocketdata::msg::LogBool>(ROS_ROCKEDATA_TOPIC_LOGBOOL, 10);
+rdata::vsensor::Bool::Bool(const char *nodeName, std::chrono::milliseconds period) : rdata::vsensor::Node<rdata::msg::LogBool>(nodeName, period)
+{
+    this->clCreateLogger = this->create_client<rdata::srv::CreateLogger>(rdata::iface::srv_create_logger_bool);
+    this->clRemoveLogger = this->create_client<rdata::srv::RemoveLogger>(rdata::iface::srv_remove_logger_bool);
+    this->logger = this->create_publisher<rdata::msg::LogBool>(this->loggerTopicName, 10);
 
-//     RCLCPP_INFO(this->get_logger(), "Creating virtual boolean sensor \"%s\" with period \"%sms\".", this->nodeName.c_str(), std::to_string(period.count()).c_str());
-// }
+    RCLCPP_INFO(this->get_logger(), "Created virtual bool sensor with period '%sms'", std::to_string(period.count()).c_str());
+}
 
-// VirtualSensorNodeBool::~VirtualSensorNodeBool()
-// {
-//     RCLCPP_INFO(this->get_logger(), "Destroying virtual boolean sensor \"'%s'\" with period \"'%sms'\".", this->nodeName.c_str(), std::to_string(period.count()).c_str());
-// }
+rdata::vsensor::Bool::~Bool()
+{
+    RCLCPP_INFO(this->get_logger(), "Destroyed virtual bool sensor with period '%sms'", std::to_string(period.count()).c_str());
+}
 
-// void VirtualSensorNodeBool::timerCallback()
-// {
-//     auto message = rocketdata::msg::LogBool();
-//     message.measurment = "virtual_bool";
-//     message.sensor = this->nodeName;
+void rdata::vsensor::Bool::timerCallback()
+{
+    auto message = rdata::msg::LogBool();
+    message.measurment = "virtual_bool";
+    message.sensor = this->nodeName;
+    message.value = !this->prevOutput;
 
-//     if (this->prevOutput == true)
-//     {
-//         message.value = false;
-//     }
-//     else
-//     {
-//         message.value = true;
-//     }
-
-//     this->publisher->publish(message);
-//     this->prevOutput = message.value;
-// }
+    this->logger->publish(message);
+    this->prevOutput = message.value;
+}
 
 // Virtual float sensor
 rdata::vsensor::F64::F64(const char *nodeName, std::chrono::milliseconds period) : rdata::vsensor::Node<rdata::msg::LogF64>(nodeName, period)
@@ -60,75 +54,81 @@ void rdata::vsensor::F64::timerCallback()
     this->logger->publish(message);
 }
 
-// // Virtual int sensor
-// VirtualSensorNodeInt64::VirtualSensorNodeInt64(std::string nodeName, std::chrono::milliseconds period) : VirtualSensorNode(nodeName, period)
-// {
-//     this->publisher = this->create_publisher<rocketdata::msg::LogInt64>(ROS_ROCKEDATA_TOPIC_LOGINT64, 10);
+// Virtual int sensor
+rdata::vsensor::I64::I64(const char *nodeName, std::chrono::milliseconds period) : rdata::vsensor::Node<rdata::msg::LogI64>(nodeName, period)
+{
+    this->clCreateLogger = this->create_client<rdata::srv::CreateLogger>(rdata::iface::srv_create_logger_i64);
+    this->clRemoveLogger = this->create_client<rdata::srv::RemoveLogger>(rdata::iface::srv_remove_logger_i64);
+    this->logger = this->create_publisher<rdata::msg::LogI64>(this->loggerTopicName, 10);
 
-//     RCLCPP_INFO(this->get_logger(), "Creating virtual int64 sensor \"%s\" with period \"%sms\".", this->nodeName.c_str(), std::to_string(period.count()).c_str());
-// }
+    RCLCPP_INFO(this->get_logger(), "Created virtual i64 sensor with period '%sms'", std::to_string(period.count()).c_str());
+}
 
-// VirtualSensorNodeInt64::~VirtualSensorNodeInt64()
-// {
-//     RCLCPP_INFO(this->get_logger(), "Destroying virtual int64 sensor \"%s\" with period \"%sms\".", this->nodeName.c_str(), std::to_string(period.count()).c_str());
-// }
+rdata::vsensor::I64::~I64()
+{
+    RCLCPP_INFO(this->get_logger(), "Destroyed virtual i64 sensor with period '%sms'", std::to_string(period.count()).c_str());
+}
 
-// void VirtualSensorNodeInt64::timerCallback()
-// {
-//     auto message = rocketdata::msg::LogInt64();
+void rdata::vsensor::I64::timerCallback()
+{
+    auto message = rdata::msg::LogI64();
 
-//     message.measurment = "virtual_int";
-//     message.sensor = this->nodeName;
-//     message.value = rand() % 10;
+    message.measurment = "virtual_int";
+    message.sensor = this->nodeName;
+    message.value = rand() % 10;
 
-//     this->publisher->publish(message);
-// }
+    this->logger->publish(message);
+}
 
-// // Virtual string sensor
-// VirtualSensorNodeString::VirtualSensorNodeString(std::string nodeName, std::chrono::milliseconds period) : VirtualSensorNode(nodeName, period)
-// {
-//     this->publisher = this->create_publisher<rocketdata::msg::LogString>(ROS_ROCKEDATA_TOPIC_LOGSTRING, 10);
+// Virtual string sensor
+rdata::vsensor::Str::Str(const char *nodeName, std::chrono::milliseconds period) : rdata::vsensor::Node<rdata::msg::LogStr>(nodeName, period)
+{
+    this->clCreateLogger = this->create_client<rdata::srv::CreateLogger>(rdata::iface::srv_create_logger_str);
+    this->clRemoveLogger = this->create_client<rdata::srv::RemoveLogger>(rdata::iface::srv_remove_logger_str);
+    this->logger = this->create_publisher<rdata::msg::LogStr>(this->loggerTopicName, 10);
 
-//     RCLCPP_INFO(this->get_logger(), "Creating virtual string sensor \"%s\" with period \"%sms\".", this->nodeName.c_str(), std::to_string(period.count()).c_str());
-// }
+    RCLCPP_INFO(this->get_logger(), "Created virtual string sensor with period '%sms'", std::to_string(period.count()).c_str());
+}
 
-// VirtualSensorNodeString::~VirtualSensorNodeString()
-// {
-//     RCLCPP_INFO(this->get_logger(), "Destroying virtual string sensor \"%s\" with period \"%sms\".", this->nodeName.c_str(), std::to_string(period.count()).c_str());
-// }
+rdata::vsensor::Str::~Str()
+{
+    RCLCPP_INFO(this->get_logger(), "Destroyed virtual string sensor with period '%sms'", std::to_string(period.count()).c_str());
+}
 
-// void VirtualSensorNodeString::timerCallback()
-// {
-//     auto message = rocketdata::msg::LogString();
-//     uint ms = VirtualSensorNode::calcElapsedTime();
+void rdata::vsensor::Str::timerCallback()
+{
+    auto message = rdata::msg::LogStr();
+    uint ms = this->calcElapsedTime();
 
-//     message.measurment = "virtual_string";
-//     message.sensor = this->nodeName;
-//     message.value = "Event at " + std::to_string(ms) + "ms";
+    message.measurment = "virtual_string";
+    message.sensor = this->nodeName;
+    message.value = "Event at " + std::to_string(ms) + "ms";
 
-//     this->publisher->publish(message);
-// }
+    this->logger->publish(message);
+}
 
-// // Virtual uint sensor
-// VirtualSensorNodeUInt64::VirtualSensorNodeUInt64(std::string nodeName, std::chrono::milliseconds period) : VirtualSensorNode(nodeName, period)
-// {
-//     this->publisher = this->create_publisher<rocketdata::msg::LogUint64>(ROS_ROCKEDATA_TOPIC_LOGUINT64, 10);
+// Virtual uint sensor
+rdata::vsensor::U64::U64(const char *nodeName, std::chrono::milliseconds period) : rdata::vsensor::Node<rdata::msg::LogU64>(nodeName, period)
+{
+    this->clCreateLogger = this->create_client<rdata::srv::CreateLogger>(rdata::iface::srv_create_logger_u64);
+    this->clRemoveLogger = this->create_client<rdata::srv::RemoveLogger>(rdata::iface::srv_remove_logger_u64);
+    this->logger = this->create_publisher<rdata::msg::LogU64>(this->loggerTopicName, 10);
 
-//     RCLCPP_INFO(this->get_logger(), "Creating virtual uint64 sensor \"%s\" with period \"%sms\".", this->nodeName.c_str(), std::to_string(period.count()).c_str());
-// }
+    RCLCPP_INFO(this->get_logger(), "Created virtual u64 sensor with period '%sms'", std::to_string(period.count()).c_str());
+}
 
-// VirtualSensorNodeUInt64::~VirtualSensorNodeUInt64()
-// {
-//     RCLCPP_INFO(this->get_logger(), "Destroying virtual uint64 sensor \"%s\" with period \"%sms\".", this->nodeName.c_str(), std::to_string(period.count()).c_str());
-// }
+rdata::vsensor::U64::~U64()
+{
+    RCLCPP_INFO(this->get_logger(), "Destroyed virtual u64 sensor with period '%sms'", std::to_string(period.count()).c_str());
+}
 
-// void VirtualSensorNodeUInt64::timerCallback()
-// {
-//     auto message = rocketdata::msg::LogUint64();
+void rdata::vsensor::U64::timerCallback()
+{
+    auto message = rdata::msg::LogU64();
 
-//     message.measurment = "virtual_uint";
-//     message.sensor = this->nodeName;
-//     message.value = rand() % 10 + 4000000000;
+    message.measurment = "virtual_uint";
+    message.sensor = this->nodeName;
+    message.value = rand() % 10 + 4000000000;
 
-//     this->publisher->publish(message);
-// }
+    this->logger->publish(message);
+}

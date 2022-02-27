@@ -13,7 +13,7 @@ namespace rutil::except
     private:
         std::string buildMessage(const char *serviceName)
         {
-            std::string error = fmt::format("Failed to request service '%s'", serviceName);
+            std::string error = fmt::format("Failed to request service '{}'", serviceName);
             
             return error;
         }

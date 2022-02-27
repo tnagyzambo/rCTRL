@@ -56,18 +56,17 @@ namespace rdata::vsensor
         std::string createLoggerTopicName();
     };
 
-    // class VirtualSensorNodeBool : public VirtualSensorNode
-    // {
-    // public:
-    //     VirtualSensorNodeBool(std::string, std::chrono::milliseconds);
-    //     ~VirtualSensorNodeBool();
+    class Bool : public Node<rdata::msg::LogBool>
+    {
+    public:
+        Bool(const char *, std::chrono::milliseconds);
+        ~Bool();
 
-    // private:
-    //     rclcpp::Publisher<rdata::msg::LogBool>::SharedPtr publisher;
-    //     bool prevOutput = false;
+    private:
+        bool prevOutput = false;
 
-    //     void timerCallback();
-    // };
+        void timerCallback();
+    };
 
     class F64 : public Node<rdata::msg::LogF64>
     {
@@ -81,41 +80,35 @@ namespace rdata::vsensor
         void timerCallback();
     };
 
-// class VirtualSensorNodeInt64 : public VirtualSensorNode
-// {
-// public:
-//     VirtualSensorNodeInt64(std::string, std::chrono::milliseconds);
-//     ~VirtualSensorNodeInt64();
+    class I64 : public Node<rdata::msg::LogI64>
+    {
+    public:
+        I64(const char *, std::chrono::milliseconds);
+        ~I64();
 
-// private:
-//     rclcpp::Publisher<rdata::msg::LogI64>::SharedPtr publisher;
+    private:
+        void timerCallback();
+    };
 
-//     void timerCallback();
-// };
+    class Str : public Node<rdata::msg::LogStr>
+    {
+    public:
+        Str(const char *, std::chrono::milliseconds);
+        ~Str();
 
-// class VirtualSensorNodeString : public VirtualSensorNode
-// {
-// public:
-//     VirtualSensorNodeString(std::string, std::chrono::milliseconds);
-//     ~VirtualSensorNodeString();
+    private:
+        void timerCallback();
+    };
 
-// private:
-//     rclcpp::Publisher<rdata::msg::LogStr>::SharedPtr publisher;
+    class U64 : public Node<rdata::msg::LogU64>
+    {
+    public:
+        U64(const char *, std::chrono::milliseconds);
+        ~U64();
 
-//     void timerCallback();
-// };
-
-// class VirtualSensorNodeUInt64 : public VirtualSensorNode
-// {
-// public:
-//     VirtualSensorNodeUInt64(std::string, std::chrono::milliseconds);
-//     ~VirtualSensorNodeUInt64();
-
-// private:
-//     rclcpp::Publisher<rdata::msg::LogU64>::SharedPtr publisher;
-
-//     void timerCallback();
-// };
+    private:
+        void timerCallback();
+    };
 
 // Implementation of templated functions
 #include "vsensor_node.tpp"
