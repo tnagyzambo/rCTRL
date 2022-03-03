@@ -1,8 +1,15 @@
 #### Folders ####
 
-build/*
-install/*
-log/*
+build/
+install/
+log/
+
+#### Rust ####
+
+debug/
+target/
+dist/
+**/*.rs.bk
 
 #### macOS ####
 

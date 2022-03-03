@@ -1,0 +1,31 @@
+[package]
+name = "rctrl"
+version = "0.1.0"
+edition = "2018"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+rctrl_rosbridge = { path = "../rctrl_rosbridge" }
+
+wasm-bindgen = "0.2.79"
+eframe = "0.17.0"
+syntect = { version = "4.6.0", default-features = false, features = ["default-fancy"] }
+
+futures = "0.3.19"
+futures-util = "0.3"
+reqwasm = { version = "0.4.0", features = ["websocket"] }
+wasm-bindgen-futures = "0.4.28"
+console_error_panic_hook = "0.1.7"
+web-sys = { version = "0.3.56", features = ['Window', 'Performance'] }
+chrono = "0.4.19"
+
+gloo-console = "0.2.1"
+gloo = { version = "0.6.0", features = ["futures"] }
+
+serde = "1.0.80"
+serde_derive = "1.0.115"
+serde_json = "1.0.13"
+strum = "0.23"
+strum_macros = "0.23"

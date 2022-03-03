@@ -1,31 +1,18 @@
 {
-    "name": "(gdb) Launch",
-    "type": "cppdbg",
-    "request": "launch",
-    "program": "${workspaceFolder}/install/${input:package}/lib/${input:package}/${input:program}",
-    "args": [],
-    "stopAtEntry": true,
-    "cwd": "${workspaceFolder}",
-    "environment": [],
-    "externalConsole": false,
-    "MIMode": "gdb",
-    "setupCommands": [
+    "configurations": [
         {
-            "description": "Enable pretty-printing for gdb",
-            "text": "-enable-pretty-printing",
-            "ignoreFailures": true
-        }
-    ],
-    "inputs": [
-        {
-        "id": "package",
-        "type": "promptString",
-        "description": "Package name"
-        },
-        {
-        "id": "program",
-        "type": "promptString",
-        "description": "Program name"
+            "name": "Remote launch",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/rdata/rdata_lc_example", // Local path.
+            "initCommands": [
+                "platform select remote-linux",
+                "platform connect connect://localhost:3000",
+                "settings set target.inherit-env true", // See the note below.
+            ],
+            // "env": {
+            //     "PATH": "...", // See the note below.
+            // }
         }
     ]
 }

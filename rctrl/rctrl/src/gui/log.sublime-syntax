@@ -1,0 +1,9 @@
+%YAML 1.2
+---
+name: log
+scope: source.c
+
+contexts:
+  main:
+    - match: \b(Unset|Debug|Info|Warn|Error|Fatal)\b
+      scope: keyword.control.c
