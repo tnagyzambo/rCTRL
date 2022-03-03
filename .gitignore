@@ -1,15 +1,14 @@
 #### Folders ####
 
-build/*
-install/*
-log/*
+build/
+install/
+log/
 
 #### Rust ####
+
 debug/
 target/
-src/rctrl/dist/
-
-src/rdata/example/gui/Cargo.lock
+dist/
 **/*.rs.bk
 
 #### macOS ####
