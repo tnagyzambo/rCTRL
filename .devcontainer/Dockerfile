@@ -17,6 +17,10 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy clang-12 python3-pip
 ENV CC=/bin/clang-12
 ENV CXX=/bin/clang++-12
 
+# Install git
+RUN apt-get update 
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy git
+
 # Install ROS2
 USER root
 RUN apt-get update 
