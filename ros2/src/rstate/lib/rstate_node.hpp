@@ -6,7 +6,6 @@
 
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_action/rclcpp_action.hpp>
-#include <sol/sol.hpp>
 
 #include <rstate/action/transition.hpp>
 
