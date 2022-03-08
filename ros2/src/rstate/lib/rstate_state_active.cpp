@@ -2,18 +2,18 @@
 
 namespace rstate
 {
-    State &Inactive::getInstance()
+    State &Active::getInstance()
     {
-        static Inactive singleton;
+        static Active singleton;
         return singleton;
     }
 
-    void Inactive::enter(Node *node)
+    void Active::enter(Node *node)
     {
-        RCLCPP_INFO(node->get_logger(), "Network is inactive");
+        RCLCPP_INFO(node->get_logger(), "Network is active");
     }
 
-    rclcpp_action::GoalResponse Inactive::handleGoal(
+    rclcpp_action::GoalResponse Active::handleGoal(
         Node *node,
         const rclcpp_action::GoalUUID &uuid,
         std::shared_ptr<const action::Transition::Goal> goal)
@@ -21,14 +21,11 @@ namespace rstate
         (void)uuid;
         switch (goal->transition)
         {
-        case Transition::CleanUp:
-            this->onTransition = &Inactive::onCleanUp;
-            return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
-        case Transition::Activate:
-            this->onTransition = &Inactive::onActivate;
+        case Transition::Deactivate:
+            this->onTransition = &Active::onDeactivate;
             return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
         case Transition::Shutdown:
-            this->onTransition = &Inactive::onShutdown;
+            this->onTransition = &Active::onShutdown;
             return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
         default:
             RCLCPP_INFO(node->get_logger(), "Received transition request with invalid goal: %d", goal->transition);
@@ -36,7 +33,7 @@ namespace rstate
         }
     }
 
-    rclcpp_action::CancelResponse Inactive::handleCancel(
+    rclcpp_action::CancelResponse Active::handleCancel(
         Node *node,
         const std::shared_ptr<rclcpp_action::ServerGoalHandle<action::Transition>> goalHandle)
     {
@@ -45,36 +42,25 @@ namespace rstate
         return rclcpp_action::CancelResponse::ACCEPT;
     }
 
-    void Inactive::handleAccepted(
+    void Active::handleAccepted(
         Node *node,
         const std::shared_ptr<rclcpp_action::ServerGoalHandle<action::Transition>> goalHandle)
     {
-        std::thread{std::bind(Inactive::onTransition, this, std::placeholders::_1, std::placeholders::_2), node, goalHandle}.detach();
+        std::thread{std::bind(Active::onTransition, this, std::placeholders::_1, std::placeholders::_2), node, goalHandle}.detach();
     }
 
-    void Inactive::onCleanUp(
+    void Active::onDeactivate(
         Node *node,
         const std::shared_ptr<rclcpp_action::ServerGoalHandle<action::Transition>> goalHandle)
     {
-        node->setState(CleaningUp::getInstance());
+        node->setState(Deactivating::getInstance());
 
         const auto goal = goalHandle->get_goal();
 
-        node->setState(Unconfigured::getInstance());
+        node->setState(Inactive::getInstance());
     }
 
-    void Inactive::onActivate(
-        Node *node,
-        const std::shared_ptr<rclcpp_action::ServerGoalHandle<action::Transition>> goalHandle)
-    {
-        node->setState(Activating::getInstance());
-
-        const auto goal = goalHandle->get_goal();
-
-        node->setState(Active::getInstance());
-    }
-
-    void Inactive::onShutdown(
+    void Active::onShutdown(
         Node *node,
         const std::shared_ptr<rclcpp_action::ServerGoalHandle<action::Transition>> goalHandle)
     {

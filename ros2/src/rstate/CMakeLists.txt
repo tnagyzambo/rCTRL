@@ -22,8 +22,12 @@ rosidl_generate_interfaces(${PROJECT_NAME}
 # rstate executable
 add_executable(rstate_node src/main.cpp
                            lib/rstate_node.cpp
+                           lib/rstate_state_activating.cpp
+                           lib/rstate_state_active.cpp
                            lib/rstate_state_cleaning_up.cpp
                            lib/rstate_state_configuring.cpp
+                           lib/rstate_state_deactivating.cpp
+                           lib/rstate_state_error_processing.cpp
                            lib/rstate_state_finalized.cpp
                            lib/rstate_state_inactive.cpp
                            lib/rstate_state_shutting_down.cpp
