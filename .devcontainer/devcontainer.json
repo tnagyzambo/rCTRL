@@ -30,7 +30,7 @@
         "ms-azuretools.vscode-docker",
         "llvm-vs-code-extensions.vscode-clangd",
         "twxs.cmake",
-        "yzhang.markdown-all-in-one",
+        "bierner.markdown-mermaid",
         "spmeesseman.vscode-taskexplorer",
         "rust-lang.rust",
     ]
