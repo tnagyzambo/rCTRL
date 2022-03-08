@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
 # Start influxd process and send to background
-influxd &
+# Use nohup to output everything that would be going to a terminal to a log file
+nohup influxd > .devcontainer/influxd.log 2>&1 &
 
 # Wait for influxd to start
 sleep 15s
@@ -24,7 +25,3 @@ sed -i -E "s/$(grep -oP '(token = [^\s]+")' ${CREDENTIALS_FILE})/token = \"${INF
 
 # Remove setup script
 rm -f ~/setup.sh
-
-echo ""
-echo "Press any key to stop influxDB..."
-read -rsp -n1 key
