@@ -71,6 +71,9 @@
         "*.tpp": "cpp"
     },
     "editor.formatOnSave": true,
+    "clang-format.executable": "/bin/clang-format",
+    "files.insertFinalNewline": true,
+    "files.trimFinalNewlines": true,
     "python.autoComplete.extraPaths": [
         "/opt/ros/galactic/lib/python3.8/site-packages"
     ],

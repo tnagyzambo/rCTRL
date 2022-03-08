@@ -2,9 +2,7 @@
 // Write the POST request to InfluxDB
 // The POST request can fail and should be regarded as a non critical error
 // If CURL is incorrectly configured at runtime it should be considered and unrecoverable error
-template <typename T>
-void influx::Client::writeToInflux(std::string measurment, std::string sensor, T value)
-{
+template <typename T> void Client::writeToInflux(std::string measurment, std::string sensor, T value) {
     struct curl_slist *header = NULL;
     header = curl_slist_append(header, this->authorization.c_str());
 
@@ -13,8 +11,7 @@ void influx::Client::writeToInflux(std::string measurment, std::string sensor, T
 
     long responseCode = this->postRequest(this->urlWrite, header, body, responeBuffer);
 
-    if (responseCode != 204)
-    {
-        throw influx::except::PostReq(responeBuffer);
+    if (responseCode != 204) {
+        throw except::PostReq(responeBuffer);
     }
 }

@@ -1,7 +1,7 @@
 #pragma once
 
-#include <string>
 #include <memory>
+#include <string>
 #include <vector>
 
 #include <rclcpp/rclcpp.hpp>
@@ -9,8 +9,8 @@
 
 #include <influx_client.hpp>
 #include <rdata/iface.hpp>
-#include <rutil/fmt.hpp>
 #include <rutil/except.hpp>
+#include <rutil/fmt.hpp>
 
 #include <rdata/srv/create_logger.hpp>
 #include <rdata/srv/remove_logger.hpp>
@@ -21,28 +21,26 @@
 #include <rdata/msg/log_str.hpp>
 #include <rdata/msg/log_u64.hpp>
 
-namespace rdata
-{
-    template <typename T>
-    struct Logger
-    {
+namespace rdata {
+    using LifecycleCallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
+
+    template <typename T> struct Logger {
         typename rclcpp::Subscription<T>::SharedPtr subPtr;
         rclcpp::CallbackGroup::SharedPtr callbackGroup;
         rclcpp::SubscriptionOptions opts;
     };
 
-    class Node : public rclcpp_lifecycle::LifecycleNode
-    {
+    class Node : public rclcpp_lifecycle::LifecycleNode {
     public:
         Node();
         ~Node();
 
     private:
-        rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_configure(const rclcpp_lifecycle::State &);
-        rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_activate(const rclcpp_lifecycle::State &);
-        rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_deactivate(const rclcpp_lifecycle::State &);
-        rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_cleanup(const rclcpp_lifecycle::State &);
-        rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_shutdown(const rclcpp_lifecycle::State &state);
+        LifecycleCallbackReturn on_configure(const rclcpp_lifecycle::State &);
+        LifecycleCallbackReturn on_activate(const rclcpp_lifecycle::State &);
+        LifecycleCallbackReturn on_deactivate(const rclcpp_lifecycle::State &);
+        LifecycleCallbackReturn on_cleanup(const rclcpp_lifecycle::State &);
+        LifecycleCallbackReturn on_shutdown(const rclcpp_lifecycle::State &state);
 
         rclcpp::Service<rdata::srv::CreateLogger>::SharedPtr srvCreateLoggerBool;
         rclcpp::Service<rdata::srv::CreateLogger>::SharedPtr srvCreateLoggerF64;
@@ -91,17 +89,17 @@ namespace rdata
                              std::shared_ptr<rdata::srv::RemoveLogger::Response>);
 
         template <typename T>
-        static std::vector<typename rdata::Logger<T>> removeLoggerByTopic(std::vector<typename rdata::Logger<T>>, const char *);
+        static std::vector<typename rdata::Logger<T>> removeLoggerByTopic(std::vector<typename rdata::Logger<T>>,
+                                                                          const char *);
 
         void deleteAllPointers();
 
         std::unique_ptr<influx::Client> influxClient;
         std::string readBuffer;
 
-        template <typename T>
-        void tryToWriteToInfluxDB(T);
+        template <typename T> void tryToWriteToInfluxDB(T);
     };
 
 // Implementation of templated functions
 #include "rdata_node.tpp"
-}
+} // namespace rdata

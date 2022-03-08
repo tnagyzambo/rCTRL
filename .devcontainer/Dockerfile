@@ -24,6 +24,11 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy clang-14 lldb python3-pip
 ENV CC=/bin/clang-14
 ENV CXX=/bin/clang++-14
 
+# Install clang tools
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy clangd-12 clang-format-12
+RUN update-alternatives --install /bin/clangd clangd /bin/clangd-12 100
+RUN update-alternatives --install /bin/clang-format clang-format /bin/clang-format-12 100
+
 # Install cmake (building from source takes > 8Gb memory)
 RUN wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null
 RUN apt-add-repository "deb https://apt.kitware.com/ubuntu/ $(lsb_release -cs) main"
@@ -123,5 +128,3 @@ ENV INFLUXD_CONFIG_PATH = "/home/ros/rdata/influx"
 COPY resources/setup.sh /home/ros/setup.sh
 USER root
 RUN chmod +x /home/ros/setup.sh
-
-

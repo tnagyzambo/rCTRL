@@ -26,14 +26,11 @@
     },
     "extensions": [
         "bungcip.better-toml",
+        "ajshort.msg",
         "ms-azuretools.vscode-docker",
-        "ms-iot.vscode-ros",
-        "ms-vscode.cpptools",
-        "ms-vscode.cmake-tools",
-        "xaver.clang-format",
+        "llvm-vs-code-extensions.vscode-clangd",
         "twxs.cmake",
         "yzhang.markdown-all-in-one",
-        "jebbs.plantuml",
         "spmeesseman.vscode-taskexplorer",
         "rust-lang.rust",
     ]

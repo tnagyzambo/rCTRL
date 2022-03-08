@@ -1,18 +1,16 @@
 #pragma once
 
-#include <string>
-#include <iostream>
 #include <curl/curl.h>
-#include <toml++/toml.h>
 #include <influx_exception.hpp>
+#include <iostream>
+#include <string>
+#include <toml++/toml.h>
 
 #define CREDENTIALS_FILE "/home/ros/rdata/influx/credentials.toml"
 
-namespace influx
-{
+namespace influx {
     // Structure to hold the basic info required to make post requests to InfluxDB
-    struct Credentials
-    {
+    struct Credentials {
         std::string user;
         std::string password;
         std::string token;
@@ -21,8 +19,7 @@ namespace influx
         std::string retention;
     };
 
-    class Client
-    {
+    class Client {
     public:
         Credentials credentials;
         std::string urlWrite;
@@ -35,8 +32,7 @@ namespace influx
 
         // Templated function to allow writing all supported types to InfluxDB
         // Templated functions must implemented in the header or a separate .tpp file appended to the bottom of the header
-        template <typename T>
-        void writeToInflux(std::string, std::string, T);
+        template <typename T> void writeToInflux(std::string, std::string, T);
 
     private:
         long postRequest(std::string &, struct curl_slist *, std::string &, std::string &);
@@ -60,4 +56,4 @@ namespace influx
 
 // Implementation of templated functions
 #include "influx_client.tpp"
-}
+} // namespace influx
