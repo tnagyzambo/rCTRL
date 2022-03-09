@@ -46,12 +46,12 @@ namespace influx {
     // Used for debugging
     void Client::printCredentials() {
         std::cout << std::endl;
-        std::cout << "\033[1mUser: \033[0m" << this->credentials.user << std::endl;
-        std::cout << "\033[1mPassword: \033[0m" << this->credentials.password << std::endl;
-        std::cout << "\033[1mToken: \033[0m" << this->credentials.token << std::endl;
-        std::cout << "\033[1mOrg: \033[0m" << this->credentials.org << std::endl;
-        std::cout << "\033[1mBucket: \033[0m" << this->credentials.bucket << std::endl;
-        std::cout << "\033[1mRetention: \033[0m" << this->credentials.retention << std::endl;
+        std::cout << "User: " << this->credentials.user << std::endl;
+        std::cout << "Password: " << this->credentials.password << std::endl;
+        std::cout << "Token: " << this->credentials.token << std::endl;
+        std::cout << "Org: " << this->credentials.org << std::endl;
+        std::cout << "Bucket: " << this->credentials.bucket << std::endl;
+        std::cout << "Retention: " << this->credentials.retention << std::endl;
 
         return;
     }
@@ -106,8 +106,8 @@ namespace influx {
             std::stringstream error;
 
             error << std::endl;
-            error << "\033[1;31mCANNOT PARSE CREDENTIALS FILE!\033[0m" << std::endl;
-            error << "\033[1mError: \033[0m" << e << std::endl;
+            error << "Cannot parse credentials file!" << std::endl;
+            error << "Error: " << e << std::endl;
 
             throw std::runtime_error(error.str());
         }
@@ -128,11 +128,11 @@ namespace influx {
             std::stringstream error;
 
             error << std::endl;
-            error << "\033[1;31mNO \"" << key << "\" FOUND IN CREDENTIALS FILE!\033[0m" << std::endl;
-            error << "\033[1mFile Path: \033[0m" << CREDENTIALS_FILE << std::endl;
-            error << "\033[1mSection: \033[0m" << section << std::endl;
-            error << "\033[1mKey: \033[0m" << key << std::endl;
-            error << "\033[1mError: \033[0m" << e.what() << std::endl;
+            error << "No '" << key << "' found in credentials file!" << std::endl;
+            error << "File Path: " << CREDENTIALS_FILE << std::endl;
+            error << "Section: " << section << std::endl;
+            error << "Key: " << key << std::endl;
+            error << "Error: " << e.what() << std::endl;
             error << std::endl;
 
             throw std::runtime_error(error.str());
