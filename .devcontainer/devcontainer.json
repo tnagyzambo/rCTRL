@@ -29,6 +29,7 @@
         "ajshort.msg",
         "ms-azuretools.vscode-docker",
         "llvm-vs-code-extensions.vscode-clangd",
+        "vadimcn.vscode-lldb",
         "twxs.cmake",
         "bierner.markdown-mermaid",
         "spmeesseman.vscode-taskexplorer",
