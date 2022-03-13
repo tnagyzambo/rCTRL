@@ -1,5 +1,6 @@
 #pragma once
 
+#include <rstate_cmd.hpp>
 #include <rstate_node.hpp>
 
 namespace rstate {

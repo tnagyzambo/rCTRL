@@ -45,6 +45,11 @@ namespace rstate {
 
         const auto goal = goalHandle->get_goal();
 
+        for (auto &cmd : node->cmdsOnConfigure) // access by reference to avoid copying
+        {
+            cmd->execute();
+        }
+
         node->setState(Inactive::getInstance());
     }
 

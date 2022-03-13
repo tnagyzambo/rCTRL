@@ -21,6 +21,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
 
 # rstate executable
 add_executable(rstate_node src/main.cpp
+                           lib/rstate_cmd.cpp
                            lib/rstate_node.cpp
                            lib/rstate_state_activating.cpp
                            lib/rstate_state_active.cpp
@@ -31,7 +32,8 @@ add_executable(rstate_node src/main.cpp
                            lib/rstate_state_finalized.cpp
                            lib/rstate_state_inactive.cpp
                            lib/rstate_state_shutting_down.cpp
-                           lib/rstate_state_unconfigured.cpp)
+                           lib/rstate_state_unconfigured.cpp
+                           lib/rstate_util.cpp)
 
 target_include_directories(rstate_node PRIVATE lib)
 

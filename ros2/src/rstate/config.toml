@@ -1,0 +1,151 @@
+[configure]
+    # Confingure rdata before nodes that write to it
+    [[configure.cmd_service]]
+    node = "rdata"
+    service = "change_state"
+    timeout_wait_for_srv = 100
+    timeout_request = 100
+    [configure.cmd_service.request.transition]
+        id = 1
+        label = "configure"
+    [configure.cmd_service.response]
+        success = true
+    [configure.cmd_service.cancel.request.transition]
+        id = 2
+        label = "cleanup"
+    [configure.cmd_service.cancel.response]
+        success = true
+    
+    # Other node
+    [[configure.cmd_service]]
+    node = "other"
+    service = "change_state"
+    timeout_wait_for_srv = 100
+    timeout_request = 100
+    [configure.cmd_service.request.transition]
+        id = 1
+        label = "configure"
+    [configure.cmd_service.response]
+        success = true
+    [configure.cmd_service.cancel.request.transition]
+        id = 2
+        label = "cleanup"
+    [configure.cmd_service.cancel.response]
+        success = true
+
+[cleanup]
+    # Clean up rdata after nodes that write to it
+    [[cleanup.cmd_service]]
+    node = "rdata"
+    service = "change_state"
+    timeout_wait_for_srv = 100
+    timeout_request = 100
+    [cleanup.cmd_service.request.transition]
+        id = 2
+        label = "cleanup"
+    [cleanup.cmd_service.response]
+        success = true
+    [cleanup.cmd_service.cancel.request.transition]
+        id = 1
+        label = "configure"
+    [cleanup.cmd_service.cancel.response]
+        success = true
+
+[activate]
+    # Activate rdata before nodes that write to it
+    [[activate.cmd_service]]
+    node = "rdata"
+    service = "change_state"
+    timeout_wait_for_srv = 100
+    timeout_request = 100
+    [activate.cmd_service.request.transition]
+        id = 3
+        label = "activate"
+    [activate.cmd_service.response]
+        success = true
+    [activate.cmd_service.cancel.request.transition]
+        id = 4
+        label = "deactivate"
+    [activate.cmd_service.cancel.response]
+        success = true
+
+[deactivate]
+    # Deactivate rdata after nodes that write to it
+    [[deactivate.cmd_service]]
+    node = "rdata"
+    service = "change_state"
+    timeout_wait_for_srv = 100
+    timeout_request = 100
+    [deactivate.cmd_service.request.transition]
+        id = 4
+        label = "deactivate"
+    [deactivate.cmd_service.response]
+        success = true
+    [deactivate.cmd_service.cancel.request.transition]
+        id = 3
+        label = "activate"
+    [deactivate.cmd_service.cancel.response]
+        success = true
+
+[arm]
+    # rdata cannot be armed
+
+[disarm]
+    # rdata cannot be disarmed
+
+# Shutdown must be specified for each primary network state
+# NOTE: The transition id must be precise to the current lifecycle state of the node
+# Shutdown from unconfigured: 5
+# Shutdown from configured: 6
+# Shutdown from active: 7
+[shutdown.unconfigured]
+    # Shutdown rdata after nodes that write to it
+    [[shutdown.unconfigured.cmd_service]]
+    node = "rdata"
+    service = "change_state"
+    timeout_wait_for_srv = 100
+    timeout_request = 100
+    [shutdown.unconfigured.cmd_service.request.transition]
+        id = 5
+        label = "shutdown"
+    [shutdown.unconfigured.cmd_service.response]
+        success = true
+
+[shutdown.configured]
+    # Shutdown rdata after nodes that write to it
+    [[shutdown.configured.cmd_service]]
+    node = "rdata"
+    service = "change_state"
+    timeout_wait_for_srv = 100
+    timeout_request = 100
+    [shutdown.configured.cmd_service.request.transition]
+        id = 6
+        label = "shutdown"
+    [shutdown.configured.cmd_service.response]
+        success = true
+
+[shutdown.active]
+    # Shutdown rdata after nodes that write to it
+    [[shutdown.active.cmd_service]]
+    node = "rdata"
+    service = "change_state"
+    timeout_wait_for_srv = 100
+    timeout_request = 100
+    [shutdown.active.cmd_service.request.transition]
+        id = 7
+        label = "shutdown"
+    [shutdown.active.cmd_service.response]
+        success = true
+
+[shutdown.armed]
+    # Shutdown rdata after nodes that write to it
+    [[shutdown.armed.cmd_service]]
+    node = "rdata"
+    service = "change_state"
+    timeout_wait_for_srv = 100
+    timeout_request = 100
+    [shutdown.armed.cmd_service.request.transition]
+        id = 7
+        label = "shutdown"
+    [shutdown.armed.cmd_service.response]
+        success = true
