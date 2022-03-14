@@ -1,5 +1,6 @@
 uint8 transition
 ---
-bool success
+# result
 ---
-string feedback
+uint8 cmd_total
+uint8 cmd_complete

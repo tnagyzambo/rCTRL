@@ -2,6 +2,8 @@
 #include <string>
 
 namespace rstate::util {
+    // Should write something to abstract *toml["something"].as_table() as that can fail without a trace for debugging
+
     // Create the ROS2 service name that the client is targeting from the node name and the service name
     std::string getServiceName(toml::table toml) {
         std::string serviceName = getTomlEntryByKey<std::string>(toml, "node");

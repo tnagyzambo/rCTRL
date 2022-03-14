@@ -17,6 +17,8 @@
 #include <string>
 #include <toml++/toml.h>
 
+using namespace std::chrono_literals;
+
 namespace rstate {
     // Forward declaration to resolve circular dependency/include
     class Node;
@@ -34,6 +36,7 @@ namespace rstate {
         uint id;
 
         virtual bool execute() = 0;
+        virtual bool cancel() = 0;
     };
 
     template <typename T>
@@ -42,30 +45,39 @@ namespace rstate {
         Cmd(rclcpp::Node *, std::shared_ptr<rclcpp::Client<T>>, toml::table);
 
         bool execute();
+        bool cancel();
 
     private:
         rclcpp::Node *node;
         std::shared_ptr<rclcpp::Client<T>> client;
         std::shared_ptr<typename T::Request> request;
+        std::shared_ptr<typename T::Request> requestCancel;
+        std::shared_ptr<typename T::Response> response;
+        std::shared_ptr<typename T::Response> responseCancel;
 
         std::chrono::milliseconds waitForServiceTimeOut;
         std::chrono::milliseconds requestTimeOut;
 
-        std::shared_ptr<typename T::Request> createRequest(toml::table);
+        void createRequests(toml::table);
+        bool sendRequest(std::shared_ptr<typename T::Request>, std::shared_ptr<typename T::Response>);
+        bool waitForService();
+        bool waitForFuture(std::shared_future<typename rclcpp::Client<T>::SharedResponse>);
+        bool compareResponse(std::shared_ptr<typename T::Response>, std::shared_ptr<typename T::Response>);
     };
 
     template <typename T>
     Cmd<T>::Cmd(rclcpp::Node *node, std::shared_ptr<rclcpp::Client<T>> client, toml::table toml) : CmdIface(toml) {
         this->node = node;
         this->client = client;
-        this->request = this->createRequest(toml);
+        this->createRequests(toml);
+
         this->waitForServiceTimeOut =
             std::chrono::milliseconds(util::getTomlEntryByKey<uint>(toml, "timeout_wait_for_srv"));
         this->requestTimeOut = std::chrono::milliseconds(util::getTomlEntryByKey<uint>(toml, "timeout_request"));
     }
 
     template <typename T>
-    std::shared_ptr<typename T::Request> Cmd<T>::createRequest(toml::table toml) {
+    void Cmd<T>::createRequests(toml::table toml) {
         std::stringstream error;
 
         error << "No template specialication found for service type!\n";
@@ -77,36 +89,84 @@ namespace rstate {
 
     template <typename T>
     bool Cmd<T>::execute() {
-        std::cout << "hello\n";
+        bool result = sendRequest(this->request, this->response);
+        return result;
+    }
 
-        if (!this->client->wait_for_service(waitForServiceTimeOut)) {
-            RCLCPP_ERROR(this->node->get_logger(), "Service '%s' is not available", this->client->get_service_name());
+    template <typename T>
+    bool Cmd<T>::cancel() {
+        bool result = sendRequest(this->requestCancel, this->responseCancel);
+        return result;
+    }
+
+    template <typename T>
+    bool Cmd<T>::sendRequest(std::shared_ptr<typename T::Request> request,
+                             std::shared_ptr<typename T::Response> expectedResponse) {
+        if (!waitForService()) {
             return false;
         }
 
-        auto future = this->client->async_send_request(this->request);
+        auto future = this->client->async_send_request(request);
 
-        // change this its wrong
-        std::future_status status;
-        do {
-            switch (status = future.wait_for(requestTimeOut); status) {
-            case std::future_status::deferred:
-                std::cout << "deferred\n";
-                break;
-            case std::future_status::timeout:
-                std::cout << "timeout\n";
-                return false;
-            case std::future_status::ready:
-                std::cout << "ready!\n";
-                break;
-            }
-        } while (status != std::future_status::ready);
+        if (!waitForFuture(future)) {
+            return false;
+        }
 
-        auto test = future.get();
+        auto response = future.get();
 
-        // check against expected
+        if (!compareResponse(response, expectedResponse)) {
+            return false;
+        }
 
         return true;
+    }
+
+    template <typename T>
+    bool Cmd<T>::waitForService() {
+        auto pollRate = 10ms;
+
+        bool serviceStatus = false;
+        auto serviceWaitTime = 0ms;
+        do {
+            serviceStatus = this->client->wait_for_service(pollRate);
+            if (serviceStatus) {
+                return true;
+            }
+            serviceWaitTime += pollRate;
+        } while (serviceWaitTime <= this->waitForServiceTimeOut);
+
+        RCLCPP_ERROR(
+            this->node->get_logger(), "Timed out, service '%s' is not available", this->client->get_service_name());
+        return false;
+    }
+
+    template <typename T>
+    bool Cmd<T>::waitForFuture(std::shared_future<typename rclcpp::Client<T>::SharedResponse> future) {
+        auto pollRate = 10ms;
+
+        std::future_status futureStatus;
+        auto futureWaitTime = 0ms;
+        do {
+            futureStatus = future.wait_for(pollRate);
+            if (futureStatus == std::future_status::ready) {
+                return true;
+            }
+            futureWaitTime += pollRate;
+        } while (futureStatus != std::future_status::ready);
+
+        RCLCPP_ERROR(this->node->get_logger(),
+                     "Timed out while waiting for response from service '%s'",
+                     this->client->get_service_name());
+        return false;
+    }
+
+    template <typename T>
+    bool Cmd<T>::compareResponse(std::shared_ptr<typename T::Response> response,
+                                 std::shared_ptr<typename T::Response> expectedResponse) {
+        (void)response;
+        (void)expectedResponse;
+        RCLCPP_ERROR(this->node->get_logger(), "No template specialization found for compareResponse()");
+        return false;
     }
 
     // Interface for templated CmdClient
