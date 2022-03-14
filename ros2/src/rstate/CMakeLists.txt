@@ -25,14 +25,18 @@ add_executable(rstate_node src/main.cpp
                            lib/rstate_node.cpp
                            lib/rstate_state_activating.cpp
                            lib/rstate_state_active.cpp
+                           lib/rstate_state_armed.cpp
+                           lib/rstate_state_arming.cpp
                            lib/rstate_state_cleaning_up.cpp
                            lib/rstate_state_configuring.cpp
                            lib/rstate_state_deactivating.cpp
+                           lib/rstate_state_disarming.cpp
                            lib/rstate_state_error_processing.cpp
                            lib/rstate_state_finalized.cpp
                            lib/rstate_state_inactive.cpp
                            lib/rstate_state_shutting_down.cpp
                            lib/rstate_state_unconfigured.cpp
+                           lib/rstate_state.cpp
                            lib/rstate_util.cpp)
 
 target_include_directories(rstate_node PRIVATE lib)

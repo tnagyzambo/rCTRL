@@ -39,7 +39,7 @@ namespace rstate {
     }
 
     template <>
-    bool Cmd<lifecycle_msgs::srv::ChangeState>::compareResponse(
+    void Cmd<lifecycle_msgs::srv::ChangeState>::compareResponse(
         std::shared_ptr<lifecycle_msgs::srv::ChangeState::Response> response,
         std::shared_ptr<lifecycle_msgs::srv::ChangeState::Response> expectedResponse) {
         if (response->success != expectedResponse->success) {
@@ -49,9 +49,7 @@ namespace rstate {
             error << "Recieved: success = " << response->success << "\n";
             error << "Expected: success = " << expectedResponse->success << "\n";
 
-            RCLCPP_ERROR(this->node->get_logger(), "%s", error.str().c_str());
-            return false;
+            throw(except::cmd_service_eror(error.str()));
         }
-        return true;
     }
 } // namespace rstate

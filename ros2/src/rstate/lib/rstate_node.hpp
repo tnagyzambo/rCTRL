@@ -57,6 +57,7 @@ namespace rstate {
         std::map<std::string, std::shared_ptr<rclcpp::ClientBase>> clientMap;
         // std::vector<std::shared_ptr<CmdClientIface>> onConfigureCommands;
 
+        State *getState();
         void setState(State &);
 
         void assignCmdIds(toml::table &);

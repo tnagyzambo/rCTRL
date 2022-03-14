@@ -13,6 +13,9 @@ namespace rstate {
                                                    std::shared_ptr<const action::Transition::Goal> goal) {
         (void)uuid;
         switch (goal->transition) {
+        case Transition::Arm:
+            this->onTransition = &Active::onArm;
+            return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
         case Transition::Deactivate:
             this->onTransition = &Active::onDeactivate;
             return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
@@ -38,20 +41,44 @@ namespace rstate {
             .detach();
     }
 
+    void Active::onArm(Node *node, const std::shared_ptr<rclcpp_action::ServerGoalHandle<action::Transition>> goalHandle) {
+        node->setState(Arming::getInstance());
+
+        switch (executeCommands(node, node->cmdsOnArm, goalHandle)) {
+        case Success:
+            node->setState(Armed::getInstance());
+            break;
+        case Cancelled:
+            node->setState(Active::getInstance());
+            break;
+        case Failure:
+            // SHUTDOWN
+            break;
+        }
+    }
+
     void Active::onDeactivate(Node *node,
                               const std::shared_ptr<rclcpp_action::ServerGoalHandle<action::Transition>> goalHandle) {
         node->setState(Deactivating::getInstance());
 
-        const auto goal = goalHandle->get_goal();
-
-        node->setState(Inactive::getInstance());
+        switch (executeCommands(node, node->cmdsOnDeactivate, goalHandle)) {
+        case Success:
+            node->setState(Inactive::getInstance());
+            break;
+        case Cancelled:
+            node->setState(Active::getInstance());
+            break;
+        case Failure:
+            // SHUTDOWN
+            break;
+        }
     }
 
     void Active::onShutdown(Node *node,
                             const std::shared_ptr<rclcpp_action::ServerGoalHandle<action::Transition>> goalHandle) {
         node->setState(ShuttingDown::getInstance());
 
-        const auto goal = goalHandle->get_goal();
+        (void)goalHandle;
 
         node->setState(Finalized::getInstance());
     }

@@ -35,20 +35,19 @@ namespace rstate {
 
         uint id;
 
-        virtual bool execute() = 0;
-        virtual bool cancel() = 0;
+        virtual void execute() = 0;
+        virtual void cancel() = 0;
     };
 
     template <typename T>
     class Cmd : public CmdIface {
     public:
-        Cmd(rclcpp::Node *, std::shared_ptr<rclcpp::Client<T>>, toml::table);
+        Cmd(std::shared_ptr<rclcpp::Client<T>>, toml::table);
 
-        bool execute();
-        bool cancel();
+        void execute();
+        void cancel();
 
     private:
-        rclcpp::Node *node;
         std::shared_ptr<rclcpp::Client<T>> client;
         std::shared_ptr<typename T::Request> request;
         std::shared_ptr<typename T::Request> requestCancel;
@@ -59,15 +58,14 @@ namespace rstate {
         std::chrono::milliseconds requestTimeOut;
 
         void createRequests(toml::table);
-        bool sendRequest(std::shared_ptr<typename T::Request>, std::shared_ptr<typename T::Response>);
-        bool waitForService();
-        bool waitForFuture(std::shared_future<typename rclcpp::Client<T>::SharedResponse>);
-        bool compareResponse(std::shared_ptr<typename T::Response>, std::shared_ptr<typename T::Response>);
+        void sendRequest(std::shared_ptr<typename T::Request>, std::shared_ptr<typename T::Response>);
+        void waitForService();
+        void waitForFuture(std::shared_future<typename rclcpp::Client<T>::SharedResponse>);
+        void compareResponse(std::shared_ptr<typename T::Response>, std::shared_ptr<typename T::Response>);
     };
 
     template <typename T>
-    Cmd<T>::Cmd(rclcpp::Node *node, std::shared_ptr<rclcpp::Client<T>> client, toml::table toml) : CmdIface(toml) {
-        this->node = node;
+    Cmd<T>::Cmd(std::shared_ptr<rclcpp::Client<T>> client, toml::table toml) : CmdIface(toml) {
         this->client = client;
         this->createRequests(toml);
 
@@ -84,45 +82,33 @@ namespace rstate {
         error << "Service: " << util::getTomlEntryByKey<std::string>(toml, "service") << "\n";
         error << "Section: " << toml << "\n";
 
-        throw std::runtime_error(error.str());
+        throw except::config_parse_error(error.str());
     }
 
     template <typename T>
-    bool Cmd<T>::execute() {
-        bool result = sendRequest(this->request, this->response);
-        return result;
+    void Cmd<T>::execute() {
+        sendRequest(this->request, this->response);
     }
 
     template <typename T>
-    bool Cmd<T>::cancel() {
-        bool result = sendRequest(this->requestCancel, this->responseCancel);
-        return result;
+    void Cmd<T>::cancel() {
+        sendRequest(this->requestCancel, this->responseCancel);
     }
 
     template <typename T>
-    bool Cmd<T>::sendRequest(std::shared_ptr<typename T::Request> request,
+    void Cmd<T>::sendRequest(std::shared_ptr<typename T::Request> request,
                              std::shared_ptr<typename T::Response> expectedResponse) {
-        if (!waitForService()) {
-            return false;
-        }
+        waitForService();
 
         auto future = this->client->async_send_request(request);
-
-        if (!waitForFuture(future)) {
-            return false;
-        }
+        waitForFuture(future);
 
         auto response = future.get();
-
-        if (!compareResponse(response, expectedResponse)) {
-            return false;
-        }
-
-        return true;
+        compareResponse(response, expectedResponse);
     }
 
     template <typename T>
-    bool Cmd<T>::waitForService() {
+    void Cmd<T>::waitForService() {
         auto pollRate = 10ms;
 
         bool serviceStatus = false;
@@ -130,18 +116,21 @@ namespace rstate {
         do {
             serviceStatus = this->client->wait_for_service(pollRate);
             if (serviceStatus) {
-                return true;
+                return;
             }
             serviceWaitTime += pollRate;
         } while (serviceWaitTime <= this->waitForServiceTimeOut);
 
-        RCLCPP_ERROR(
-            this->node->get_logger(), "Timed out, service '%s' is not available", this->client->get_service_name());
-        return false;
+        std::stringstream error;
+
+        error << "Timed out, service not available!\n";
+        error << "Service: " << this->client->get_service_name() << "\n";
+
+        throw except::cmd_service_eror(error.str());
     }
 
     template <typename T>
-    bool Cmd<T>::waitForFuture(std::shared_future<typename rclcpp::Client<T>::SharedResponse> future) {
+    void Cmd<T>::waitForFuture(std::shared_future<typename rclcpp::Client<T>::SharedResponse> future) {
         auto pollRate = 10ms;
 
         std::future_status futureStatus;
@@ -149,24 +138,29 @@ namespace rstate {
         do {
             futureStatus = future.wait_for(pollRate);
             if (futureStatus == std::future_status::ready) {
-                return true;
+                return;
             }
             futureWaitTime += pollRate;
         } while (futureStatus != std::future_status::ready);
 
-        RCLCPP_ERROR(this->node->get_logger(),
-                     "Timed out while waiting for response from service '%s'",
-                     this->client->get_service_name());
-        return false;
+        std::stringstream error;
+
+        error << "Timed out while waiting for response from service!\n";
+        error << "Service: " << this->client->get_service_name() << "\n";
+
+        throw except::cmd_service_eror(error.str());
     }
 
     template <typename T>
-    bool Cmd<T>::compareResponse(std::shared_ptr<typename T::Response> response,
+    void Cmd<T>::compareResponse(std::shared_ptr<typename T::Response> response,
                                  std::shared_ptr<typename T::Response> expectedResponse) {
         (void)response;
         (void)expectedResponse;
-        RCLCPP_ERROR(this->node->get_logger(), "No template specialization found for compareResponse()");
-        return false;
+        std::stringstream error;
+
+        error << "No template specialization found for compareResponse()!\n";
+
+        throw except::cmd_service_eror(error.str());
     }
 
     // Interface for templated CmdClient
@@ -179,40 +173,33 @@ namespace rstate {
     template <typename T>
     class CmdService : public CmdServiceIface {
     public:
-        CmdService(rclcpp::Node *,
-                   toml::table,
+        CmdService(toml::table,
                    std::string,
                    std::shared_ptr<rclcpp::Client<T>>,
                    std::map<uint, std::shared_ptr<CmdIface>> &);
 
     private:
-        rclcpp::Node *node;
         std::string serviceName;
         std::shared_ptr<rclcpp::Client<T>> client;
         std::vector<std::shared_ptr<Cmd<T>>> cmds;
 
-        std::vector<std::shared_ptr<Cmd<T>>> createCmds(rclcpp::Node *,
-                                                        toml::table,
+        std::vector<std::shared_ptr<Cmd<T>>> createCmds(toml::table,
                                                         std::shared_ptr<rclcpp::Client<T>>,
                                                         std::map<uint, std::shared_ptr<CmdIface>> &);
-        // std::shared_ptr<Cmd<T>> createCmd(toml::table, std::shared_ptr<rclcpp::Client<T>>);
     };
 
     template <typename T>
-    CmdService<T>::CmdService(rclcpp::Node *node,
-                              toml::table toml,
+    CmdService<T>::CmdService(toml::table toml,
                               std::string serviceName,
                               std::shared_ptr<rclcpp::Client<T>> client,
                               std::map<uint, std::shared_ptr<CmdIface>> &cmdMap) {
-        this->node = node;
         this->serviceName = serviceName;
         this->client = client;
-        this->cmds = createCmds(this->node, toml, this->client, cmdMap);
+        this->cmds = createCmds(toml, this->client, cmdMap);
     }
 
     template <typename T>
-    std::vector<std::shared_ptr<Cmd<T>>> CmdService<T>::createCmds(rclcpp::Node *node,
-                                                                   toml::table toml,
+    std::vector<std::shared_ptr<Cmd<T>>> CmdService<T>::createCmds(toml::table toml,
                                                                    std::shared_ptr<rclcpp::Client<T>> client,
                                                                    std::map<uint, std::shared_ptr<CmdIface>> &cmdMap) {
         std::vector<std::shared_ptr<Cmd<T>>> cmds;
@@ -221,7 +208,7 @@ namespace rstate {
             if (elems != nullptr) {
                 for (toml::node &elem : *elems) {
                     if (util::getServiceName(*elem.as_table()) == this->serviceName) {
-                        auto cmd = Cmd(node, client, *elem.as_table());
+                        auto cmd = Cmd(client, *elem.as_table());
 
                         // Register base interface of cmd in cmdMap with unique ID
                         auto insertResult = cmdMap.insert(
@@ -235,13 +222,10 @@ namespace rstate {
                             error << "ID: " << cmd.id << "\n";
                             error << "Section: " << toml << "\n";
 
-                            throw std::runtime_error(error.str());
+                            throw except::config_parse_error(error.str());
                         }
 
                         cmds.push_back(std::make_shared<Cmd<T>>(cmd));
-                        std::cout << "accepted: " << (*elem.as_table())["id"] << "\n";
-                    } else {
-                        std::cout << "rejected: " << (*elem.as_table())["id"] << "\n";
                     }
                 }
             }

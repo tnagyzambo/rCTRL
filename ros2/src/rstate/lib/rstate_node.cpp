@@ -43,6 +43,9 @@ namespace rstate {
             std::bind(&State::handleAccepted, std::ref(this->currentState), this, std::placeholders::_1));
     }
 
+    // Get current node state
+    State *Node::getState() { return this->currentState; }
+
     // Assign the state of the node and trigger enter() event
     void Node::setState(State &newState) {
         // this->currentState->exit(this); (this can be defined for all states and used if needed)
@@ -135,14 +138,14 @@ namespace rstate {
                 case 1: {
                     auto client = this->create_client<lifecycle_msgs::srv::ChangeState>(serviceName);
                     this->clientMap[serviceName] = client;
-                    auto cmdClient = CmdService(this, toml, serviceName, client, this->cmdMap);
+                    auto cmdClient = CmdService(toml, serviceName, client, this->cmdMap);
                     this->cmdSrvClients.push_back(
                         std::make_shared<CmdService<lifecycle_msgs::srv::ChangeState>>(cmdClient));
                 } break;
                 case 2: {
                     auto client = this->create_client<lifecycle_msgs::srv::GetState>(serviceName);
                     this->clientMap[serviceName] = client;
-                    auto cmdClient = CmdService(this, toml, serviceName, client, this->cmdMap);
+                    auto cmdClient = CmdService(toml, serviceName, client, this->cmdMap);
                     this->cmdSrvClients.push_back(std::make_shared<CmdService<lifecycle_msgs::srv::GetState>>(cmdClient));
                 } break;
                 default:

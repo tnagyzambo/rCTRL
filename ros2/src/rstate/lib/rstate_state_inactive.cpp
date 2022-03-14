@@ -45,18 +45,34 @@ namespace rstate {
                              const std::shared_ptr<rclcpp_action::ServerGoalHandle<action::Transition>> goalHandle) {
         node->setState(CleaningUp::getInstance());
 
-        const auto goal = goalHandle->get_goal();
-
-        node->setState(Unconfigured::getInstance());
+        switch (executeCommands(node, node->cmdsOnCleanUp, goalHandle)) {
+        case Success:
+            node->setState(Unconfigured::getInstance());
+            break;
+        case Cancelled:
+            node->setState(Inactive::getInstance());
+            break;
+        case Failure:
+            // SHUTDOWN
+            break;
+        }
     }
 
     void Inactive::onActivate(Node *node,
                               const std::shared_ptr<rclcpp_action::ServerGoalHandle<action::Transition>> goalHandle) {
         node->setState(Activating::getInstance());
 
-        const auto goal = goalHandle->get_goal();
-
-        node->setState(Active::getInstance());
+        switch (executeCommands(node, node->cmdsOnActivate, goalHandle)) {
+        case Success:
+            node->setState(Active::getInstance());
+            break;
+        case Cancelled:
+            node->setState(Inactive::getInstance());
+            break;
+        case Failure:
+            // SHUTDOWN
+            break;
+        }
     }
 
     void Inactive::onShutdown(Node *node,
