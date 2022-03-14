@@ -16,11 +16,13 @@ RUN apt-get update
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy software-properties-common pkg-config wget curl jq libssl-dev 
 RUN apt-get update
 
-# Install compile tools
+# Install compile toolsc
 RUN wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -
 RUN apt-add-repository "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-14 main"
-RUN apt-get update 
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy clang-14 lldb python3-pip
+RUN apt update 
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy clang-14 lldb-14 python3-pip
+RUN update-alternatives --install /bin/lldb lldb /bin/lldb-14 100
+RUN update-alternatives --install /bin/lldb-server lldb-server /bin/lldb-server-14 100
 ENV CC=/bin/clang-14
 ENV CXX=/bin/clang++-14
 
