@@ -1,8 +1,24 @@
-#include <rstate_util.hpp>
-#include <string>
+#include <util/util.hpp>
 
 namespace rstate::util {
-    // Should write something to abstract *toml["something"].as_table() as that can fail without a trace for debugging
+    // Helper function for getTomlTableBySections()
+    // Change input point argument 'toml' to the table found with the section key
+    // Throw if no table exists
+    void pointTomlToTableBySection(toml::table *toml, const char *section) {
+        toml::node_view view = (*toml)[section];
+
+        if (view.type() != toml::node_type::table) {
+            std::stringstream error;
+
+            error << "Unable to parse toml section!\n";
+            error << "Section: " << section << "\n";
+            error << "TOML: " << view << "\n";
+
+            throw rstate::except::config_parse_error(error.str());
+        }
+
+        toml = view.as_table();
+    }
 
     // Create the ROS2 service name that the client is targeting from the node name and the service name
     std::string getServiceName(toml::table toml) {

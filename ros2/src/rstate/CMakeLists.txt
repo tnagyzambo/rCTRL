@@ -21,25 +21,28 @@ rosidl_generate_interfaces(${PROJECT_NAME}
 
 # rstate executable
 add_executable(rstate_node src/main.cpp
-                           lib/rstate_cmd.cpp
-                           lib/rstate_node.cpp
-                           lib/rstate_state_activating.cpp
-                           lib/rstate_state_active.cpp
-                           lib/rstate_state_armed.cpp
-                           lib/rstate_state_arming.cpp
-                           lib/rstate_state_cleaning_up.cpp
-                           lib/rstate_state_configuring.cpp
-                           lib/rstate_state_deactivating.cpp
-                           lib/rstate_state_disarming.cpp
-                           lib/rstate_state_error_processing.cpp
-                           lib/rstate_state_finalized.cpp
-                           lib/rstate_state_inactive.cpp
-                           lib/rstate_state_shutting_down.cpp
-                           lib/rstate_state_unconfigured.cpp
-                           lib/rstate_state.cpp
-                           lib/rstate_util.cpp)
+                           lib/cmd/cmd_srv.cpp
+                           lib/state/activating.cpp
+                           lib/state/active.cpp
+                           lib/state/armed.cpp
+                           lib/state/arming.cpp
+                           lib/state/cleaning_up.cpp
+                           lib/state/configuring.cpp
+                           lib/state/deactivating.cpp
+                           lib/state/disarming.cpp
+                           lib/state/error_processing.cpp
+                           lib/state/finalized.cpp
+                           lib/state/inactive.cpp
+                           lib/state/shutting_down.cpp
+                           lib/state/state.cpp
+                           lib/state/unconfigured.cpp
+                           lib/util/util.cpp
+                           lib/node.cpp)
 
-target_include_directories(rstate_node PRIVATE lib)
+target_include_directories(rstate_node PRIVATE lib
+                                               lib/cmd
+                                               lib/state
+                                               lib/util)
 
 ament_target_dependencies(rstate_node rclcpp
                                       rclcpp_lifecycle

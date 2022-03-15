@@ -1,4 +1,4 @@
-#include <rstate_state.hpp>
+#include <state.hpp>
 
 namespace rstate {
     TransitionResult State::executeCommands(

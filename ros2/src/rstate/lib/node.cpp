@@ -1,6 +1,4 @@
-#include <rclcpp/logging.hpp>
-#include <rstate_node.hpp>
-#include <stdexcept>
+#include <node.hpp>
 
 namespace rstate {
     Node::Node() : rclcpp::Node("rstate") {
@@ -11,14 +9,14 @@ namespace rstate {
             {"deactivate", &this->cmdsOnDeactivate},
             {"arm", &this->cmdsOnArm},
             {"disarm", &this->cmdsOnDisarm},
-            {"shutdown.unconfigured", &this->cmdsOnShutdownUnconfigured},
-            {"shutdown.configured", &this->cmdsOnShutdownConfigured},
-            {"shutdown.active", &this->cmdsOnShutdownActive},
-            {"shutdown.armed", &this->cmdsOnShutdownArmed},
+            {"shutdown_unconfigured", &this->cmdsOnShutdownUnconfigured},
+            {"shutdown_inactive", &this->cmdsOnShutdownConfigured},
+            {"shutdown_active", &this->cmdsOnShutdownActive},
+            {"shutdown_armed", &this->cmdsOnShutdownArmed},
         };
 
         // THESE CAN ERROR
-        // FAIL CONFIGURATION OF NODE ON ERROR
+        // FAIL CONFIGURATION OF RSTATE NODE ON ERROR
         {
             toml::table toml = toml::parse_file("/workspaces/rCTRL/ros2/src/rstate/config.toml");
 
@@ -58,9 +56,10 @@ namespace rstate {
     void Node::assignCmdIds(toml::table &toml) {
         uint id = 0;
 
-        for (auto section : {"configure", "cleanup", "activate", "deactivate", "arm", "disarm"}) {
+        for (auto section : configSections) {
             for (auto cmdType : {"cmd_service", "cmd_wait"}) {
-                auto cmds = util::getCmdsAsArray(*(toml[section]).as_table(), cmdType);
+                auto tomlSection = util::getTomlTableBySections(toml, section);
+                auto cmds = util::getCmdsAsArray(tomlSection, cmdType);
                 if (cmds != nullptr) {
                     for (toml::node &cmd : *cmds) {
                         cmd.as_table()->insert_or_assign("id", id);
@@ -75,10 +74,11 @@ namespace rstate {
     void Node::createCmds(toml::table &toml) {
         // Iterate through all sections of the config.toml
         // If section contains commands, construct them and register their ID's in the relevent execution tables
-        for (auto section : {"configure", "cleanup", "activate", "deactivate", "arm", "disarm"}) {
+        for (auto section : configSections) {
             // Construct all service commands
             RCLCPP_INFO(this->get_logger(), "In TOML section: '%s', creating all 'cmd_service'", section);
-            auto cmds = util::getCmdsAsArray(*(toml[section]).as_table(), "cmd_service");
+            auto tomlSection = util::getTomlTableBySections(toml, section);
+            auto cmds = util::getCmdsAsArray(tomlSection, "cmd_service");
             if (cmds != nullptr) {
                 for (toml::node &cmd : *cmds) {
                     createCmdService(toml, *cmd.as_table());
@@ -90,23 +90,39 @@ namespace rstate {
     // Iterate through all sections of the config.toml
     // Register all commands by their ID to the appropriate cmd queue
     void Node::registerCmds(toml::table &toml) {
-        for (auto section : {"configure", "cleanup", "activate", "deactivate", "arm", "disarm"}) {
+        for (auto section : configSections) {
             auto transitionFindResult = this->transitionMap.find(section);
 
             if (transitionFindResult == this->transitionMap.end()) {
-                throw std::runtime_error("no transition found");
+                std::stringstream error;
+
+                error << "Unable to parse toml section!\n";
+                error << "Section: " << section << "\n";
+                error << "Error: Section not found in transitionMap"
+                      << "\n";
+
+                throw rstate::except::config_parse_error(error.str());
             }
 
             auto transition = transitionFindResult->second;
 
-            auto cmds = util::getCmdsAsArray(*(toml[section]).as_table(), "cmd_service");
+            auto tomlSection = util::getTomlTableBySections(toml, section);
+            auto cmds = util::getCmdsAsArray(tomlSection, "cmd_service");
             if (cmds != nullptr) {
                 for (toml::node &cmd : *cmds) {
                     uint id = util::getTomlEntryByKey<uint>(*cmd.as_table(), "id");
                     auto cmdFindResult = this->cmdMap.find(id);
 
                     if (cmdFindResult == this->cmdMap.end()) {
-                        throw std::runtime_error("no cmd found");
+                        if (transitionFindResult == this->transitionMap.end()) {
+                            std::stringstream error;
+
+                            error << "Command found in toml does not exist in cmdMap!\n";
+                            error << "Section: " << section << "\n";
+                            error << "Command ID: " << id << "\n";
+
+                            throw rstate::except::config_parse_error(error.str());
+                        }
                     }
 
                     transition->push_back(cmdFindResult->second);
@@ -138,15 +154,16 @@ namespace rstate {
                 case 1: {
                     auto client = this->create_client<lifecycle_msgs::srv::ChangeState>(serviceName);
                     this->clientMap[serviceName] = client;
-                    auto cmdClient = CmdService(toml, serviceName, client, this->cmdMap);
+                    auto cmdSrvClient = CmdServiceClient(toml, serviceName, client, configSections, this->cmdMap);
                     this->cmdSrvClients.push_back(
-                        std::make_shared<CmdService<lifecycle_msgs::srv::ChangeState>>(cmdClient));
+                        std::make_shared<CmdServiceClient<lifecycle_msgs::srv::ChangeState>>(cmdSrvClient));
                 } break;
                 case 2: {
                     auto client = this->create_client<lifecycle_msgs::srv::GetState>(serviceName);
                     this->clientMap[serviceName] = client;
-                    auto cmdClient = CmdService(toml, serviceName, client, this->cmdMap);
-                    this->cmdSrvClients.push_back(std::make_shared<CmdService<lifecycle_msgs::srv::GetState>>(cmdClient));
+                    auto cmdSrvClient = CmdServiceClient(toml, serviceName, client, configSections, this->cmdMap);
+                    this->cmdSrvClients.push_back(
+                        std::make_shared<CmdServiceClient<lifecycle_msgs::srv::GetState>>(cmdSrvClient));
                 } break;
                 default:
                     throw std::out_of_range("ROS2 service type defined in 'srvTypeMap' but not in switch case");

@@ -1,23 +1,18 @@
 #pragma once
 
-#include <functional>
-#include <lifecycle_msgs/msg/state.hpp>
-#include <lifecycle_msgs/msg/transition.hpp>
-#include <lifecycle_msgs/srv/change_state.hpp>
-#include <lifecycle_msgs/srv/get_state.hpp>
+#include <cmd/cmd.hpp>
+#include <cmd/cmd_srv.hpp>
+#include <cmd/cmd_srv_client.hpp>
 #include <memory>
 #include <rclcpp/client.hpp>
 #include <rclcpp/node.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_action/rclcpp_action.hpp>
-#include <rclcpp_lifecycle/lifecycle_node.hpp>
 #include <rstate/action/transition.hpp>
-#include <rstate_cmd.hpp>
-#include <rstate_state.hpp>
-#include <rstate_util.hpp>
+#include <state/state.hpp>
 #include <string>
-#include <thread>
 #include <toml++/toml.h>
+#include <util/util.hpp>
 #include <vector>
 
 namespace rstate {
@@ -49,7 +44,7 @@ namespace rstate {
 
         // Vec to hold CmdClient<T>'s
         // Not used directly, only to keep the stored classes from going out of scope
-        std::vector<std::shared_ptr<CmdServiceIface>> cmdSrvClients;
+        std::vector<std::shared_ptr<CmdServiceClientIface>> cmdSrvClients;
 
         // Map with service names as keys and constructed ROS2 clients as values
         // Used to prevent registering multiple clients to the same service
@@ -69,7 +64,18 @@ namespace rstate {
         State *currentState;
     };
 
+    static const std::vector<const char *> configSections = {"configure",
+                                                             "cleanup",
+                                                             "activate",
+                                                             "deactivate",
+                                                             "arm",
+                                                             "disarm",
+                                                             "shutdown_unconfigured",
+                                                             "shutdown_inactive",
+                                                             "shutdown_active",
+                                                             "shutdown_armed"};
+
     // Map from 'service' definition in the .toml to a int used in the switch case of createCmdClients()
     // These two MUST match or there will be runtime errors
-    const static std::unordered_map<std::string, int> srvTypeMap{{"change_state", 1}, {"get_state", 2}};
+    static const std::unordered_map<std::string, int> srvTypeMap{{"change_state", 1}, {"get_state", 2}};
 } // namespace rstate

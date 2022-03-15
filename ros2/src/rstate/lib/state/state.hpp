@@ -1,7 +1,7 @@
 #pragma once
 
-#include <rstate_cmd.hpp>
-#include <rstate_node.hpp>
+#include <cmd/cmd.hpp>
+#include <node.hpp>
 
 namespace rstate {
     // Forward declaration to resolve circular dependency/include

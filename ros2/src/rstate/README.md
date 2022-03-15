@@ -38,24 +38,31 @@ These transitions are provided as goals in a [ROS2 action server](http://design.
 
 ```mermaid
 stateDiagram-v2
-    ErrorProcessing --> Unconfigured
-    ErrorProcessing --> Finalized
+    
 
     [*] --> Unconfigured
     Unconfigured --> Configuring
     Inactive --> CleaningUp
-    Configuring --> Inactive
-    CleaningUp --> Unconfigured
+    Configuring --> Inactive : ✅
+    Configuring --> Unconfigured : ✖️ 
+    CleaningUp --> Unconfigured : ✅
+    CleaningUp --> Inactive : ✖️
 
     Inactive --> Activating
-    Activating --> Active
+    Activating --> Active : ✅
+    Activating --> Inactive : ✖️
     Active --> Deactivating
-    Deactivating --> Inactive
+    Deactivating --> Inactive : ✅
+    Deactivating --> Active : ✖️
 
     Active --> Arming
-    Arming --> Armed
+    Arming --> Armed : ✅
+    Arming --> Active : ✖️
     Armed --> Disarming
-    Disarming --> Active
+    Disarming --> Active : ✅
+    Disarming --> Armed : ✖️
+
+    ErrorProcessing --> ShuttingDown
 
     Unconfigured --> ShuttingDown
     Inactive --> ShuttingDown
@@ -64,23 +71,19 @@ stateDiagram-v2
     ShuttingDown --> Finalized
     Finalized --> [*]
 
-    state "Error Processing" as ErrorProcessing
-    state "On error raised" as ErrorProcessing
-    state "Configuring" as Configuring
-    state "Can raise error" as Configuring
-    state "Cleaning Up" as CleaningUp
-    state "Can raise error" as CleaningUp
-    state "Activating" as Activating
-    state "Can raise error" as Activating
-    state "Deactivating" as Deactivating
-    state "Can raise error" as Deactivating
-    state "Arming" as Arming
-    state "Can raise error" as Arming
-    state "Disarming" as Disarming
-    state "Can raise error" as Disarming
+
+    state "Error Processing ❌" as ErrorProcessing
+
+    state "Configuring ❗" as Configuring
+    state "Cleaning Up ❗" as CleaningUp
+    state "Activating ❗" as Activating
+    state "Deactivating ❗" as Deactivating
+    state "Arming ❗" as Arming
+    state "Disarming ❗" as Disarming
     state "Shutting Down" as ShuttingDown
-    state "Can raise error" as ShuttingDown
 ```
+**NOTE:** Transitions state marked with ❗ have a possibility of failure. If performed successfully, the network will transition according to the path marked with ✅. **rSTATE** will attempt to recover from an error by returning the the network to the previous state. The network will enter the `Error Processing` state at this point. This behaviour is denoted by the symbol ✖️ on the state diagram. If it is not possible to restore the previous network state, the `Error Processing` transition will fail (denoted with ❌) and proceed to shut down the network.
+
 ## Primary State: Unconfigured
 
 All managed lifecycle nodes controlled by **rSTATE** are `unconfigured`. No processes on the network are running.
