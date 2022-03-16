@@ -3,7 +3,10 @@
 #include <toml++/toml_node_view.h>
 
 namespace rstate {
-    Node::Node() : rclcpp::Node("rstate") {
+    // Node will construct and immediately enter the unconfigured state
+    Node::Node() : rclcpp_lifecycle::LifecycleNode("rstate") {
+        RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::transition::constructing().c_str());
+
         // Map toml sections to vectors that will store commands to execute in order
         this->transitionMap = {
             {"configure", &this->cmdsOnConfigure},
@@ -23,13 +26,28 @@ namespace rstate {
                                  return this->createCmdService(cmdServiceView, allowCancel);
                              }}};
 
-        // THESE CAN ERROR
-        // FAIL CONFIGURATION OF RSTATE NODE ON ERROR
-        {
-            toml::table toml = toml::parse_file("/workspaces/rCTRL/ros2/src/rstate/config.toml");
+        RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::state::unconfigured().c_str());
+    }
 
+    Node::~Node() { RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::transition::destructing().c_str()); }
+
+    LifecycleCallbackReturn Node::on_configure(const rclcpp_lifecycle::State &) {
+        RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::transition::configuring().c_str());
+
+        try {
+            toml::table toml = toml::parse_file("/workspaces/rCTRL/ros2/src/rstate/config.toml");
             readConfig(toml);
+        } catch (except::config_parse_error e) {
+            RCLCPP_ERROR(this->get_logger(), "Failed to configure!\nError: %s", e.what());
+            return LifecycleCallbackReturn::FAILURE;
         }
+
+        RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::state::inactive().c_str());
+        return LifecycleCallbackReturn::SUCCESS;
+    }
+
+    LifecycleCallbackReturn Node::on_activate(const rclcpp_lifecycle::State &) {
+        RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::transition::activating().c_str());
 
         // Set initial network state
         this->setState(Unconfigured::getInstance());
@@ -42,10 +60,56 @@ namespace rstate {
             std::bind(&State::handleGoal, std::ref(this->currentState), this, std::placeholders::_1, std::placeholders::_2),
             std::bind(&State::handleCancel, std::ref(this->currentState), this, std::placeholders::_1),
             std::bind(&State::handleAccepted, std::ref(this->currentState), this, std::placeholders::_1));
+
+        RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::state::active().c_str());
+
+        return LifecycleCallbackReturn::SUCCESS;
     }
 
-    // Get current node state
-    State *Node::getState() { return this->currentState; }
+    LifecycleCallbackReturn Node::on_deactivate(const rclcpp_lifecycle::State &) {
+        RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::transition::deactivating().c_str());
+
+        this->actionServer.reset();
+
+        RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::state::inactive().c_str());
+
+        return LifecycleCallbackReturn::SUCCESS;
+    }
+
+    LifecycleCallbackReturn Node::on_cleanup(const rclcpp_lifecycle::State &) {
+        RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::transition::cleaningUp().c_str());
+
+        this->deleteAllPointers();
+
+        RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::state::unconfigured().c_str());
+
+        return LifecycleCallbackReturn::SUCCESS;
+    }
+
+    LifecycleCallbackReturn Node::on_shutdown(const rclcpp_lifecycle::State &) {
+        RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::transition::shuttingDown().c_str());
+
+        this->deleteAllPointers();
+
+        RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::state::finalized().c_str());
+
+        return LifecycleCallbackReturn::SUCCESS;
+    }
+
+    void Node::deleteAllPointers() {
+        this->actionServer.reset();
+
+        this->cmdsOnConfigure.clear();
+        this->cmdsOnCleanUp.clear();
+        this->cmdsOnActivate.clear();
+        this->cmdsOnDeactivate.clear();
+        this->cmdsOnArm.clear();
+        this->cmdsOnDisarm.clear();
+        this->cmdsOnShutdownUnconfigured.clear();
+        this->cmdOnShutdownInactive.clear();
+        this->cmdsOnShutdownActive.clear();
+        this->cmdsOnShutdownArmed.clear();
+    }
 
     // Assign the state of the node and trigger enter() event
     void Node::setState(State &newState) {
@@ -77,9 +141,12 @@ namespace rstate {
                 RCLCPP_DEBUG(this->get_logger(), "No commands found in section '%s'", transitionName);
             }
             if (cmdsFound) {
-                bool allowCancel;
-                if (!strcmp(transitionName, "shutdown_unconfigred") || !strcmp(transitionName, "shutdown_inactive") ||
-                    !strcmp(transitionName, "shutdown_active") || !strcmp(transitionName, "shutdown_armed")) {
+                // Shutdown commands cannot be canceled
+                // strcmp() returns 0 when strings match
+                bool allowCancel = true;
+                if ((strcmp(transitionName, "shutdown_unconfigured") == 0) ||
+                    (strcmp(transitionName, "shutdown_inactive") == 0) ||
+                    (strcmp(transitionName, "shutdown_active") == 0) || (strcmp(transitionName, "shutdown_armed") == 0)) {
                     allowCancel = false;
                 };
 

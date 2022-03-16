@@ -23,7 +23,7 @@ namespace rstate {
     }
 
     template <>
-    void CmdServiceCancelable<lifecycle_msgs::srv::ChangeState>::createRequestCancel(toml::node_view<toml::node> toml) {
+    void CmdService<lifecycle_msgs::srv::ChangeState>::createRequestCancel(toml::node_view<toml::node> toml) {
         // Cancel request
         auto requestCancel = std::make_shared<lifecycle_msgs::srv::ChangeState::Request>();
         auto cancelToml = util::toml::viewOfTable(toml, "cancel");

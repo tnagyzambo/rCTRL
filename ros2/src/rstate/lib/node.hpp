@@ -7,7 +7,9 @@
 #include <rclcpp/node.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_action/rclcpp_action.hpp>
+#include <rclcpp_lifecycle/lifecycle_node.hpp>
 #include <rstate/action/transition.hpp>
+#include <rutil/fmt.hpp>
 #include <state/state.hpp>
 #include <string>
 #include <toml++/toml.h>
@@ -17,14 +19,15 @@
 #include <vector>
 
 namespace rstate {
+    using LifecycleCallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
+
     // Forward declaration to resolve circular dependency/include
     class State;
 
-    class Node : public rclcpp::Node {
+    class Node : public rclcpp_lifecycle::LifecycleNode {
     public:
-        explicit Node();
-
-        rclcpp_action::Server<rstate::action::Transition>::SharedPtr actionServer;
+        Node();
+        ~Node();
 
         // Vectors to hold all cmds to be exectuted on transitions in order
         std::vector<std::shared_ptr<CmdIface>> cmdsOnConfigure;
@@ -37,6 +40,20 @@ namespace rstate {
         std::vector<std::shared_ptr<CmdIface>> cmdOnShutdownInactive;
         std::vector<std::shared_ptr<CmdIface>> cmdsOnShutdownActive;
         std::vector<std::shared_ptr<CmdIface>> cmdsOnShutdownArmed;
+
+        void setState(State &);
+
+    private:
+        LifecycleCallbackReturn on_configure(const rclcpp_lifecycle::State &);
+        LifecycleCallbackReturn on_activate(const rclcpp_lifecycle::State &);
+        LifecycleCallbackReturn on_deactivate(const rclcpp_lifecycle::State &);
+        LifecycleCallbackReturn on_cleanup(const rclcpp_lifecycle::State &);
+        LifecycleCallbackReturn on_shutdown(const rclcpp_lifecycle::State &state);
+
+        State *currentState;
+        rclcpp_action::Server<rstate::action::Transition>::SharedPtr actionServer;
+
+        // Map to hold exectution buffers for transitions
         std::map<const char *, std::vector<std::shared_ptr<CmdIface>> *> transitionMap;
 
         // Map to hold command constructors based on type
@@ -48,9 +65,6 @@ namespace rstate {
         std::map<std::string, std::shared_ptr<rclcpp::Client<lifecycle_msgs::srv::ChangeState>>> cmdServiceClientMapChangeState;
         std::map<std::string, std::shared_ptr<rclcpp::Client<lifecycle_msgs::srv::GetState>>> cmdServiceClientMapGetState;
 
-        State *getState();
-        void setState(State &);
-
         void readConfig(toml::table);
         std::shared_ptr<CmdIface> createCmd(toml::node_view<toml::node>, bool);
         std::shared_ptr<CmdIface> createCmdService(toml::node_view<toml::node>, bool);
@@ -59,8 +73,7 @@ namespace rstate {
                                                        bool,
                                                        std::map<std::string, std::shared_ptr<rclcpp::Client<T>>> &);
 
-    private:
-        State *currentState;
+        void deleteAllPointers();
     };
 
     // Map from 'service' definition in the .toml to a int used in the switch case of createCmdClients()
@@ -98,13 +111,9 @@ namespace rstate {
         auto client = clientFindResult->second;
 
         std::shared_ptr<CmdService<T>> cmdPtr;
-        if (allowCancel) {
-            auto cmd = CmdServiceCancelable<T>(client, cmdServiceView);
-            cmdPtr = std::make_shared<CmdService<T>>(cmd);
-        } else {
-            auto cmd = CmdService<T>(client, cmdServiceView);
-            cmdPtr = std::make_shared<CmdService<T>>(cmd);
-        }
+
+        auto cmd = CmdService<T>(client, cmdServiceView, allowCancel);
+        cmdPtr = std::make_shared<CmdService<T>>(cmd);
 
         return cmdPtr;
     }

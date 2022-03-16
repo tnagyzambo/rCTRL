@@ -19,11 +19,10 @@ namespace rstate {
     // Forward declaration to resolve circular dependency/include
     class Node;
 
-    // Base non-cancelable service command
     template <typename T>
     class CmdService : public CmdIface {
     public:
-        CmdService(std::shared_ptr<rclcpp::Client<T>>, toml::node_view<toml::node>);
+        CmdService(std::shared_ptr<rclcpp::Client<T>>, toml::node_view<toml::node>, bool = false);
 
         void execute();
         void cancel();
@@ -33,10 +32,14 @@ namespace rstate {
         std::shared_ptr<typename T::Request> request;
         std::shared_ptr<typename T::Response> response;
 
+        std::shared_ptr<typename T::Request> requestCancel;
+        std::shared_ptr<typename T::Response> responseCancel;
+
         std::chrono::milliseconds waitForServiceTimeOut;
         std::chrono::milliseconds requestTimeOut;
 
         void createRequest(toml::node_view<toml::node>);
+        void createRequestCancel(toml::node_view<toml::node>);
         void sendRequest(std::shared_ptr<typename T::Request>, std::shared_ptr<typename T::Response>);
         void waitForService();
         void waitForFuture(std::shared_future<typename rclcpp::Client<T>::SharedResponse>);
@@ -44,10 +47,14 @@ namespace rstate {
     };
 
     template <typename T>
-    CmdService<T>::CmdService(std::shared_ptr<rclcpp::Client<T>> client, toml::node_view<toml::node> toml)
-        : CmdIface(toml) {
+    CmdService<T>::CmdService(std::shared_ptr<rclcpp::Client<T>> client, toml::node_view<toml::node> toml, bool allowCancel)
+        : CmdIface(toml, allowCancel) {
         this->client = client;
         this->createRequest(toml);
+
+        if (allowCancel) {
+            this->createRequestCancel(toml);
+        }
 
         this->waitForServiceTimeOut =
             std::chrono::milliseconds(util::toml::getTomlEntryByKey<uint>(toml, "timeout_wait_for_srv"));
@@ -66,18 +73,23 @@ namespace rstate {
     }
 
     template <typename T>
+    void CmdService<T>::createRequestCancel(toml::node_view<toml::node> toml) {
+        std::stringstream error;
+
+        error << "No template specialication found for service type!\n";
+        error << "TOML: " << toml << "\n";
+
+        throw except::config_parse_error(error.str());
+    }
+
+    template <typename T>
     void CmdService<T>::execute() {
         this->sendRequest(this->request, this->response);
     }
 
     template <typename T>
     void CmdService<T>::cancel() {
-        std::stringstream error;
-
-        error << "Attempted to cancel non cancelable command!\n";
-        error << "TOML: " << this->toml << "\n";
-
-        throw except::cmd_service_eror(error.str());
+        this->sendRequest(this->requestCancel, this->responseCancel);
     }
 
     template <typename T>
@@ -147,42 +159,4 @@ namespace rstate {
 
         throw except::cmd_service_eror(error.str());
     }
-
-    // Extend and pratially overide base non-cancelable service command to allow cancel
-    template <typename T>
-    class CmdServiceCancelable : public CmdService<T> {
-    public:
-        CmdServiceCancelable(std::shared_ptr<rclcpp::Client<T>>, toml::node_view<toml::node>);
-
-        void cancel();
-
-    private:
-        std::shared_ptr<typename T::Request> requestCancel;
-        std::shared_ptr<typename T::Response> responseCancel;
-
-        void createRequestCancel(toml::node_view<toml::node>);
-    };
-
-    template <typename T>
-    CmdServiceCancelable<T>::CmdServiceCancelable(std::shared_ptr<rclcpp::Client<T>> client,
-                                                  toml::node_view<toml::node> toml)
-        : CmdService<T>(client, toml) {
-        this->createRequestCancel(toml);
-    }
-
-    template <typename T>
-    void CmdServiceCancelable<T>::createRequestCancel(toml::node_view<toml::node> toml) {
-        std::stringstream error;
-
-        error << "No template specialication found for service type!\n";
-        error << "TOML: " << toml << "\n";
-
-        throw except::config_parse_error(error.str());
-    }
-
-    template <typename T>
-    void CmdServiceCancelable<T>::cancel() {
-        this->sendRequest(this->requestCancel, this->responseCancel);
-    }
-
 } // namespace rstate

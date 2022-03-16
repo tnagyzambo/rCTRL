@@ -33,12 +33,8 @@ namespace rstate {
             } catch (except::cmd_service_eror e) {
                 node->setState(ErrorProcessing::getInstance());
 
-                std::stringstream cmdToml;
-                cmdToml << cmd->toml;
-                RCLCPP_ERROR(node->get_logger(),
-                             "Failed to execute command!\nError: %s\nTOML: %s",
-                             e.what(),
-                             cmdToml.str().c_str());
+                RCLCPP_ERROR(
+                    node->get_logger(), "Failed to execute command!\nError: %s\nTOML: %s", e.what(), cmd->toml.c_str());
 
                 try {
                     executeCommandsCancel(cmdsCompleted, goalHandle);
@@ -67,13 +63,23 @@ namespace rstate {
         while (!cmds.empty()) {
             auto cmd = cmds.back();
 
+            if (!cmd->allowCancel) {
+                std::stringstream error;
+
+                error << "Attempted to cancel non cancelable command!\n";
+                error << "TOML: " << cmd->toml << "\n";
+
+                throw except::cmd_service_eror(error.str());
+            }
+
             try {
+                // Trying to call cancel without checking allowCancel will reference null pointers
                 cmd->cancel();
             } catch (except::cmd_service_eror e) {
                 throw;
             }
 
-            feedback->cmd_complete -= 1;
+            feedback->cmd_complete = cmds.size();
             goalHandle->publish_feedback(feedback);
             cmds.pop_back();
         }
