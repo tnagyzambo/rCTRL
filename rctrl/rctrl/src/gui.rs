@@ -115,12 +115,9 @@ impl epi::App for Gui {
             // borrowing an already mutable reference to self
             // REFERENCE: <https://doc.rust-lang.org/nomicon/borrow-splitting.html>
             let logger = self.logger.lock().unwrap();
-            let mut open = logger.open;
-            egui::Window::new("Logger")
-                .open(&mut open)
+            egui::TopBottomPanel::bottom("Logger")
                 .resizable(true)
-                .hscroll(true)
-                .default_width(600.0)
+                .default_height(200.0)
                 .show(&ctx, |ui| logger.draw(ui));
         }
     }

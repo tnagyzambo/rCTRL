@@ -10,7 +10,6 @@ use std::sync::Mutex;
 /// Main [`Logger`] structure.
 pub struct Logger {
     ws_lock: Rc<WsLock>,
-    pub open: bool,
     logs: Vec<rctrl_rosbridge::rosout::msg::log::Log>,
 }
 
@@ -18,7 +17,6 @@ impl Logger {
     pub fn new_shared(ws_lock: &Rc<WsLock>) -> Rc<Mutex<Self>> {
         let logger = Self {
             ws_lock: Rc::clone(&ws_lock),
-            open: true,
             logs: Vec::new(),
         };
 
@@ -44,10 +42,16 @@ impl GuiElem for Logger {
         let text_style = egui::TextStyle::Body;
         let row_height = ui.text_style_height(&text_style);
         egui::ScrollArea::vertical()
+            .auto_shrink([false; 2])
+            .hscroll(true)
+            .always_show_scroll(true)
             .stick_to_bottom()
             .show_rows(ui, row_height, self.logs.len(), |ui, row_range| {
                 for row in row_range {
                     ui.horizontal(|ui| {
+                        ui.set_max_height(row_height);
+                        ui.set_min_height(row_height);
+
                         let mut log = String::new();
                         if true {
                             log.push_str("[");
@@ -84,7 +88,6 @@ impl GuiElem for Logger {
                     });
                 }
             });
-
         ui.ctx().request_repaint();
     }
 
