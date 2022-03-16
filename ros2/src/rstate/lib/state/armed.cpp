@@ -13,10 +13,10 @@ namespace rstate {
                                                   std::shared_ptr<const action::Transition::Goal> goal) {
         (void)uuid;
         switch (goal->transition) {
-        case Transition::Disarm:
+        case (int)Transition::Disarm:
             this->onTransition = &Armed::onDisarm;
             return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
-        case Transition::Shutdown:
+        case (int)Transition::Shutdown:
             this->onTransition = &Armed::onShutdown;
             return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
         default:
@@ -43,13 +43,13 @@ namespace rstate {
         node->setState(Disarming::getInstance());
 
         switch (executeCommands(node, node->cmdsOnDisarm, goalHandle)) {
-        case Success:
+        case TransitionResult::Success:
             node->setState(Active::getInstance());
             break;
-        case Cancelled:
+        case TransitionResult::Cancelled:
             node->setState(Armed::getInstance());
             break;
-        case Failure:
+        case TransitionResult::Failure:
             // SHUTDOWN
             break;
         }
@@ -59,7 +59,13 @@ namespace rstate {
                            const std::shared_ptr<rclcpp_action::ServerGoalHandle<action::Transition>> goalHandle) {
         node->setState(ShuttingDown::getInstance());
 
-        (void)goalHandle;
+        switch (executeCommandsShutdown(node, node->cmdsOnShutdownArmed, goalHandle)) {
+        case ShutdownResult::Success:
+            break;
+        case ShutdownResult::Failure:
+            RCLCPP_ERROR(node->get_logger(), "The network was not shutdown successfully");
+            break;
+        }
 
         node->setState(Finalized::getInstance());
     }

@@ -7,9 +7,11 @@ namespace rstate {
     // Forward declaration to resolve circular dependency/include
     class Node;
 
-    enum Transition { Configure, CleanUp, Activate, Deactivate, Arm, Disarm, Shutdown };
+    enum class Transition { Configure, CleanUp, Activate, Deactivate, Arm, Disarm, Shutdown };
 
-    enum TransitionResult { Success, Cancelled, Failure };
+    enum class TransitionResult { Success, Cancelled, Failure };
+
+    enum class ShutdownResult { Success, Failure };
 
     class State {
     public:
@@ -30,6 +32,10 @@ namespace rstate {
                                                 const std::shared_ptr<rclcpp_action::ServerGoalHandle<action::Transition>>);
         static void executeCommandsCancel(std::vector<std::shared_ptr<CmdIface>>,
                                           const std::shared_ptr<rclcpp_action::ServerGoalHandle<action::Transition>>);
+        static ShutdownResult executeCommandsShutdown(
+            Node *,
+            std::vector<std::shared_ptr<CmdIface>>,
+            const std::shared_ptr<rclcpp_action::ServerGoalHandle<action::Transition>>);
     };
 
     class Activating : public State {

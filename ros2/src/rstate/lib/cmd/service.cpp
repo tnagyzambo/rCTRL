@@ -1,43 +1,45 @@
-#include <cmd_srv.hpp>
+#include <service.hpp>
 
 namespace rstate {
     template <>
-    void CmdService<lifecycle_msgs::srv::ChangeState>::createRequest(toml::table toml) {
+    void CmdService<lifecycle_msgs::srv::ChangeState>::createRequest(toml::node_view<toml::node> toml) {
         // Main request
         auto request = std::make_shared<lifecycle_msgs::srv::ChangeState::Request>();
 
-        request->transition.id =
-            util::getTomlEntryByKey<uint>(util::getTomlTableBySections(toml, "request", "transition"), "id");
-        request->transition.label =
-            util::getTomlEntryByKey<std::string>(util::getTomlTableBySections(toml, "request", "transition"), "label");
+        auto requestToml = util::toml::viewOfTable(toml, "request");
+        auto transitionToml = util::toml::viewOfTable(requestToml, "transition");
+        request->transition.id = util::getTomlEntryByKey<uint>(*transitionToml.as_table(), "id");
+        request->transition.label = util::getTomlEntryByKey<std::string>(*transitionToml.as_table(), "label");
 
         this->request = request;
 
         // Main response
         auto response = std::make_shared<lifecycle_msgs::srv::ChangeState::Response>();
 
-        response->success = util::getTomlEntryByKey<bool>(util::getTomlTableBySections(toml, "response"), "success");
+        auto responseToml = util::toml::viewOfTable(toml, "response");
+        response->success = util::getTomlEntryByKey<bool>(*responseToml.as_table(), "success");
 
         this->response = response;
     }
 
     template <>
-    void CmdServiceCancelable<lifecycle_msgs::srv::ChangeState>::createRequestCancel(toml::table toml) {
+    void CmdServiceCancelable<lifecycle_msgs::srv::ChangeState>::createRequestCancel(toml::node_view<toml::node> toml) {
         // Cancel request
         auto requestCancel = std::make_shared<lifecycle_msgs::srv::ChangeState::Request>();
+        auto cancelToml = util::toml::viewOfTable(toml, "cancel");
 
-        requestCancel->transition.id =
-            util::getTomlEntryByKey<uint>(util::getTomlTableBySections(toml, "cancel", "request", "transition"), "id");
-        requestCancel->transition.label = util::getTomlEntryByKey<std::string>(
-            util::getTomlTableBySections(toml, "cancel", "request", "transition"), "label");
+        auto requestToml = util::toml::viewOfTable(cancelToml, "request");
+        auto transitionToml = util::toml::viewOfTable(requestToml, "transition");
+        requestCancel->transition.id = util::getTomlEntryByKey<uint>(*transitionToml.as_table(), "id");
+        requestCancel->transition.label = util::getTomlEntryByKey<std::string>(*transitionToml.as_table(), "label");
 
         this->requestCancel = requestCancel;
 
         // Cancel response
         auto responseCancel = std::make_shared<lifecycle_msgs::srv::ChangeState::Response>();
 
-        responseCancel->success =
-            util::getTomlEntryByKey<bool>(util::getTomlTableBySections(toml, "cancel", "response"), "success");
+        auto responseToml = util::toml::viewOfTable(cancelToml, "response");
+        responseCancel->success = util::getTomlEntryByKey<bool>(*responseToml.as_table(), "success");
 
         this->responseCancel = responseCancel;
     }

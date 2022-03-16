@@ -1,7 +1,10 @@
 #include <node.hpp>
+#include <rclcpp/logging.hpp>
+#include <toml++/toml_node_view.h>
 
 namespace rstate {
     Node::Node() : rclcpp::Node("rstate") {
+        // Map toml sections to vectors that will store commands to execute in order
         this->transitionMap = {
             {"configure", &this->cmdsOnConfigure},
             {"cleanup", &this->cmdsOnCleanUp},
@@ -10,22 +13,22 @@ namespace rstate {
             {"arm", &this->cmdsOnArm},
             {"disarm", &this->cmdsOnDisarm},
             {"shutdown_unconfigured", &this->cmdsOnShutdownUnconfigured},
-            {"shutdown_inactive", &this->cmdsOnShutdownConfigured},
+            {"shutdown_inactive", &this->cmdOnShutdownInactive},
             {"shutdown_active", &this->cmdsOnShutdownActive},
             {"shutdown_armed", &this->cmdsOnShutdownArmed},
         };
+
+        // Place member functions needed to construct command type into map with lambda functions
+        this->cmdTypeMap = {{"service", [&](toml::node_view<toml::node> cmdServiceView, bool allowCancel) {
+                                 return this->createCmdService(cmdServiceView, allowCancel);
+                             }}};
 
         // THESE CAN ERROR
         // FAIL CONFIGURATION OF RSTATE NODE ON ERROR
         {
             toml::table toml = toml::parse_file("/workspaces/rCTRL/ros2/src/rstate/config.toml");
 
-            // Assign unique ID's for all commands
-            assignCmdIds(toml);
-
-            createCmds(toml);
-
-            registerCmds(toml);
+            readConfig(toml);
         }
 
         // Set initial network state
@@ -51,133 +54,100 @@ namespace rstate {
         this->currentState->enter(this);
     }
 
-    // Iterate through all sections of the config.toml
-    // Generate and append unique ID's to all commands
-    void Node::assignCmdIds(toml::table &toml) {
-        uint id = 0;
+    // Parse .toml and create all commands
+    void Node::readConfig(toml::table toml) {
+        auto tomlView = toml::node_view(toml);
 
-        for (auto section : configSections) {
-            for (auto cmdType : {"cmd_service", "cmd_wait"}) {
-                auto tomlSection = util::getTomlTableBySections(toml, section);
-                auto cmds = util::getCmdsAsArray(tomlSection, cmdType);
-                if (cmds != nullptr) {
-                    for (toml::node &cmd : *cmds) {
-                        cmd.as_table()->insert_or_assign("id", id);
-                        id++;
-                    }
-                }
-            }
-        }
-    }
+        for (auto transition : transitionMap) {
+            auto transitionName = transition.first;
+            auto transitionCmdVector = transition.second;
 
-    // Create all commands found in config.toml
-    void Node::createCmds(toml::table &toml) {
-        // Iterate through all sections of the config.toml
-        // If section contains commands, construct them and register their ID's in the relevent execution tables
-        for (auto section : configSections) {
-            // Construct all service commands
-            RCLCPP_INFO(this->get_logger(), "In TOML section: '%s', creating all 'cmd_service'", section);
-            auto tomlSection = util::getTomlTableBySections(toml, section);
-            auto cmds = util::getCmdsAsArray(tomlSection, "cmd_service");
-            if (cmds != nullptr) {
-                for (toml::node &cmd : *cmds) {
-                    createCmdService(toml, *cmd.as_table());
-                }
-            }
-        }
-    }
+            // Get view of valid toml table
+            auto transitionView = util::toml::viewOfTable(tomlView, transitionName);
 
-    // Iterate through all sections of the config.toml
-    // Register all commands by their ID to the appropriate cmd queue
-    void Node::registerCmds(toml::table &toml) {
-        for (auto section : configSections) {
-            auto transitionFindResult = this->transitionMap.find(section);
-
-            if (transitionFindResult == this->transitionMap.end()) {
-                std::stringstream error;
-
-                error << "Unable to parse toml section!\n";
-                error << "Section: " << section << "\n";
-                error << "Error: Section not found in transitionMap"
-                      << "\n";
-
-                throw rstate::except::config_parse_error(error.str());
-            }
-
-            auto transition = transitionFindResult->second;
-
-            auto tomlSection = util::getTomlTableBySections(toml, section);
-            auto cmds = util::getCmdsAsArray(tomlSection, "cmd_service");
-            if (cmds != nullptr) {
-                for (toml::node &cmd : *cmds) {
-                    uint id = util::getTomlEntryByKey<uint>(*cmd.as_table(), "id");
-                    auto cmdFindResult = this->cmdMap.find(id);
-
-                    if (cmdFindResult == this->cmdMap.end()) {
-                        if (transitionFindResult == this->transitionMap.end()) {
-                            std::stringstream error;
-
-                            error << "Command found in toml does not exist in cmdMap!\n";
-                            error << "Section: " << section << "\n";
-                            error << "Command ID: " << id << "\n";
-
-                            throw rstate::except::config_parse_error(error.str());
-                        }
-                    }
-
-                    transition->push_back(cmdFindResult->second);
-                }
-            }
-        }
-    }
-
-    // Create all 'cmd_service's found in config.toml
-    // These are commands that are meant to be executed against ROS2 services
-    // They require an approriate ROS2 client and msg's to be constructed in addition to registering their
-    // exec() method to the relevent execution table
-    void Node::createCmdService(toml::table &toml, toml::table &cmd) {
-        // Get the 'node/service' name registered in the toml
-        std::string serviceName = util::getServiceName(cmd);
-
-        // If the service name has not been registered in the clientMap, create Client and CmdClients
-        // Prevents registering two clients to the same service
-        if (!clientMap.count(serviceName)) {
-            // ROS2 messages do not inherit from a common interface
-            // This results in us having to define create a very heirarchical structure since polymorphism is not
-            // possible Get service type declared in .toml to switch on the template arguments for the Clients and
-            // CmdClients This switch case MUST match the definition found in 'srvTypeMap' or there will be runtime
-            // errors Replacing this switch with a map is not possible due to the lack of a common inteface
-            std::string serviceType = util::getTomlEntryByKey<std::string>(cmd, "service");
-
+            // util::toml::viewOfArray will throw if there is no commands in a section
+            // We need to catch the execption and skip assignment of ID's in this case
+            toml::node_view<toml::node> cmdsView;
+            bool cmdsFound = false;
             try {
-                switch (srvTypeMap.at(serviceType)) {
-                case 1: {
-                    auto client = this->create_client<lifecycle_msgs::srv::ChangeState>(serviceName);
-                    this->clientMap[serviceName] = client;
-                    auto cmdSrvClient = CmdServiceClient(toml, serviceName, client, configSections, this->cmdMap);
-                    this->cmdSrvClients.push_back(
-                        std::make_shared<CmdServiceClient<lifecycle_msgs::srv::ChangeState>>(cmdSrvClient));
-                } break;
-                case 2: {
-                    auto client = this->create_client<lifecycle_msgs::srv::GetState>(serviceName);
-                    this->clientMap[serviceName] = client;
-                    auto cmdSrvClient = CmdServiceClient(toml, serviceName, client, configSections, this->cmdMap);
-                    this->cmdSrvClients.push_back(
-                        std::make_shared<CmdServiceClient<lifecycle_msgs::srv::GetState>>(cmdSrvClient));
-                } break;
-                default:
-                    throw std::out_of_range("ROS2 service type defined in 'srvTypeMap' but not in switch case");
-                };
-            } catch (const std::out_of_range &e) {
-                std::stringstream error;
-
-                error << "Service in toml section has no known type!\n";
-                error << "Service: " << serviceType << "\n";
-                error << "Section: " << cmd << "\n";
-                error << "Error: " << e.what() << "\n";
-
-                throw rstate::except::config_parse_error(error.str());
+                // Get view of valid toml array
+                cmdsView = util::toml::viewOfArray(transitionView, "cmd");
+                cmdsFound = true;
+            } catch (rstate::except::config_parse_error e) {
+                RCLCPP_DEBUG(this->get_logger(), "No commands found in section '%s'", transitionName);
             }
+            if (cmdsFound) {
+                bool allowCancel;
+                if (!strcmp(transitionName, "shutdown_unconfigred") || !strcmp(transitionName, "shutdown_inactive") ||
+                    !strcmp(transitionName, "shutdown_active") || !strcmp(transitionName, "shutdown_armed")) {
+                    allowCancel = false;
+                };
+
+                for (auto &&cmdNode : *cmdsView.as_array()) {
+                    // Create command and add to execution vector of transition
+                    auto cmd = this->createCmd(toml::node_view(cmdNode), allowCancel);
+                    transitionCmdVector->push_back(cmd);
+                }
+            }
+        }
+    }
+
+    std::shared_ptr<CmdIface> Node::createCmd(toml::node_view<toml::node> cmdView, bool allowCancel) {
+        for (auto cmdType : cmdTypeMap) {
+            auto cmdTypeName = cmdType.first;
+            auto cmdTypeConstructor = cmdType.second;
+
+            toml::node_view<toml::node> cmdTypeView;
+            try {
+                cmdTypeView = util::toml::viewOfTable(cmdView, cmdTypeName);
+            } catch (rstate::except::config_parse_error e) {
+                // Cmd was not of type cmdType
+                // Catch and ignore
+                // Exit current loop iteration
+                continue;
+            }
+
+            auto cmd = cmdTypeConstructor(cmdTypeView, allowCancel);
+            return cmd;
+        }
+
+        // If function did not return early, no match was found
+        std::stringstream error;
+
+        error << "Command found in .toml does not match any know type!\n";
+        error << "TOML: " << cmdView << "\n";
+
+        throw rstate::except::config_parse_error(error.str());
+    }
+
+    // Create cmd.service
+    std::shared_ptr<CmdIface> Node::createCmdService(toml::node_view<toml::node> cmdServiceView, bool allowCancel) {
+        std::string serviceType = util::toml::getTomlEntryByKey<std::string>(cmdServiceView, "service");
+
+        // We must explicitly cast based on service type
+        try {
+            switch (cmdServiceTypeMap.at(serviceType)) {
+            case 1: {
+                return createCmdServiceType<lifecycle_msgs::srv::ChangeState>(
+                    cmdServiceView, allowCancel, this->cmdServiceClientMapChangeState);
+            } break;
+            case 2: {
+                return createCmdServiceType<lifecycle_msgs::srv::GetState>(
+                    cmdServiceView, allowCancel, this->cmdServiceClientMapGetState);
+            } break;
+            default:
+                throw std::out_of_range(
+                    "ROS2 service type defined in 'cmdServiceTypeMap' but not in createCmdService() switch case");
+            };
+        } catch (const std::out_of_range &e) {
+            std::stringstream error;
+
+            error << "Service in toml section has no known type!\n";
+            error << "Service: " << serviceType << "\n";
+            error << "TOML: " << cmdServiceView << "\n";
+            error << "Error: " << e.what() << "\n";
+
+            throw rstate::except::config_parse_error(error.str());
         }
     }
 } // namespace rstate

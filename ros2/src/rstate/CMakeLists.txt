@@ -21,7 +21,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
 
 # rstate executable
 add_executable(rstate_node src/main.cpp
-                           lib/cmd/cmd_srv.cpp
+                           lib/cmd/service.cpp
                            lib/state/activating.cpp
                            lib/state/active.cpp
                            lib/state/armed.cpp

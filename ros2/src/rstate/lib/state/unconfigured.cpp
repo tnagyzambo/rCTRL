@@ -13,10 +13,10 @@ namespace rstate {
                                                          std::shared_ptr<const action::Transition::Goal> goal) {
         (void)uuid;
         switch (goal->transition) {
-        case Transition::Configure:
+        case (int)Transition::Configure:
             this->onTransition = &Unconfigured::onConfigure;
             return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
-        case Transition::Shutdown:
+        case (int)Transition::Shutdown:
             this->onTransition = &Unconfigured::onShutdown;
             return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
         default:
@@ -44,13 +44,13 @@ namespace rstate {
         node->setState(Configuring::getInstance());
 
         switch (executeCommands(node, node->cmdsOnConfigure, goalHandle)) {
-        case Success:
+        case TransitionResult::Success:
             node->setState(Inactive::getInstance());
             break;
-        case Cancelled:
+        case TransitionResult::Cancelled:
             node->setState(Unconfigured::getInstance());
             break;
-        case Failure:
+        case TransitionResult::Failure:
             // SHUTDOWN
             break;
         }
@@ -60,7 +60,13 @@ namespace rstate {
                                   const std::shared_ptr<rclcpp_action::ServerGoalHandle<action::Transition>> goalHandle) {
         node->setState(ShuttingDown::getInstance());
 
-        const auto goal = goalHandle->get_goal();
+        switch (executeCommandsShutdown(node, node->cmdsOnShutdownUnconfigured, goalHandle)) {
+        case ShutdownResult::Success:
+            break;
+        case ShutdownResult::Failure:
+            RCLCPP_ERROR(node->get_logger(), "The network was not shutdown successfully");
+            break;
+        }
 
         node->setState(Finalized::getInstance());
     }

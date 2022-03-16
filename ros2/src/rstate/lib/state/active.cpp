@@ -13,13 +13,13 @@ namespace rstate {
                                                    std::shared_ptr<const action::Transition::Goal> goal) {
         (void)uuid;
         switch (goal->transition) {
-        case Transition::Arm:
+        case (int)Transition::Arm:
             this->onTransition = &Active::onArm;
             return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
-        case Transition::Deactivate:
+        case (int)Transition::Deactivate:
             this->onTransition = &Active::onDeactivate;
             return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
-        case Transition::Shutdown:
+        case (int)Transition::Shutdown:
             this->onTransition = &Active::onShutdown;
             return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
         default:
@@ -45,13 +45,13 @@ namespace rstate {
         node->setState(Arming::getInstance());
 
         switch (executeCommands(node, node->cmdsOnArm, goalHandle)) {
-        case Success:
+        case TransitionResult::Success:
             node->setState(Armed::getInstance());
             break;
-        case Cancelled:
+        case TransitionResult::Cancelled:
             node->setState(Active::getInstance());
             break;
-        case Failure:
+        case TransitionResult::Failure:
             // SHUTDOWN
             break;
         }
@@ -62,13 +62,13 @@ namespace rstate {
         node->setState(Deactivating::getInstance());
 
         switch (executeCommands(node, node->cmdsOnDeactivate, goalHandle)) {
-        case Success:
+        case TransitionResult::Success:
             node->setState(Inactive::getInstance());
             break;
-        case Cancelled:
+        case TransitionResult::Cancelled:
             node->setState(Active::getInstance());
             break;
-        case Failure:
+        case TransitionResult::Failure:
             // SHUTDOWN
             break;
         }
@@ -78,7 +78,13 @@ namespace rstate {
                             const std::shared_ptr<rclcpp_action::ServerGoalHandle<action::Transition>> goalHandle) {
         node->setState(ShuttingDown::getInstance());
 
-        (void)goalHandle;
+        switch (executeCommandsShutdown(node, node->cmdsOnShutdownActive, goalHandle)) {
+        case ShutdownResult::Success:
+            break;
+        case ShutdownResult::Failure:
+            RCLCPP_ERROR(node->get_logger(), "The network was not shutdown successfully");
+            break;
+        }
 
         node->setState(Finalized::getInstance());
     }

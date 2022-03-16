@@ -23,7 +23,7 @@ namespace rstate {
     template <typename T>
     class CmdService : public CmdIface {
     public:
-        CmdService(std::shared_ptr<rclcpp::Client<T>>, toml::table);
+        CmdService(std::shared_ptr<rclcpp::Client<T>>, toml::node_view<toml::node>);
 
         void execute();
         void cancel();
@@ -36,7 +36,7 @@ namespace rstate {
         std::chrono::milliseconds waitForServiceTimeOut;
         std::chrono::milliseconds requestTimeOut;
 
-        void createRequest(toml::table);
+        void createRequest(toml::node_view<toml::node>);
         void sendRequest(std::shared_ptr<typename T::Request>, std::shared_ptr<typename T::Response>);
         void waitForService();
         void waitForFuture(std::shared_future<typename rclcpp::Client<T>::SharedResponse>);
@@ -44,21 +44,22 @@ namespace rstate {
     };
 
     template <typename T>
-    CmdService<T>::CmdService(std::shared_ptr<rclcpp::Client<T>> client, toml::table toml) : CmdIface(toml) {
+    CmdService<T>::CmdService(std::shared_ptr<rclcpp::Client<T>> client, toml::node_view<toml::node> toml)
+        : CmdIface(toml) {
         this->client = client;
         this->createRequest(toml);
 
         this->waitForServiceTimeOut =
-            std::chrono::milliseconds(util::getTomlEntryByKey<uint>(toml, "timeout_wait_for_srv"));
-        this->requestTimeOut = std::chrono::milliseconds(util::getTomlEntryByKey<uint>(toml, "timeout_request"));
+            std::chrono::milliseconds(util::toml::getTomlEntryByKey<uint>(toml, "timeout_wait_for_srv"));
+        this->requestTimeOut = std::chrono::milliseconds(util::toml::getTomlEntryByKey<uint>(toml, "timeout_request"));
     }
 
     template <typename T>
-    void CmdService<T>::createRequest(toml::table toml) {
+    void CmdService<T>::createRequest(toml::node_view<toml::node> toml) {
         std::stringstream error;
 
         error << "No template specialication found for service type!\n";
-        error << "Service: " << util::getTomlEntryByKey<std::string>(toml, "service") << "\n";
+        error << "Service: " << util::toml::getTomlEntryByKey<std::string>(toml, "service") << "\n";
         error << "Section: " << toml << "\n";
 
         throw except::config_parse_error(error.str());
@@ -74,7 +75,7 @@ namespace rstate {
         std::stringstream error;
 
         error << "Attempted to cancel non cancelable command!\n";
-        error << "Command ID: " << this->id << "\n";
+        error << "TOML: " << this->toml << "\n";
 
         throw except::cmd_service_eror(error.str());
     }
@@ -151,7 +152,7 @@ namespace rstate {
     template <typename T>
     class CmdServiceCancelable : public CmdService<T> {
     public:
-        CmdServiceCancelable(std::shared_ptr<rclcpp::Client<T>>, toml::table);
+        CmdServiceCancelable(std::shared_ptr<rclcpp::Client<T>>, toml::node_view<toml::node>);
 
         void cancel();
 
@@ -159,22 +160,22 @@ namespace rstate {
         std::shared_ptr<typename T::Request> requestCancel;
         std::shared_ptr<typename T::Response> responseCancel;
 
-        void createRequestCancel(toml::table);
+        void createRequestCancel(toml::node_view<toml::node>);
     };
 
     template <typename T>
-    CmdServiceCancelable<T>::CmdServiceCancelable(std::shared_ptr<rclcpp::Client<T>> client, toml::table toml)
+    CmdServiceCancelable<T>::CmdServiceCancelable(std::shared_ptr<rclcpp::Client<T>> client,
+                                                  toml::node_view<toml::node> toml)
         : CmdService<T>(client, toml) {
         this->createRequestCancel(toml);
     }
 
     template <typename T>
-    void CmdServiceCancelable<T>::createRequestCancel(toml::table toml) {
+    void CmdServiceCancelable<T>::createRequestCancel(toml::node_view<toml::node> toml) {
         std::stringstream error;
 
         error << "No template specialication found for service type!\n";
-        error << "Service: " << util::getTomlEntryByKey<std::string>(toml, "service") << "\n";
-        error << "Section: " << toml << "\n";
+        error << "TOML: " << toml << "\n";
 
         throw except::config_parse_error(error.str());
     }
