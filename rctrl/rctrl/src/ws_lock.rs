@@ -1,4 +1,4 @@
-use crate::gui::gui_elem::{GuiElem, GuiElems};
+use crate::gui::{GuiElem, GuiElems};
 use gloo_console::log;
 use rctrl_rosbridge::protocol::{OpWrapper, PublishWrapper, ServiceResponseWrapper};
 use reqwasm::websocket::{Message, WebSocketError};
@@ -157,16 +157,15 @@ impl WsLock {
     }
 
     fn deserialize_service_response(&self, msg_text: String, op_wrapper: OpWrapper) -> Result<(), ReadError> {
-        let service_response_wrapper =
-            match ServiceResponseWrapper::deserialize(MapDeserializer::new(op_wrapper.other.into_iter())) {
-                Ok(deserialized) => deserialized,
-                Err(_) => {
-                    return Err(ReadError::from(ParseError {
-                        reason: "failed to parse service_response operation",
-                        json: Some(msg_text),
-                    }));
-                }
-            };
+        let service_response_wrapper = match ServiceResponseWrapper::deserialize(MapDeserializer::new(op_wrapper.other.into_iter())) {
+            Ok(deserialized) => deserialized,
+            Err(_) => {
+                return Err(ReadError::from(ParseError {
+                    reason: "failed to parse service_response operation",
+                    json: Some(msg_text),
+                }));
+            }
+        };
 
         let gui_elems = self.gui_elems_lock.lock().unwrap();
         // Match GuiElem with the key pair <publish, topic>

@@ -1,5 +1,5 @@
+use super::logger_hl::{highlight, CodeTheme};
 use crate::gui::gui_elem::GuiElem;
-use crate::gui::logger_hl::{highlight, CodeTheme};
 use crate::ws_lock::WsLock;
 use eframe::egui;
 use gloo_console::log;

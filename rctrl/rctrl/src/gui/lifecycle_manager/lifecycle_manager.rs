@@ -1,6 +1,6 @@
-use crate::gui::gui_elem::GuiElem;
+use crate::gui::{gui_elem::GuiElem, App};
 use crate::ws_lock::WsLock;
-use eframe::egui;
+use eframe::{egui, epi};
 use gloo_console::log;
 use rctrl_rosbridge::lifecycle_msgs::msg::{State, Transition, TransitionDescription};
 use serde_json::Value;
@@ -12,58 +12,119 @@ use web_sys::{Performance, Window};
 /// Main [`LifecycleManager`] structure.
 pub struct LifecycleManager {
     ws_lock: Rc<WsLock>,
-    pub open: bool,
+    lifecycle_panels: Rc<Mutex<LifecyclePanels>>,
+}
+
+impl LifecycleManager {
+    pub fn new(ws_lock: &Rc<WsLock>) -> Self {
+        Self {
+            ws_lock: Rc::clone(&ws_lock),
+            lifecycle_panels: LifecyclePanels::new_shared(ws_lock),
+        }
+    }
+}
+
+impl epi::App for LifecycleManager {
+    fn name(&self) -> &str {
+        "lifecycle_manager"
+    }
+
+    /// Called once before the first frame.
+    fn setup(&mut self, _ctx: &egui::Context, _frame: &epi::Frame, _storage: Option<&dyn epi::Storage>) {
+        // Load previous app state (if any).
+        // Note that you must enable the `persistence` feature for this to work.
+        #[cfg(feature = "persistence")]
+        if let Some(storage) = _storage {
+            *self = epi::get_value(storage, epi::APP_KEY).unwrap_or_default()
+        }
+    }
+
+    /// Called by the frame work to save state before shutdown.
+    /// Note that you must enable the `persistence` feature for this to work.
+    #[cfg(feature = "persistence")]
+    fn save(&mut self, storage: &mut dyn epi::Storage) {
+        epi::set_value(storage, epi::APP_KEY, self);
+    }
+
+    /// Called each time the UI needs repainting, which may be many times per second.
+    /// Put your widgets into a `SidePanel`, `TopPanel`, `CentralPanel`, `Window` or `Area`.
+    fn update(&mut self, ctx: &egui::Context, frame: &epi::Frame) {
+        let Self { ws_lock, lifecycle_panels } = self;
+
+        egui::CentralPanel::default().show(ctx, |ui| {
+            ui.horizontal(|ui| {
+                let tooltip = "Refresh ROS2 node list";
+                if ui.button("🔄").on_hover_text(tooltip).clicked() {
+                    let cmd = rctrl_rosbridge::protocol::CallService::<u8>::new("/rosapi/nodes");
+                    self.ws_lock.add_ws_write(serde_json::to_string(&cmd).unwrap());
+                }
+
+                {
+                    let lifecycle_panels = self.lifecycle_panels.lock().unwrap();
+                    let refresh_msg = match lifecycle_panels.last_refresh {
+                        Some(last_refresh) => format!("Refreshed {}ms ago", lifecycle_panels.performance.now() - last_refresh),
+                        None => "Refreshed N/A ago".to_string(),
+                    };
+
+                    ui.with_layout(egui::Layout::left_to_right(), |ui| {
+                        ui.label(refresh_msg);
+                    });
+                }
+            });
+            ui.separator();
+
+            // Need to explicitly split up the borrowing here or else the borrow checker will complain about
+            // borrowing an already mutable reference to self
+            // REFERENCE: <https://doc.rust-lang.org/nomicon/borrow-splitting.html>
+            {
+                let lifecycle_panels = self.lifecycle_panels.lock().unwrap();
+                egui::ScrollArea::vertical()
+                    .auto_shrink([false; 2])
+                    .show(ui, |ui| lifecycle_panels.draw(ui));
+            }
+        });
+    }
+}
+
+impl App for LifecycleManager {
+    fn refresh(&mut self) {
+        // Call for refresh
+        let cmd = rctrl_rosbridge::protocol::CallService::<u8>::new("/rosapi/nodes");
+        self.ws_lock.add_ws_write(serde_json::to_string(&cmd).unwrap());
+    }
+}
+
+pub struct LifecyclePanels {
+    ws_lock: Rc<WsLock>,
     window: Window,
     performance: Performance,
     last_refresh: Option<f64>,
     node_panels: Rc<Mutex<HashMap<String, Rc<Mutex<NodePanel>>>>>,
 }
 
-impl LifecycleManager {
+impl LifecyclePanels {
     pub fn new_shared(ws_lock: &Rc<WsLock>) -> Rc<Mutex<Self>> {
         let window = web_sys::window().expect("should have a window in this context");
         let performance = window.performance().expect("performance should be available");
-
-        let lifcycle_manager = Self {
+        let lifecycle_panels = Self {
             ws_lock: Rc::clone(&ws_lock),
-            open: true,
             window: window,
             performance: performance,
             last_refresh: None,
             node_panels: Rc::new(Mutex::new(HashMap::new())),
         };
-
         let op = ("service_response").to_owned();
         let topic = ("/rosapi/nodes").to_owned();
-        let lifcycle_manager_lock = Rc::new(Mutex::new(lifcycle_manager));
-        let lifcycle_manager_lock_c = Rc::clone(&lifcycle_manager_lock);
-        ws_lock.add_gui_elem(op, topic, lifcycle_manager_lock_c);
+        let lifecycle_panels_lock = Rc::new(Mutex::new(lifecycle_panels));
+        let lifecycle_panels_lock_c = Rc::clone(&lifecycle_panels_lock);
+        ws_lock.add_gui_elem(op, topic, lifecycle_panels_lock_c);
 
-        return lifcycle_manager_lock;
+        return lifecycle_panels_lock;
     }
 }
 
-impl GuiElem for LifecycleManager {
+impl GuiElem for LifecyclePanels {
     fn draw(&self, ui: &mut egui::Ui) {
-        ui.horizontal(|ui| {
-            let tooltip = "Refresh ROS2 node list";
-            if ui.button("🔄").on_hover_text(tooltip).clicked() {
-                let cmd = rctrl_rosbridge::protocol::CallService::<u8>::new("/rosapi/nodes");
-                self.ws_lock.add_ws_write(serde_json::to_string(&cmd).unwrap());
-            }
-
-            let refresh_msg = match self.last_refresh {
-                Some(last_refresh) => format!("Refreshed {}ms ago", self.performance.now() - last_refresh),
-                None => "Refreshed N/A ago".to_string(),
-            };
-
-            ui.with_layout(egui::Layout::right_to_left(), |ui| {
-                ui.label(refresh_msg);
-            });
-        });
-
-        ui.separator();
-
         ui.horizontal_wrapped(|ui| {
             for (key, value) in self.node_panels.lock().unwrap().iter() {
                 ui.label(format!(""));
@@ -92,15 +153,22 @@ impl GuiElem for LifecycleManager {
                 .entry(node.clone())
                 .or_insert_with(|| NodePanel::new_shared(node.clone(), &self.ws_lock));
 
-            // Request state of node
-            let topic = node.clone() + "/get_state";
-            let cmd = rctrl_rosbridge::protocol::CallService::<u8>::new(&topic);
-            self.ws_lock.add_ws_write(serde_json::to_string(&cmd).unwrap());
+            match node.as_str() {
+                "/rosapi" => (),
+                "/rosapi_params" => (),
+                "/rosbridge_websocket" => (),
+                _ => {
+                    // Request state of node
+                    let topic = node.clone() + "/get_state";
+                    let cmd = rctrl_rosbridge::protocol::CallService::<u8>::new(&topic);
+                    self.ws_lock.add_ws_write(serde_json::to_string(&cmd).unwrap());
 
-            // Request available transitions of node
-            let topic = node.clone() + "/get_available_transitions";
-            let cmd = rctrl_rosbridge::protocol::CallService::<u8>::new(&topic);
-            self.ws_lock.add_ws_write(serde_json::to_string(&cmd).unwrap());
+                    // Request available transitions of node
+                    let topic = node.clone() + "/get_available_transitions";
+                    let cmd = rctrl_rosbridge::protocol::CallService::<u8>::new(&topic);
+                    self.ws_lock.add_ws_write(serde_json::to_string(&cmd).unwrap());
+                }
+            }
         }
 
         // Update last refresh counter
@@ -129,10 +197,17 @@ impl NodePanel {
         };
 
         let op = ("publish").to_owned();
-        let topic = node + "/transition_event";
+        let topic = node.clone() + "/transition_event";
 
-        let cmd = rctrl_rosbridge::protocol::Subscribe::new(&topic);
-        ws_lock.add_ws_write(serde_json::to_string(&cmd).unwrap());
+        match node.as_str() {
+            "/rosapi" => (),
+            "/rosapi_params" => (),
+            "/rosbridge_websocket" => (),
+            _ => {
+                let cmd = rctrl_rosbridge::protocol::Subscribe::new(&topic);
+                ws_lock.add_ws_write(serde_json::to_string(&cmd).unwrap());
+            }
+        }
 
         let node_panel_lock = Rc::new(Mutex::new(node_panel));
         let node_panel_lock_c = Rc::clone(&node_panel_lock);
@@ -155,15 +230,22 @@ impl GuiElem for NodePanel {
     }
 
     fn update_data(&mut self, data: Value) {
-        // Request state of node
-        let topic = self.node.clone() + "/get_state";
-        let cmd = rctrl_rosbridge::protocol::CallService::<u8>::new(&topic);
-        self.ws_lock.add_ws_write(serde_json::to_string(&cmd).unwrap());
+        match self.node.as_str() {
+            "/rosapi" => (),
+            "/rosapi_params" => (),
+            "/rosbridge_websocket" => (),
+            _ => {
+                // Request state of node
+                let topic = self.node.clone() + "/get_state";
+                let cmd = rctrl_rosbridge::protocol::CallService::<u8>::new(&topic);
+                self.ws_lock.add_ws_write(serde_json::to_string(&cmd).unwrap());
 
-        // Request available transitions of node
-        let topic = self.node.clone() + "/get_available_transitions";
-        let cmd = rctrl_rosbridge::protocol::CallService::<u8>::new(&topic);
-        self.ws_lock.add_ws_write(serde_json::to_string(&cmd).unwrap());
+                // Request available transitions of node
+                let topic = self.node.clone() + "/get_available_transitions";
+                let cmd = rctrl_rosbridge::protocol::CallService::<u8>::new(&topic);
+                self.ws_lock.add_ws_write(serde_json::to_string(&cmd).unwrap());
+            }
+        }
     }
 }
 
