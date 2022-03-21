@@ -91,16 +91,18 @@ impl epi::App for Gui {
             logger,
         } = self;
 
-        egui::SidePanel::left("Apps").show(ctx, |ui| {
-            for (name, anchor, app) in self.apps.iter_mut() {
-                if ui.selectable_label(self.selected_anchor == anchor, name).clicked() {
-                    self.selected_anchor = anchor.to_owned();
-                    app.refresh();
-                    if frame.is_web() {
-                        ui.output().open_url(format!("#{}", anchor));
+        egui::SidePanel::left("Apps").default_width(150.0).resizable(false).show(ctx, |ui| {
+            ui.with_layout(egui::Layout::top_down_justified(egui::Align::LEFT), |ui| {
+                for (name, anchor, app) in self.apps.iter_mut() {
+                    if ui.selectable_label(self.selected_anchor == anchor, name).clicked() {
+                        self.selected_anchor = anchor.to_owned();
+                        app.refresh();
+                        if frame.is_web() {
+                            ui.output().open_url(format!("#{}", anchor));
+                        }
                     }
                 }
-            }
+            });
         });
 
         for (_name, anchor, app) in self.apps.iter_mut() {
