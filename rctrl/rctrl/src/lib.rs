@@ -15,6 +15,9 @@ These scripts are based off the example found in the [eframe_template](https://g
 Included in the `.tasks.json` of the monorepo are the commands needed to build and serve the application.
 */
 
+#[macro_use]
+extern crate lazy_static;
+
 /// Application module.
 mod app;
 

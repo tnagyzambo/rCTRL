@@ -1841,6 +1841,7 @@ dependencies = [
  "futures-util",
  "gloo",
  "gloo-console",
+ "lazy_static",
  "rctrl_rosbridge",
  "reqwasm",
  "serde",

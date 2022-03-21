@@ -14,7 +14,7 @@ use std::sync::Mutex;
 /// WebSocket read/write loops and the [`Gui`](crate::gui::Gui) draw loop.
 pub struct WsLock {
     /// Lock of [`GuiElems`](crate::gui::gui_elem::GuiElems) map that will be updated when an appropriate `WebSocket` read has been made.
-    gui_elems_lock: Mutex<GuiElems<String, String>>,
+    gui_elems_lock: Mutex<GuiElems<String, String, u32>>,
     /// Lock of messages waiting to be writen to the WebSocket.
     ws_write_lock: Mutex<VecDeque<String>>,
 }
@@ -31,7 +31,7 @@ impl Default for WsLock {
 impl WsLock {
     pub fn new() -> Self {
         Self {
-            gui_elems_lock: Mutex::new(GuiElems::<String, String>::new()),
+            gui_elems_lock: Mutex::new(GuiElems::<String, String, u32>::new()),
             ws_write_lock: Mutex::new(VecDeque::<String>::with_capacity(100)),
         }
     }
@@ -61,9 +61,9 @@ impl WsLock {
     }
 
     /// Given a key pair, add an object that implements the [`GuiElem`](crate::gui::gui_elem::GuiElem) to the HashMap [`GuiElems`](crate::gui::gui_elem::GuiElems).
-    pub fn add_gui_elem(&self, op: String, topic: String, gui_elem: Rc<Mutex<dyn GuiElem>>) {
+    pub fn add_gui_elem(&self, op: String, topic: String, id: u32, gui_elem: Rc<Mutex<dyn GuiElem>>) {
         let mut gui_elems = self.gui_elems_lock.lock().unwrap();
-        gui_elems.insert(op, topic, gui_elem);
+        gui_elems.insert(op, topic, id, gui_elem);
     }
 
     /// Add a message to the `WebSocket` write queue.
@@ -140,23 +140,40 @@ impl WsLock {
                 }));
             }
         };
+
+        // Get vector of key values present in inner map of <id, GuiElem> from key pair <node, topic>
         let gui_elems = self.gui_elems_lock.lock().unwrap();
-        // Match GuiElem with the key pair <publish, topic>
-        // Final typecasting of msg field is done within GuiElem.update()
-        match gui_elems.get(&String::from("publish"), &publish_wrapper.topic) {
-            Some(gui_elem) => {
-                drop(gui_elems);
-                gui_elem.lock().unwrap().update_data(publish_wrapper.msg);
+        let gui_elems_ids = match gui_elems.get_ids(&String::from("publish"), &publish_wrapper.topic) {
+            Some(ids) => ids.clone(),
+            None => return Ok(()),
+        };
+        drop(gui_elems);
+
+        // Iterate over id's to updat all GuiElems
+        // You cannot directly take an iterator of the elements with in the inner map as that would lead to some weird self modifying behaviour
+        // Iterating over a vector of copied id's allows the program to handle the case where the previous iteration of the loop deleted the GuiElem
+        // that would have been referneced in the current interation
+        for id in gui_elems_ids {
+            let gui_elems = self.gui_elems_lock.lock().unwrap();
+
+            match gui_elems.get(&String::from("publish"), &publish_wrapper.topic, &id) {
+                Some(gui_elem) => {
+                    // Must drop the lock before calling update_data() since update_data() might need to aquire the lock
+                    drop(gui_elems);
+                    gui_elem.lock().unwrap().update_data(&publish_wrapper.msg);
+                }
+                None => log!(format!(
+                    "GuiElem coresponding to keypair <publish, {}, {}> does not exist.",
+                    &publish_wrapper.topic, &id
+                )),
             }
-            None => log!(format!(
-                "GuiElem coresponding to keypair <publish, {}> does not exist.",
-                &publish_wrapper.topic
-            )),
         }
+
         Ok(())
     }
 
     fn deserialize_service_response(&self, msg_text: String, op_wrapper: OpWrapper) -> Result<(), ReadError> {
+        // Final typecasting of msg field is done within GuiElem.update()
         let service_response_wrapper = match ServiceResponseWrapper::deserialize(MapDeserializer::new(op_wrapper.other.into_iter())) {
             Ok(deserialized) => deserialized,
             Err(_) => {
@@ -167,19 +184,32 @@ impl WsLock {
             }
         };
 
+        // Get vector of key values present in inner map of <id, GuiElem> from key pair <node, topic>
         let gui_elems = self.gui_elems_lock.lock().unwrap();
-        // Match GuiElem with the key pair <publish, topic>
-        // Final typecasting of msg field is done within GuiElem.update()
-        match gui_elems.get(&String::from("service_response"), &service_response_wrapper.service) {
-            Some(gui_elem) => {
-                // Must drop the lock before calling update_data() since update_data() might need to aquire the lock
-                drop(gui_elems);
-                gui_elem.lock().unwrap().update_data(service_response_wrapper.values);
+        let gui_elems_ids = match gui_elems.get_ids(&String::from("service_response"), &service_response_wrapper.service) {
+            Some(ids) => ids.clone(),
+            None => return Ok(()),
+        };
+        drop(gui_elems);
+
+        // Iterate over id's to updat all GuiElems
+        // You cannot directly take an iterator of the elements with in the inner map as that would lead to some weird self modifying behaviour
+        // Iterating over a vector of copied id's allows the program to handle the case where the previous iteration of the loop deleted the GuiElem
+        // that would have been referneced in the current interation
+        for id in gui_elems_ids {
+            let gui_elems = self.gui_elems_lock.lock().unwrap();
+
+            match gui_elems.get(&String::from("service_response"), &service_response_wrapper.service, &id) {
+                Some(gui_elem) => {
+                    // Must drop the lock before calling update_data() since update_data() might need to aquire the lock
+                    drop(gui_elems);
+                    gui_elem.lock().unwrap().update_data(&service_response_wrapper.values);
+                }
+                None => log!(format!(
+                    "GuiElem coresponding to keypair <service_response, {}, {}> does not exist.",
+                    &service_response_wrapper.service, &id
+                )),
             }
-            None => log!(format!(
-                "GuiElem coresponding to keypair <service_response, {}> does not exist.",
-                &service_response_wrapper.service
-            )),
         }
 
         Ok(())
