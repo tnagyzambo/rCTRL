@@ -66,6 +66,12 @@ impl WsLock {
         gui_elems.insert(op, topic, id, gui_elem);
     }
 
+    /// Given a key pair, remove the [`GuiElem`](crate::gui::gui_elem::GuiElem) from the HashMap [`GuiElems`](crate::gui::gui_elem::GuiElems).
+    pub fn remove_gui_elem(&self, op: String, topic: String, id: u32) {
+        let mut gui_elems = self.gui_elems_lock.lock().unwrap();
+        gui_elems.remove(op, topic, id);
+    }
+
     /// Add a message to the `WebSocket` write queue.
     pub fn add_ws_write(&self, msg: String) {
         let mut msg_queue = self.ws_write_lock.lock().unwrap();

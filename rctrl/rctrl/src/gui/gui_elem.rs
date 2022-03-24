@@ -23,6 +23,7 @@ pub fn gen_gui_elem_id() -> u32 {
 pub trait GuiElem {
     fn draw(&self, ui: &mut egui::Ui);
     fn update_data(&mut self, data: &Value);
+    fn deregister(&self);
 }
 
 #[derive(Eq, PartialEq, Hash)]
@@ -154,6 +155,16 @@ impl<A: Eq + Hash, B: Eq + Hash, C: Eq + Hash + Copy> GuiElems<A, B, C> {
                 self.map.insert((a, b), inner_map);
                 return;
             }
+        }
+    }
+
+    pub fn remove(&mut self, a: A, b: B, id: C) {
+        match self.map.get_mut(&(&a, &b) as &dyn KeyPair<A, B>) {
+            Some(inner_map) => {
+                inner_map.remove(&id);
+                return;
+            }
+            None => (),
         }
     }
 }

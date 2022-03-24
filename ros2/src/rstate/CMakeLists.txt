@@ -17,7 +17,9 @@ find_package(rdata REQUIRED)
 include_directories(include)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
-                           "action/Transition.action")
+                           "srv/TransitionCancelGoal.srv"
+                           "srv/TransitionSendGoal.srv"
+                           "msg/TransitionFeedback.msg")
 
 # rstate executable
 add_executable(rstate_node src/main.cpp

@@ -8,23 +8,21 @@ namespace rstate {
 
     void ShuttingDown::enter(Node *node) { RCLCPP_INFO(node->get_logger(), "Network is shutting down"); }
 
-    rclcpp_action::GoalResponse ShuttingDown::handleGoal(Node *node,
-                                                         const rclcpp_action::GoalUUID &uuid,
-                                                         std::shared_ptr<const action::Transition::Goal> goal) {
-        (void)uuid;
+    GoalResponse ShuttingDown::handleGoal(Node *node,
+                                          std::shared_ptr<const rstate::srv::TransitionSendGoal::Request> goal) {
         RCLCPP_INFO(node->get_logger(), "Received action request while shutting down, goal: %d", goal->transition);
-        return rclcpp_action::GoalResponse::REJECT;
+        return GoalResponse::REJECT;
     }
 
-    rclcpp_action::CancelResponse ShuttingDown::handleCancel(
-        Node *node, const std::shared_ptr<rclcpp_action::ServerGoalHandle<action::Transition>> goalHandle) {
+    CancelResponse ShuttingDown::handleCancel(
+        Node *node, const std::shared_ptr<GoalHandle<rstate::msg::TransitionFeedback>> goalHandle) {
         RCLCPP_INFO(node->get_logger(), "Received request to cancel transition");
         (void)goalHandle;
-        return rclcpp_action::CancelResponse::ACCEPT;
+        return CancelResponse::ACCEPT;
     }
 
-    void ShuttingDown::handleAccepted(
-        Node *node, const std::shared_ptr<rclcpp_action::ServerGoalHandle<action::Transition>> goalHandle) {
+    void ShuttingDown::handleAccepted(Node *node,
+                                      const std::shared_ptr<GoalHandle<rstate::msg::TransitionFeedback>> goalHandle) {
         (void)node;
         (void)goalHandle;
     }

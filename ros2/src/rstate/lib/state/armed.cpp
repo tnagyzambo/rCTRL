@@ -8,38 +8,33 @@ namespace rstate {
 
     void Armed::enter(Node *node) { RCLCPP_INFO(node->get_logger(), "Network is armed"); }
 
-    rclcpp_action::GoalResponse Armed::handleGoal(Node *node,
-                                                  const rclcpp_action::GoalUUID &uuid,
-                                                  std::shared_ptr<const action::Transition::Goal> goal) {
-        (void)uuid;
+    GoalResponse Armed::handleGoal(Node *node, std::shared_ptr<const rstate::srv::TransitionSendGoal::Request> goal) {
         switch (goal->transition) {
         case (int)Transition::Disarm:
             this->onTransition = &Armed::onDisarm;
-            return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
+            return GoalResponse::ACCEPT_AND_EXECUTE;
         case (int)Transition::Shutdown:
             this->onTransition = &Armed::onShutdown;
-            return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
+            return GoalResponse::ACCEPT_AND_EXECUTE;
         default:
             RCLCPP_INFO(node->get_logger(), "Received transition request with invalid goal: %d", goal->transition);
-            return rclcpp_action::GoalResponse::REJECT;
+            return GoalResponse::REJECT;
         }
     }
 
-    rclcpp_action::CancelResponse Armed::handleCancel(
-        Node *node, const std::shared_ptr<rclcpp_action::ServerGoalHandle<action::Transition>> goalHandle) {
+    CancelResponse Armed::handleCancel(Node *node,
+                                       const std::shared_ptr<GoalHandle<rstate::msg::TransitionFeedback>> goalHandle) {
         RCLCPP_INFO(node->get_logger(), "Received request to cancel transition");
         (void)goalHandle;
-        return rclcpp_action::CancelResponse::ACCEPT;
+        return CancelResponse::ACCEPT;
     }
 
-    void Armed::handleAccepted(Node *node,
-                               const std::shared_ptr<rclcpp_action::ServerGoalHandle<action::Transition>> goalHandle) {
+    void Armed::handleAccepted(Node *node, const std::shared_ptr<GoalHandle<rstate::msg::TransitionFeedback>> goalHandle) {
         std::thread{std::bind(Armed::onTransition, this, std::placeholders::_1, std::placeholders::_2), node, goalHandle}
             .detach();
     }
 
-    void Armed::onDisarm(Node *node,
-                         const std::shared_ptr<rclcpp_action::ServerGoalHandle<action::Transition>> goalHandle) {
+    void Armed::onDisarm(Node *node, const std::shared_ptr<GoalHandle<rstate::msg::TransitionFeedback>> goalHandle) {
         node->setState(Disarming::getInstance());
 
         switch (executeCommands(node, node->cmdsOnDisarm, goalHandle)) {
@@ -55,8 +50,7 @@ namespace rstate {
         }
     }
 
-    void Armed::onShutdown(Node *node,
-                           const std::shared_ptr<rclcpp_action::ServerGoalHandle<action::Transition>> goalHandle) {
+    void Armed::onShutdown(Node *node, const std::shared_ptr<GoalHandle<rstate::msg::TransitionFeedback>> goalHandle) {
         node->setState(ShuttingDown::getInstance());
 
         switch (executeCommandsShutdown(node, node->cmdsOnShutdownArmed, goalHandle)) {

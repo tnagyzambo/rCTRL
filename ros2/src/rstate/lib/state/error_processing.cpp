@@ -8,23 +8,21 @@ namespace rstate {
 
     void ErrorProcessing::enter(Node *node) { RCLCPP_INFO(node->get_logger(), "Network is error processing"); }
 
-    rclcpp_action::GoalResponse ErrorProcessing::handleGoal(Node *node,
-                                                            const rclcpp_action::GoalUUID &uuid,
-                                                            std::shared_ptr<const action::Transition::Goal> goal) {
-        (void)uuid;
+    GoalResponse ErrorProcessing::handleGoal(Node *node,
+                                             std::shared_ptr<const rstate::srv::TransitionSendGoal::Request> goal) {
         RCLCPP_INFO(node->get_logger(), "Received action request while error processing, goal: %d", goal->transition);
-        return rclcpp_action::GoalResponse::REJECT;
+        return GoalResponse::REJECT;
     }
 
-    rclcpp_action::CancelResponse ErrorProcessing::handleCancel(
-        Node *node, const std::shared_ptr<rclcpp_action::ServerGoalHandle<action::Transition>> goalHandle) {
+    CancelResponse ErrorProcessing::handleCancel(
+        Node *node, const std::shared_ptr<GoalHandle<rstate::msg::TransitionFeedback>> goalHandle) {
         RCLCPP_INFO(node->get_logger(), "Received request to cancel transition");
         (void)goalHandle;
-        return rclcpp_action::CancelResponse::ACCEPT;
+        return CancelResponse::ACCEPT;
     }
 
-    void ErrorProcessing::handleAccepted(
-        Node *node, const std::shared_ptr<rclcpp_action::ServerGoalHandle<action::Transition>> goalHandle) {
+    void ErrorProcessing::handleAccepted(Node *node,
+                                         const std::shared_ptr<GoalHandle<rstate::msg::TransitionFeedback>> goalHandle) {
         (void)node;
         (void)goalHandle;
     }

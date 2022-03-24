@@ -24,7 +24,8 @@
 using namespace std::chrono_literals;
 
 namespace rdata::vsensor {
-    template <typename T> class Node : public rclcpp_lifecycle::LifecycleNode {
+    template <typename T>
+    class Node : public rclcpp_lifecycle::LifecycleNode {
     public:
         Node(const char *, std::chrono::milliseconds);
         ~Node();

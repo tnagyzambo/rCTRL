@@ -1,15 +1,13 @@
-#include <sstream>
 #include <state.hpp>
 
 namespace rstate {
-    TransitionResult State::executeCommands(
-        Node *node,
-        std::vector<std::shared_ptr<CmdIface>> cmds,
-        const std::shared_ptr<rclcpp_action::ServerGoalHandle<action::Transition>> goalHandle) {
-        auto feedback = std::make_shared<rstate::action::Transition::Feedback>();
-        auto result = std::make_shared<rstate::action::Transition::Result>();
-        feedback->cmd_total = cmds.size();
-        feedback->cmd_complete = 0;
+    TransitionResult State::executeCommands(Node *node,
+                                            std::vector<std::shared_ptr<CmdIface>> cmds,
+                                            const std::shared_ptr<GoalHandle<rstate::msg::TransitionFeedback>> goalHandle) {
+        auto feedback = rstate::msg::TransitionFeedback();
+        // auto result = std::make_shared<rstate::action::Transition::Result>();
+        feedback.cmd_total = cmds.size();
+        feedback.cmd_complete = 0;
         goalHandle->publish_feedback(feedback);
 
         std::vector<std::shared_ptr<CmdIface>> cmdsCompleted;
@@ -20,11 +18,11 @@ namespace rstate {
                 } catch (except::cmd_service_eror e) {
                     node->setState(ErrorProcessing::getInstance());
                     RCLCPP_ERROR(node->get_logger(), "Failed to cancel transition\nError: %s", e.what());
-                    goalHandle->abort(result);
+                    // goalHandle->abort(result);
                     return TransitionResult::Failure;
                 }
 
-                goalHandle->canceled(result);
+                // goalHandle->canceled(result);
                 return TransitionResult::Cancelled;
             }
 
@@ -40,26 +38,27 @@ namespace rstate {
                     executeCommandsCancel(cmdsCompleted, goalHandle);
                 } catch (except::cmd_service_eror e) {
                     RCLCPP_ERROR(node->get_logger(), "Failed to revert partial transition\nError: %s", e.what());
-                    goalHandle->abort(result);
+                    // goalHandle->abort(result);
                     return TransitionResult::Failure;
                 }
 
-                goalHandle->abort(result);
+                // goalHandle->abort(result);
                 return TransitionResult::Cancelled;
             }
 
             cmdsCompleted.push_back(cmd);
-            feedback->cmd_complete = cmdsCompleted.size();
+            feedback.cmd_complete = cmdsCompleted.size();
             goalHandle->publish_feedback(feedback);
         }
 
-        goalHandle->succeed(result);
+        // goalHandle->succeed(result);
         return TransitionResult::Success;
     }
 
     void State::executeCommandsCancel(std::vector<std::shared_ptr<CmdIface>> cmds,
-                                      const std::shared_ptr<rclcpp_action::ServerGoalHandle<action::Transition>> goalHandle) {
-        auto feedback = std::make_shared<rstate::action::Transition::Feedback>();
+                                      const std::shared_ptr<GoalHandle<rstate::msg::TransitionFeedback>> goalHandle) {
+        (void)goalHandle;
+        auto feedback = rstate::msg::TransitionFeedback();
         while (!cmds.empty()) {
             auto cmd = cmds.back();
 
@@ -79,8 +78,8 @@ namespace rstate {
                 throw;
             }
 
-            feedback->cmd_complete = cmds.size();
-            goalHandle->publish_feedback(feedback);
+            feedback.cmd_complete = cmds.size();
+            // goalHandle->publish_feedback(feedback);
             cmds.pop_back();
         }
     }
@@ -88,11 +87,11 @@ namespace rstate {
     ShutdownResult State::executeCommandsShutdown(
         Node *node,
         std::vector<std::shared_ptr<CmdIface>> cmds,
-        const std::shared_ptr<rclcpp_action::ServerGoalHandle<action::Transition>> goalHandle) {
-        auto feedback = std::make_shared<rstate::action::Transition::Feedback>();
-        auto result = std::make_shared<rstate::action::Transition::Result>();
-        feedback->cmd_total = cmds.size();
-        feedback->cmd_complete = 0;
+        const std::shared_ptr<GoalHandle<rstate::msg::TransitionFeedback>> goalHandle) {
+        auto feedback = rstate::msg::TransitionFeedback();
+        // auto result = std::make_shared<rstate::action::Transition::Result>();
+        feedback.cmd_total = cmds.size();
+        feedback.cmd_complete = 0;
         goalHandle->publish_feedback(feedback);
         ShutdownResult transitionResult = ShutdownResult::Success;
 
@@ -111,14 +110,14 @@ namespace rstate {
             }
 
             cmdsCompleted.push_back(cmd);
-            feedback->cmd_complete = cmdsCompleted.size();
+            feedback.cmd_complete = cmdsCompleted.size();
             goalHandle->publish_feedback(feedback);
         }
 
         if (transitionResult == ShutdownResult::Success) {
-            goalHandle->succeed(result);
+            // goalHandle->succeed(result);
         } else {
-            goalHandle->abort(result);
+            // goalHandle->abort(result);
         }
 
         return transitionResult;

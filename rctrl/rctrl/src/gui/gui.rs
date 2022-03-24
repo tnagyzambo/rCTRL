@@ -6,7 +6,7 @@ use std::sync::Mutex;
 use crate::gui::GuiElem;
 use crate::gui::LifecycleManager;
 use crate::gui::Logger;
-use crate::gui::Rstate;
+use crate::gui::PInD;
 
 // Extend epi:App trait
 pub trait App: epi::App {
@@ -16,14 +16,14 @@ pub trait App: epi::App {
 
 pub struct Apps {
     lifecycle_manager: LifecycleManager,
-    rstate: Rstate,
+    pind: PInD,
 }
 
 impl Apps {
     fn new(ws_lock: &Rc<WsLock>) -> Self {
         Self {
             lifecycle_manager: LifecycleManager::new(&Rc::clone(&ws_lock)),
-            rstate: Rstate::new(&Rc::clone(&ws_lock)),
+            pind: PInD::new(&Rc::clone(&ws_lock)),
         }
     }
 
@@ -34,7 +34,7 @@ impl Apps {
                 "lifecycle_manager",
                 &mut self.lifecycle_manager as &mut dyn App,
             ),
-            ("rSTATE", "rstate", &mut self.rstate as &mut dyn App),
+            ("PI&D", "pind", &mut self.pind as &mut dyn App),
         ]
         .into_iter()
     }

@@ -96,6 +96,8 @@ impl App for LifecycleManager {
 
 pub struct LifecyclePanels {
     id: u32,
+    op: String,
+    topic: String,
     ws_lock: Rc<WsLock>,
     window: Window,
     performance: Performance,
@@ -109,15 +111,18 @@ impl LifecyclePanels {
         let performance = window.performance().expect("performance should be available");
         let lifecycle_panels = Self {
             id: gen_gui_elem_id(),
+            op: ("service_response").to_owned(),
+            topic: ("/rosapi/nodes").to_owned(),
             ws_lock: Rc::clone(&ws_lock),
             window: window,
             performance: performance,
             last_refresh: None,
             node_panels: Rc::new(Mutex::new(HashMap::new())),
         };
-        let op = ("service_response").to_owned();
-        let topic = ("/rosapi/nodes").to_owned();
-        let id = lifecycle_panels.id;
+
+        let op = lifecycle_panels.op.clone();
+        let topic = lifecycle_panels.topic.clone();
+        let id = lifecycle_panels.id.clone();
         let lifecycle_panels_lock = Rc::new(Mutex::new(lifecycle_panels));
         let lifecycle_panels_lock_c = Rc::clone(&lifecycle_panels_lock);
         ws_lock.add_gui_elem(op, topic, id, lifecycle_panels_lock_c);
@@ -146,13 +151,29 @@ impl GuiElem for LifecyclePanels {
         let deserialized: rctrl_rosbridge::rosapi_msgs::srv::nodes::Response = serde_json::from_value(data.clone()).unwrap();
 
         // Retain all node_panels whos names exist in the response, drop all others
-        self.node_panels.lock().unwrap().retain(|k, _| deserialized.nodes.contains(k));
+        let mut retain_keys = Vec::<String>::new();
+        let mut node_panels = self.node_panels.lock().unwrap();
+        for (k, v) in node_panels.iter() {
+            let mut exists_in_node_panels = false;
+            let node_panel = v.lock().unwrap();
+
+            for node in &deserialized.nodes {
+                if &node_panel.node == node {
+                    exists_in_node_panels = true;
+                    retain_keys.push(k.to_owned());
+                    continue;
+                }
+            }
+
+            if !exists_in_node_panels {
+                node_panel.deregister();
+            }
+        }
+        node_panels.retain(|k, _| retain_keys.contains(k));
 
         // Create and insert new node_panels if they do node exist in the map
         for node in deserialized.nodes {
-            self.node_panels
-                .lock()
-                .unwrap()
+            node_panels
                 .entry(node.clone())
                 .or_insert_with(|| NodePanel::new_shared(node.clone(), &self.ws_lock));
 
@@ -177,11 +198,17 @@ impl GuiElem for LifecyclePanels {
         // Update last refresh counter
         self.last_refresh = Some(self.performance.now());
     }
+
+    fn deregister(&self) {
+        self.ws_lock.remove_gui_elem(self.op.clone(), self.topic.clone(), self.id.clone())
+    }
 }
 
 /// Wrapper structure containing all [`GuiElem`]'s needed for a single node.
 struct NodePanel {
     id: u32,
+    op: String,
+    topic: String,
     ws_lock: Rc<WsLock>,
     pub node: String,
     state_display: Rc<Mutex<StateDisplay>>,
@@ -195,26 +222,27 @@ impl NodePanel {
 
         let node_panel = Self {
             id: gen_gui_elem_id(),
+            op: ("publish").to_owned(),
+            topic: node.clone() + "/transition_event",
             ws_lock: Rc::clone(&ws_lock),
             node: node.clone(),
             state_display: state_display,
             state_transitions: state_transitions,
         };
 
-        let op = ("publish").to_owned();
-        let topic = node.clone() + "/transition_event";
-
         match node.as_str() {
             "/rosapi" => (),
             "/rosapi_params" => (),
             "/rosbridge_websocket" => (),
             _ => {
-                let cmd = rctrl_rosbridge::protocol::Subscribe::new(&topic);
+                let cmd = rctrl_rosbridge::protocol::Subscribe::new(&node_panel.topic);
                 ws_lock.add_ws_write(serde_json::to_string(&cmd).unwrap());
             }
         }
 
-        let id = node_panel.id;
+        let op = node_panel.op.clone();
+        let topic = node_panel.topic.clone();
+        let id = node_panel.id.clone();
         let node_panel_lock = Rc::new(Mutex::new(node_panel));
         let node_panel_lock_c = Rc::clone(&node_panel_lock);
         ws_lock.add_gui_elem(op, topic, id, node_panel_lock_c);
@@ -253,11 +281,17 @@ impl GuiElem for NodePanel {
             }
         }
     }
+
+    fn deregister(&self) {
+        self.ws_lock.remove_gui_elem(self.op.clone(), self.topic.clone(), self.id.clone())
+    }
 }
 
 /// Display the [`State`] of a node.
-pub struct StateDisplay {
+struct StateDisplay {
     id: u32,
+    op: String,
+    topic: String,
     ws_lock: Rc<WsLock>,
     state: State,
 }
@@ -266,13 +300,15 @@ impl StateDisplay {
     pub fn new_shared(node: String, ws_lock: &Rc<WsLock>) -> Rc<Mutex<Self>> {
         let state_display = Self {
             id: gen_gui_elem_id(),
+            op: ("service_response").to_owned(),
+            topic: node + "/get_state",
             ws_lock: Rc::clone(&ws_lock),
             state: State::Unknown,
         };
 
-        let op = ("service_response").to_owned();
-        let topic = node + "/get_state";
-        let id = state_display.id;
+        let op = state_display.op.clone();
+        let topic = state_display.topic.clone();
+        let id = state_display.id.clone();
         let state_display_lock = Rc::new(Mutex::new(state_display));
         let state_display_lock_c = Rc::clone(&state_display_lock);
         ws_lock.add_gui_elem(op, topic, id, state_display_lock_c);
@@ -295,11 +331,17 @@ impl GuiElem for StateDisplay {
             }
         }
     }
+
+    fn deregister(&self) {
+        self.ws_lock.remove_gui_elem(self.op.clone(), self.topic.clone(), self.id.clone())
+    }
 }
 
 /// Display the [`Transitions`] of a node.
 pub struct StateTransitions {
     id: u32,
+    op: String,
+    topic: String,
     ws_lock: Rc<WsLock>,
     node: String,
     topic_change_state: String,
@@ -312,15 +354,17 @@ impl StateTransitions {
 
         let state_transitions = Self {
             id: gen_gui_elem_id(),
+            op: ("service_response").to_owned(),
+            topic: node.clone() + "/get_available_transitions",
             ws_lock: Rc::clone(&ws_lock),
             node: node.clone(),
             topic_change_state: topic_change_state,
             available_transitions: Vec::new(),
         };
 
-        let op = ("service_response").to_owned();
-        let topic = node + "/get_available_transitions";
-        let id = state_transitions.id;
+        let op = state_transitions.op.clone();
+        let topic = state_transitions.topic.clone();
+        let id = state_transitions.id.clone();
         let state_transitions_lock = Rc::new(Mutex::new(state_transitions));
         let state_transitions_lock_c = Rc::clone(&state_transitions_lock);
         ws_lock.add_gui_elem(op, topic, id, state_transitions_lock_c);
@@ -391,5 +435,9 @@ impl GuiElem for StateTransitions {
                 log!(format!("StateTransitions::update_data() for node \"{}\" failed: {}", self.node, e));
             }
         }
+    }
+
+    fn deregister(&self) {
+        self.ws_lock.remove_gui_elem(self.op.clone(), self.topic.clone(), self.id.clone())
     }
 }

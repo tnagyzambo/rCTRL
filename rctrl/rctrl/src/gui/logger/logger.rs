@@ -10,6 +10,8 @@ use std::sync::Mutex;
 /// Main [`Logger`] structure.
 pub struct Logger {
     id: u32,
+    op: String,
+    topic: String,
     ws_lock: Rc<WsLock>,
     logs: Vec<rctrl_rosbridge::rosout::msg::log::Log>,
 }
@@ -18,13 +20,15 @@ impl Logger {
     pub fn new_shared(ws_lock: &Rc<WsLock>) -> Rc<Mutex<Self>> {
         let logger = Self {
             id: gen_gui_elem_id(),
+            op: ("publish").to_owned(),
+            topic: ("/rosout").to_owned(),
             ws_lock: Rc::clone(&ws_lock),
             logs: Vec::new(),
         };
 
-        let op = ("publish").to_owned();
-        let topic = ("/rosout").to_owned();
-        let id = logger.id;
+        let op = logger.op.clone();
+        let topic = logger.topic.clone();
+        let id = logger.id.clone();
         let logger_lock = Rc::new(Mutex::new(logger));
         let logger_lock_c = Rc::clone(&logger_lock);
         ws_lock.add_gui_elem(op, topic, id, logger_lock_c);
@@ -103,5 +107,9 @@ impl GuiElem for Logger {
                 log!(format!("Logger::update_data() failed: {}", e));
             }
         }
+    }
+
+    fn deregister(&self) {
+        self.ws_lock.remove_gui_elem(self.op.clone(), self.topic.clone(), self.id.clone())
     }
 }

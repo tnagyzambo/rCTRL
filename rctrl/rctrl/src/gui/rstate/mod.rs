@@ -1,3 +1,3 @@
 mod rstate;
 
-pub use rstate::Rstate;
+pub use rstate::RStatePanel;

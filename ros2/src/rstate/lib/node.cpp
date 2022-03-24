@@ -1,6 +1,4 @@
 #include <node.hpp>
-#include <rclcpp/logging.hpp>
-#include <toml++/toml_node_view.h>
 
 namespace rstate {
     // Node will construct and immediately enter the unconfigured state
@@ -54,10 +52,11 @@ namespace rstate {
 
         // Bind action server call backs to State interface method
         // Provide a reference to the State currently held by the rstate Node as an execution context
-        this->actionServer = rclcpp_action::create_server<action::Transition>(
-            this,
+        this->actionServer = std::make_shared<
+            ActionServer<rstate::srv::TransitionCancelGoal, rstate::srv::TransitionSendGoal, rstate::msg::TransitionFeedback>>(
+            static_cast<rclcpp_lifecycle::LifecycleNode *>(this),
             "rstate/transition",
-            std::bind(&State::handleGoal, std::ref(this->currentState), this, std::placeholders::_1, std::placeholders::_2),
+            std::bind(&State::handleGoal, std::ref(this->currentState), this, std::placeholders::_1),
             std::bind(&State::handleCancel, std::ref(this->currentState), this, std::placeholders::_1),
             std::bind(&State::handleAccepted, std::ref(this->currentState), this, std::placeholders::_1));
 

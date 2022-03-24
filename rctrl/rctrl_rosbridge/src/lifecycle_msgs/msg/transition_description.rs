@@ -2,8 +2,8 @@
 /// REFERENCE: <https://github.com/ros2/rcl_interfaces/blob/master/lifecycle_msgs/msg/TransitionDescription.msg>
 use serde_derive::Deserialize;
 
-use crate::lifecycle_msgs::msg::state::State;
-use crate::lifecycle_msgs::msg::transition::Transition;
+use crate::lifecycle_msgs::msg::State;
+use crate::lifecycle_msgs::msg::Transition;
 
 #[derive(Deserialize, PartialEq, Debug)]
 pub struct TransitionDescription {

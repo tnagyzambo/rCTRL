@@ -1,14 +1,17 @@
 #pragma once
 
+#include "rstate/srv/detail/transition_cancel_goal__struct.hpp"
+#include <action/server.hpp>
 #include <cmd/cmd.hpp>
 #include <cmd/service.hpp>
 #include <memory>
 #include <rclcpp/client.hpp>
 #include <rclcpp/node.hpp>
 #include <rclcpp/rclcpp.hpp>
-#include <rclcpp_action/rclcpp_action.hpp>
 #include <rclcpp_lifecycle/lifecycle_node.hpp>
-#include <rstate/action/transition.hpp>
+#include <rstate/msg/transition_feedback.hpp>
+#include <rstate/srv/transition_cancel_goal.hpp>
+#include <rstate/srv/transition_send_goal.hpp>
 #include <rutil/fmt.hpp>
 #include <state/state.hpp>
 #include <string>
@@ -51,7 +54,9 @@ namespace rstate {
         LifecycleCallbackReturn on_shutdown(const rclcpp_lifecycle::State &state);
 
         State *currentState;
-        rclcpp_action::Server<rstate::action::Transition>::SharedPtr actionServer;
+
+        std::shared_ptr<ActionServer<rstate::srv::TransitionCancelGoal, rstate::srv::TransitionSendGoal, rstate::msg::TransitionFeedback>>
+            actionServer;
 
         // Map to hold exectution buffers for transitions
         std::map<const char *, std::vector<std::shared_ptr<CmdIface>> *> transitionMap;
@@ -117,4 +122,5 @@ namespace rstate {
 
         return cmdPtr;
     }
+
 } // namespace rstate

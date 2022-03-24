@@ -1,6 +1,2 @@
-uint8 transition
----
-# result
----
 uint8 cmd_total
 uint8 cmd_complete
