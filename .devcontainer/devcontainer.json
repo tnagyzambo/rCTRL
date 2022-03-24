@@ -2,7 +2,7 @@
     "dockerFile": "Dockerfile",
     "build": {
         "args": {
-            "WORKSPACE": "${containerWorkspaceFolder}"
+            "WORKSPACE": "${containerWorkspaceFolder}",
         }
     },
     "remoteUser": "ros",
