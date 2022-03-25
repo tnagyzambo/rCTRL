@@ -1,0 +1,3 @@
+NetworkTransition transition
+NetworkState start_state
+NetworkState goal_state

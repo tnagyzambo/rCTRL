@@ -8,20 +8,29 @@ namespace rstate {
 
     void Activating::enter(Node *node) { RCLCPP_INFO(node->get_logger(), "Network is activating"); }
 
-    GoalResponse Activating::handleGoal(Node *node, std::shared_ptr<const rstate::srv::TransitionSendGoal::Request> goal) {
-        RCLCPP_INFO(node->get_logger(), "Received action request while activating, goal: %d", goal->transition);
+    rstate::msg::NetworkState Activating::getNetworkState() {
+        rstate::msg::NetworkState network_state;
+        network_state.id = (uint)NetworkState::Activating;
+        network_state.label = "activating";
+
+        return network_state;
+    }
+
+    GoalResponse Activating::handleGoal(Node *node,
+                                        std::shared_ptr<const rstate::srv::NetworkTransitionSendGoal::Request> goal) {
+        RCLCPP_INFO(node->get_logger(), "Received action request while activating, goal: %d", goal->transition.id);
         return GoalResponse::REJECT;
     }
 
-    CancelResponse Activating::handleCancel(Node *node,
-                                            const std::shared_ptr<GoalHandle<rstate::msg::TransitionFeedback>> goalHandle) {
+    CancelResponse Activating::handleCancel(
+        Node *node, const std::shared_ptr<GoalHandle<rstate::msg::NetworkTransitionFeedback>> goalHandle) {
         RCLCPP_INFO(node->get_logger(), "Received request to cancel transition");
         (void)goalHandle;
         return CancelResponse::ACCEPT;
     }
 
     void Activating::handleAccepted(Node *node,
-                                    const std::shared_ptr<GoalHandle<rstate::msg::TransitionFeedback>> goalHandle) {
+                                    const std::shared_ptr<GoalHandle<rstate::msg::NetworkTransitionFeedback>> goalHandle) {
         (void)node;
         (void)goalHandle;
     }

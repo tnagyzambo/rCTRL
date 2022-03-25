@@ -20,25 +20,25 @@ pub enum NetworkState {
     Unconfigured = 1,
     Inactive = 2,
     Active = 3,
-    Armed = 5,
-    Finalized = 6,
+    Armed = 4,
+    Finalized = 5,
 
     // Transition states
     Configuring = 10,
     CleaningUp = 11,
-    Activating = 13,
-    Deactivating = 14,
-    Arming = 15,
-    Disarming = 16,
-    ShuttingDown = 17,
-    ErrorProcessing = 18,
+    Activating = 12,
+    Deactivating = 13,
+    Arming = 14,
+    Disarming = 15,
+    ShuttingDown = 16,
+    ErrorProcessing = 17,
 }
 
 impl TryFrom<NetworkStateMsg> for NetworkState {
     type Error = InvalidNetworkStateError;
 
     fn try_from(state_msg: NetworkStateMsg) -> Result<Self, Self::Error> {
-        if state_msg.id <= 6 || (10 <= state_msg.id && state_msg.id <= 18) {
+        if state_msg.id <= 5 || (10 <= state_msg.id && state_msg.id <= 17) {
             Ok(unsafe { std::mem::transmute(state_msg.id) })
         } else {
             Err(InvalidNetworkStateError)

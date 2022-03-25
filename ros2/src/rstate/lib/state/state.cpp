@@ -1,11 +1,12 @@
 #include <state.hpp>
 
 namespace rstate {
-    TransitionResult State::executeCommands(Node *node,
-                                            std::vector<std::shared_ptr<CmdIface>> cmds,
-                                            const std::shared_ptr<GoalHandle<rstate::msg::TransitionFeedback>> goalHandle) {
-        auto feedback = rstate::msg::TransitionFeedback();
-        // auto result = std::make_shared<rstate::action::Transition::Result>();
+    NetworkTransitionResult State::executeCommands(
+        Node *node,
+        std::vector<std::shared_ptr<CmdIface>> cmds,
+        const std::shared_ptr<GoalHandle<rstate::msg::NetworkTransitionFeedback>> goalHandle) {
+        auto feedback = rstate::msg::NetworkTransitionFeedback();
+        // auto result = std::make_shared<rstate::action::NetworkTransition::Result>();
         feedback.cmd_total = cmds.size();
         feedback.cmd_complete = 0;
         goalHandle->publish_feedback(feedback);
@@ -19,11 +20,11 @@ namespace rstate {
                     node->setState(ErrorProcessing::getInstance());
                     RCLCPP_ERROR(node->get_logger(), "Failed to cancel transition\nError: %s", e.what());
                     // goalHandle->abort(result);
-                    return TransitionResult::Failure;
+                    return NetworkTransitionResult::Failure;
                 }
 
                 // goalHandle->canceled(result);
-                return TransitionResult::Cancelled;
+                return NetworkTransitionResult::Cancelled;
             }
 
             try {
@@ -39,11 +40,11 @@ namespace rstate {
                 } catch (except::cmd_service_eror e) {
                     RCLCPP_ERROR(node->get_logger(), "Failed to revert partial transition\nError: %s", e.what());
                     // goalHandle->abort(result);
-                    return TransitionResult::Failure;
+                    return NetworkTransitionResult::Failure;
                 }
 
                 // goalHandle->abort(result);
-                return TransitionResult::Cancelled;
+                return NetworkTransitionResult::Cancelled;
             }
 
             cmdsCompleted.push_back(cmd);
@@ -52,13 +53,13 @@ namespace rstate {
         }
 
         // goalHandle->succeed(result);
-        return TransitionResult::Success;
+        return NetworkTransitionResult::Success;
     }
 
     void State::executeCommandsCancel(std::vector<std::shared_ptr<CmdIface>> cmds,
-                                      const std::shared_ptr<GoalHandle<rstate::msg::TransitionFeedback>> goalHandle) {
+                                      const std::shared_ptr<GoalHandle<rstate::msg::NetworkTransitionFeedback>> goalHandle) {
         (void)goalHandle;
-        auto feedback = rstate::msg::TransitionFeedback();
+        auto feedback = rstate::msg::NetworkTransitionFeedback();
         while (!cmds.empty()) {
             auto cmd = cmds.back();
 
@@ -84,16 +85,16 @@ namespace rstate {
         }
     }
 
-    ShutdownResult State::executeCommandsShutdown(
+    NetworkShutdownResult State::executeCommandsShutdown(
         Node *node,
         std::vector<std::shared_ptr<CmdIface>> cmds,
-        const std::shared_ptr<GoalHandle<rstate::msg::TransitionFeedback>> goalHandle) {
-        auto feedback = rstate::msg::TransitionFeedback();
-        // auto result = std::make_shared<rstate::action::Transition::Result>();
+        const std::shared_ptr<GoalHandle<rstate::msg::NetworkTransitionFeedback>> goalHandle) {
+        auto feedback = rstate::msg::NetworkTransitionFeedback();
+        // auto result = std::make_shared<rstate::action::NetworkTransition::Result>();
         feedback.cmd_total = cmds.size();
         feedback.cmd_complete = 0;
         goalHandle->publish_feedback(feedback);
-        ShutdownResult transitionResult = ShutdownResult::Success;
+        NetworkShutdownResult transitionResult = NetworkShutdownResult::Success;
 
         std::vector<std::shared_ptr<CmdIface>> cmdsCompleted;
         for (auto &cmd : cmds) {
@@ -106,7 +107,7 @@ namespace rstate {
                              "Failed to execute command!\nError: %s\nTOML: %s",
                              e.what(),
                              cmdToml.str().c_str());
-                transitionResult = ShutdownResult::Failure;
+                transitionResult = NetworkShutdownResult::Failure;
             }
 
             cmdsCompleted.push_back(cmd);
@@ -114,7 +115,7 @@ namespace rstate {
             goalHandle->publish_feedback(feedback);
         }
 
-        if (transitionResult == ShutdownResult::Success) {
+        if (transitionResult == NetworkShutdownResult::Success) {
             // goalHandle->succeed(result);
         } else {
             // goalHandle->abort(result);

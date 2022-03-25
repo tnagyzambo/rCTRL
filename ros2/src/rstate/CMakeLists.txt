@@ -17,9 +17,16 @@ find_package(rdata REQUIRED)
 include_directories(include)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
-                           "srv/TransitionCancelGoal.srv"
-                           "srv/TransitionSendGoal.srv"
-                           "msg/TransitionFeedback.msg")
+                           "msg/NetworkState.msg"
+                           "msg/NetworkTransition.msg"
+                           "msg/NetworkTransitionDescription.msg"
+                           "msg/NetworkTransitionEvent.msg"
+                           "msg/NetworkTransitionFeedback.msg"
+                           "srv/GetAvailableNetworkStates.srv"
+                           "srv/GetAvailableNetworkTransitions.srv"
+                           "srv/GetNetworkState.srv"
+                           "srv/NetworkTransitionCancelGoal.srv"
+                           "srv/NetworkTransitionSendGoal.srv")
 
 # rstate executable
 add_executable(rstate_node src/main.cpp
@@ -38,6 +45,7 @@ add_executable(rstate_node src/main.cpp
                            lib/state/shutting_down.cpp
                            lib/state/state.cpp
                            lib/state/unconfigured.cpp
+                           lib/state/unknown.cpp
                            lib/util/util.cpp
                            lib/node.cpp)
 

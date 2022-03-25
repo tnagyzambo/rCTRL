@@ -64,6 +64,7 @@
     <param name="params_glob" value="$(var params_glob)"/>
   </node>
 
+  <node pkg="rstate" exec="rstate_node"/>
   <node pkg="rdata" exec="rdata_node"/>
   <node pkg="rdata" exec="rdata_vsensor"/>
 </launch>

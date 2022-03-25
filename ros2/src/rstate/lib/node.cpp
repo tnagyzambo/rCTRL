@@ -5,6 +5,12 @@ namespace rstate {
     Node::Node() : rclcpp_lifecycle::LifecycleNode("rstate") {
         RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::transition::constructing().c_str());
 
+        this->setState(Unknown::getInstance());
+
+        this->serviceGetNetworkState = this->create_service<rstate::srv::GetNetworkState>(
+            "rstate/get_network_state",
+            std::bind(&Node::serviceGetNetworkStateCallback, this, std::placeholders::_1, std::placeholders::_2));
+
         // Map toml sections to vectors that will store commands to execute in order
         this->transitionMap = {
             {"configure", &this->cmdsOnConfigure},
@@ -52,8 +58,9 @@ namespace rstate {
 
         // Bind action server call backs to State interface method
         // Provide a reference to the State currently held by the rstate Node as an execution context
-        this->actionServer = std::make_shared<
-            ActionServer<rstate::srv::TransitionCancelGoal, rstate::srv::TransitionSendGoal, rstate::msg::TransitionFeedback>>(
+        this->actionServer = std::make_shared<ActionServer<rstate::srv::NetworkTransitionCancelGoal,
+                                                           rstate::srv::NetworkTransitionSendGoal,
+                                                           rstate::msg::NetworkTransitionFeedback>>(
             static_cast<rclcpp_lifecycle::LifecycleNode *>(this),
             "rstate/transition",
             std::bind(&State::handleGoal, std::ref(this->currentState), this, std::placeholders::_1),
@@ -97,6 +104,10 @@ namespace rstate {
 
     void Node::deleteAllPointers() {
         this->actionServer.reset();
+
+        this->serviceGetNetworkState.reset();
+        this->serviceGetAvailableNetworkTransistions.reset();
+        this->serviceGetAvailableNetworkStates.reset();
 
         this->cmdsOnConfigure.clear();
         this->cmdsOnCleanUp.clear();
@@ -215,5 +226,11 @@ namespace rstate {
 
             throw rstate::except::config_parse_error(error.str());
         }
+    }
+
+    void Node::serviceGetNetworkStateCallback(const std::shared_ptr<rstate::srv::GetNetworkState::Request> request,
+                                              const std::shared_ptr<rstate::srv::GetNetworkState::Response> response) {
+        (void)request;
+        response->current_state = this->currentState->getNetworkState();
     }
 } // namespace rstate
