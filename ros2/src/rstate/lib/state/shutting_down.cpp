@@ -10,10 +10,15 @@ namespace rstate {
 
     rstate::msg::NetworkState ShuttingDown::getNetworkState() {
         rstate::msg::NetworkState network_state;
-        network_state.id = (uint)NetworkState::ShuttingDown;
+        network_state.id = (uint)NetworkStateEnum::ShuttingDown;
         network_state.label = "shutting_down";
 
         return network_state;
+    }
+
+    rstate::srv::GetAvailableNetworkTransitions::Response ShuttingDown::getAvailableNetworkTransitions() {
+        rstate::srv::GetAvailableNetworkTransitions::Response response;
+        return response;
     }
 
     GoalResponse ShuttingDown::handleGoal(Node *node,

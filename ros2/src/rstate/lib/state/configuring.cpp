@@ -10,10 +10,15 @@ namespace rstate {
 
     rstate::msg::NetworkState Configuring::getNetworkState() {
         rstate::msg::NetworkState network_state;
-        network_state.id = (uint)NetworkState::Configuring;
+        network_state.id = (uint)NetworkStateEnum::Configuring;
         network_state.label = "configuring";
 
         return network_state;
+    }
+
+    rstate::srv::GetAvailableNetworkTransitions::Response Configuring::getAvailableNetworkTransitions() {
+        rstate::srv::GetAvailableNetworkTransitions::Response response;
+        return response;
     }
 
     GoalResponse Configuring::handleGoal(Node *node,

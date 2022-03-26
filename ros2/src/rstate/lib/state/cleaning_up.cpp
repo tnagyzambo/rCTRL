@@ -10,10 +10,15 @@ namespace rstate {
 
     rstate::msg::NetworkState CleaningUp::getNetworkState() {
         rstate::msg::NetworkState network_state;
-        network_state.id = (uint)NetworkState::CleaningUp;
+        network_state.id = (uint)NetworkStateEnum::CleaningUp;
         network_state.label = "cleaning_up";
 
         return network_state;
+    }
+
+    rstate::srv::GetAvailableNetworkTransitions::Response CleaningUp::getAvailableNetworkTransitions() {
+        rstate::srv::GetAvailableNetworkTransitions::Response response;
+        return response;
     }
 
     GoalResponse CleaningUp::handleGoal(Node *node,

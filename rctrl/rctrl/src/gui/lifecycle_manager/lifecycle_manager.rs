@@ -77,7 +77,7 @@ impl epi::App for LifecycleManager {
             // borrowing an already mutable reference to self
             // REFERENCE: <https://doc.rust-lang.org/nomicon/borrow-splitting.html>
             {
-                let lifecycle_panels = self.lifecycle_panels.lock().unwrap();
+                let mut lifecycle_panels = self.lifecycle_panels.lock().unwrap();
                 egui::ScrollArea::vertical()
                     .auto_shrink([false; 2])
                     .show(ui, |ui| lifecycle_panels.draw(ui));
@@ -132,7 +132,7 @@ impl LifecyclePanels {
 }
 
 impl GuiElem for LifecyclePanels {
-    fn draw(&self, ui: &mut egui::Ui) {
+    fn draw(&mut self, ui: &mut egui::Ui) {
         ui.horizontal_wrapped(|ui| {
             for (key, value) in self.node_panels.lock().unwrap().iter() {
                 ui.label(format!(""));
@@ -252,7 +252,7 @@ impl NodePanel {
 }
 
 impl GuiElem for NodePanel {
-    fn draw(&self, ui: &mut egui::Ui) {
+    fn draw(&mut self, ui: &mut egui::Ui) {
         ui.group(|ui| {
             ui.set_width(150.0);
             ui.vertical_centered_justified(|ui| {
@@ -318,7 +318,7 @@ impl StateDisplay {
 }
 
 impl GuiElem for StateDisplay {
-    fn draw(&self, ui: &mut egui::Ui) {
+    fn draw(&mut self, ui: &mut egui::Ui) {
         ui.label(format!("{:?}", self.state));
     }
 
@@ -416,7 +416,7 @@ impl StateTransitions {
 }
 
 impl GuiElem for StateTransitions {
-    fn draw(&self, ui: &mut egui::Ui) {
+    fn draw(&mut self, ui: &mut egui::Ui) {
         self.draw_state_change_button(ui, self.is_enabled(&Transition::Create), Transition::Create, "Create");
         self.draw_state_change_button(ui, self.is_enabled(&Transition::Configure), Transition::Configure, "Configure");
         self.draw_state_change_button(ui, self.is_enabled(&Transition::CleanUp), Transition::CleanUp, "Clean Up");

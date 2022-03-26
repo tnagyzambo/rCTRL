@@ -1,3 +1,4 @@
+#include "rstate/srv/detail/get_available_network_states__struct.hpp"
 #include <state/state.hpp>
 
 namespace rstate {
@@ -10,10 +11,15 @@ namespace rstate {
 
     rstate::msg::NetworkState Activating::getNetworkState() {
         rstate::msg::NetworkState network_state;
-        network_state.id = (uint)NetworkState::Activating;
+        network_state.id = (uint)NetworkStateEnum::Activating;
         network_state.label = "activating";
 
         return network_state;
+    }
+
+    rstate::srv::GetAvailableNetworkTransitions::Response Activating::getAvailableNetworkTransitions() {
+        rstate::srv::GetAvailableNetworkTransitions::Response response;
+        return response;
     }
 
     GoalResponse Activating::handleGoal(Node *node,

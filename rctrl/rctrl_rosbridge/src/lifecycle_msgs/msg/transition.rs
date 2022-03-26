@@ -67,6 +67,23 @@ impl Transition {
     }
 }
 
+impl std::fmt::Display for Transition {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let label = match self {
+            Transition::Create => "Create",
+            Transition::Configure => "Configure",
+            Transition::CleanUp => "Clean Up",
+            Transition::Activate => "Activate",
+            Transition::Deactivate => "Deactivate",
+            Transition::UnconfiguredShutdown => "Unconfigured Shutdown",
+            Transition::InactiveShutdown => "Inactive Shutdown",
+            Transition::ActiveShutdown => "Active Shutdown",
+            Transition::Destroy => "Destroy",
+        };
+        write!(f, "{}", label)
+    }
+}
+
 impl Into<TransitionMsg> for Transition {
     fn into(self) -> TransitionMsg {
         let label = self.label().to_string();

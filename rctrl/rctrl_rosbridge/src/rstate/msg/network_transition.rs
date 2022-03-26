@@ -21,7 +21,7 @@ pub enum NetworkTransition {
 }
 
 impl NetworkTransition {
-    fn label(&self) -> &'static str {
+    pub fn label(&self) -> &'static str {
         match self {
             NetworkTransition::Configure => "configure",
             NetworkTransition::CleanUp => "cleanup",
@@ -31,6 +31,21 @@ impl NetworkTransition {
             NetworkTransition::Disarm => "disarm",
             NetworkTransition::Shutdown => "shutdown",
         }
+    }
+}
+
+impl std::fmt::Display for NetworkTransition {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let label = match self {
+            NetworkTransition::Configure => "Configure",
+            NetworkTransition::CleanUp => "Clean Up",
+            NetworkTransition::Activate => "Activate",
+            NetworkTransition::Deactivate => "Deactivate",
+            NetworkTransition::Arm => "Arm",
+            NetworkTransition::Disarm => "Disarm",
+            NetworkTransition::Shutdown => "Shutdown",
+        };
+        write!(f, "{}", label)
     }
 }
 

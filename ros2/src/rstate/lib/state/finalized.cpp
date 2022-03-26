@@ -11,10 +11,15 @@ namespace rstate {
 
     rstate::msg::NetworkState Finalized::getNetworkState() {
         rstate::msg::NetworkState network_state;
-        network_state.id = (uint)NetworkState::Finalized;
+        network_state.id = (uint)NetworkStateEnum::Finalized;
         network_state.label = "finalized";
 
         return network_state;
+    }
+
+    rstate::srv::GetAvailableNetworkTransitions::Response Finalized::getAvailableNetworkTransitions() {
+        rstate::srv::GetAvailableNetworkTransitions::Response response;
+        return response;
     }
 
     GoalResponse Finalized::handleGoal(Node *node,

@@ -29,12 +29,12 @@ impl Apps {
 
     fn iter_mut(&mut self) -> impl Iterator<Item = (&str, &str, &mut dyn App)> {
         vec![
+            ("PI&D", "pind", &mut self.pind as &mut dyn App),
             (
                 "Lifecycle Manager",
                 "lifecycle_manager",
                 &mut self.lifecycle_manager as &mut dyn App,
             ),
-            ("PI&D", "pind", &mut self.pind as &mut dyn App),
         ]
         .into_iter()
     }
@@ -52,7 +52,7 @@ impl Gui {
     pub fn new(ws_lock: &Rc<WsLock>) -> Self {
         Self {
             ws_lock: Rc::clone(&ws_lock),
-            selected_anchor: "none".to_string(),
+            selected_anchor: "pind".to_string(),
             apps: Apps::new(&ws_lock),
             logger: Logger::new_shared(&ws_lock),
         }
@@ -72,6 +72,8 @@ impl epi::App for Gui {
         if let Some(storage) = _storage {
             *self = epi::get_value(storage, epi::APP_KEY).unwrap_or_default()
         }
+
+        self.apps.pind.refresh();
     }
 
     /// Called by the frame work to save state before shutdown.
@@ -91,8 +93,19 @@ impl epi::App for Gui {
             logger,
         } = self;
 
-        egui::SidePanel::left("Apps").default_width(150.0).resizable(false).show(ctx, |ui| {
-            ui.with_layout(egui::Layout::top_down_justified(egui::Align::LEFT), |ui| {
+        {
+            // Need to explicitly split up 2the borrowing here or else the borrow checker will complain about
+            // borrowing an already mutable reference to self
+            // REFERENCE: <https://doc.rust-lang.org/nomicon/borrow-splitting.html>
+            let mut logger = self.logger.lock().unwrap();
+            egui::TopBottomPanel::bottom("Logger")
+                .resizable(true)
+                .default_height(200.0)
+                .show(&ctx, |ui| logger.draw(ui));
+        }
+
+        egui::TopBottomPanel::top("Apps").resizable(false).show(ctx, |ui| {
+            ui.horizontal(|ui| {
                 for (name, anchor, app) in self.apps.iter_mut() {
                     if ui.selectable_label(self.selected_anchor == anchor, name).clicked() {
                         self.selected_anchor = anchor.to_owned();
@@ -109,17 +122,6 @@ impl epi::App for Gui {
             if anchor == self.selected_anchor || ctx.memory().everything_is_visible() {
                 app.update(ctx, frame);
             }
-        }
-
-        {
-            // Need to explicitly split up 2the borrowing here or else the borrow checker will complain about
-            // borrowing an already mutable reference to self
-            // REFERENCE: <https://doc.rust-lang.org/nomicon/borrow-splitting.html>
-            let logger = self.logger.lock().unwrap();
-            egui::TopBottomPanel::bottom("Logger")
-                .resizable(true)
-                .default_height(200.0)
-                .show(&ctx, |ui| logger.draw(ui));
         }
     }
 }

@@ -10,23 +10,41 @@ namespace rstate {
 
     rstate::msg::NetworkState Inactive::getNetworkState() {
         rstate::msg::NetworkState network_state;
-        network_state.id = (uint)NetworkState::Inactive;
+        network_state.id = (uint)NetworkStateEnum::Inactive;
         network_state.label = "inactive";
 
         return network_state;
     }
 
+    rstate::srv::GetAvailableNetworkTransitions::Response Inactive::getAvailableNetworkTransitions() {
+        rstate::srv::GetAvailableNetworkTransitions::Response response;
+        response.available_transitions = {
+            generateNetworkTransitionDescription(
+                NetworkTransitionEnum::CleanUp, NetworkStateEnum::Inactive, NetworkStateEnum::Unconfigured),
+            generateNetworkTransitionDescription(
+                NetworkTransitionEnum::Activate, NetworkStateEnum::Inactive, NetworkStateEnum::Active),
+            generateNetworkTransitionDescription(
+                NetworkTransitionEnum::Shutdown, NetworkStateEnum::Inactive, NetworkStateEnum::Finalized)};
+        return response;
+    }
+
     GoalResponse Inactive::handleGoal(Node *node,
                                       std::shared_ptr<const rstate::srv::NetworkTransitionSendGoal::Request> goal) {
         switch (goal->transition.id) {
-        case (int)NetworkTransition::CleanUp:
+        case (int)NetworkTransitionEnum::CleanUp:
             this->onTransition = &Inactive::onCleanUp;
+            node->publishNetworkTransitionEvent(
+                NetworkTransitionEnum::CleanUp, NetworkStateEnum::Inactive, NetworkStateEnum::Unconfigured);
             return GoalResponse::ACCEPT_AND_EXECUTE;
-        case (int)NetworkTransition::Activate:
+        case (int)NetworkTransitionEnum::Activate:
             this->onTransition = &Inactive::onActivate;
+            node->publishNetworkTransitionEvent(
+                NetworkTransitionEnum::Activate, NetworkStateEnum::Inactive, NetworkStateEnum::Active);
             return GoalResponse::ACCEPT_AND_EXECUTE;
-        case (int)NetworkTransition::Shutdown:
+        case (int)NetworkTransitionEnum::Shutdown:
             this->onTransition = &Inactive::onShutdown;
+            node->publishNetworkTransitionEvent(
+                NetworkTransitionEnum::Shutdown, NetworkStateEnum::Inactive, NetworkStateEnum::Finalized);
             return GoalResponse::ACCEPT_AND_EXECUTE;
         default:
             RCLCPP_INFO(node->get_logger(), "Received transition request with invalid goal: %d", goal->transition.id);
@@ -52,13 +70,13 @@ namespace rstate {
         node->setState(CleaningUp::getInstance());
 
         switch (executeCommands(node, node->cmdsOnCleanUp, goalHandle)) {
-        case NetworkTransitionResult::Success:
+        case NetworkTransitionResultEnum::Success:
             node->setState(Unconfigured::getInstance());
             break;
-        case NetworkTransitionResult::Cancelled:
+        case NetworkTransitionResultEnum::Cancelled:
             node->setState(Inactive::getInstance());
             break;
-        case NetworkTransitionResult::Failure:
+        case NetworkTransitionResultEnum::Failure:
             // SHUTDOWN
             break;
         }
@@ -69,13 +87,13 @@ namespace rstate {
         node->setState(Activating::getInstance());
 
         switch (executeCommands(node, node->cmdsOnActivate, goalHandle)) {
-        case NetworkTransitionResult::Success:
+        case NetworkTransitionResultEnum::Success:
             node->setState(Active::getInstance());
             break;
-        case NetworkTransitionResult::Cancelled:
+        case NetworkTransitionResultEnum::Cancelled:
             node->setState(Inactive::getInstance());
             break;
-        case NetworkTransitionResult::Failure:
+        case NetworkTransitionResultEnum::Failure:
             // SHUTDOWN
             break;
         }
@@ -86,9 +104,9 @@ namespace rstate {
         node->setState(ShuttingDown::getInstance());
 
         switch (executeCommandsShutdown(node, node->cmdOnShutdownInactive, goalHandle)) {
-        case NetworkShutdownResult::Success:
+        case NetworkShutdownResultEnum::Success:
             break;
-        case NetworkShutdownResult::Failure:
+        case NetworkShutdownResultEnum::Failure:
             RCLCPP_ERROR(node->get_logger(), "The network was not shutdown successfully");
             break;
         }

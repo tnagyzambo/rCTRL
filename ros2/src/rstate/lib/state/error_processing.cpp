@@ -10,10 +10,15 @@ namespace rstate {
 
     rstate::msg::NetworkState ErrorProcessing::getNetworkState() {
         rstate::msg::NetworkState network_state;
-        network_state.id = (uint)NetworkState::ErrorProcessing;
+        network_state.id = (uint)NetworkStateEnum::ErrorProcessing;
         network_state.label = "error_processing";
 
         return network_state;
+    }
+
+    rstate::srv::GetAvailableNetworkTransitions::Response ErrorProcessing::getAvailableNetworkTransitions() {
+        rstate::srv::GetAvailableNetworkTransitions::Response response;
+        return response;
     }
 
     GoalResponse ErrorProcessing::handleGoal(Node *node,

@@ -1,20 +1,22 @@
 #pragma once
 
+#include "rstate/msg/detail/network_transition_description__struct.hpp"
 #include <action/server.hpp>
 #include <cmd/cmd.hpp>
 #include <node.hpp>
 #include <rstate/msg/network_state.hpp>
+#include <rstate/msg/network_transition_description.hpp>
 #include <rstate/msg/network_transition_feedback.hpp>
+#include <rstate/srv/get_available_network_transitions.hpp>
 #include <rstate/srv/network_transition_send_goal.hpp>
 #include <sstream>
+#include <string>
 
 namespace rstate {
     // Forward declaration to resolve circular dependency/include
-    // enum class GoalResponse;
-    // class GoalHandle<rstate::msg::NetworkTransitionFeedback>;
     class Node;
 
-    enum class NetworkState {
+    enum class NetworkStateEnum {
         // Primary stated
         Unknown = 0,
         Unconfigured = 1,
@@ -34,11 +36,17 @@ namespace rstate {
         ErrorProcessing = 17
     };
 
-    enum class NetworkTransition { Configure, CleanUp, Activate, Deactivate, Arm, Disarm, Shutdown };
+    enum class NetworkTransitionEnum { Configure, CleanUp, Activate, Deactivate, Arm, Disarm, Shutdown };
 
-    enum class NetworkTransitionResult { Success, Cancelled, Failure };
+    enum class NetworkTransitionResultEnum { Success, Cancelled, Failure };
 
-    enum class NetworkShutdownResult { Success, Failure };
+    enum class NetworkShutdownResultEnum { Success, Failure };
+
+    std::string generateNetworkStateLabel(NetworkStateEnum);
+    std::string generateNetworkTransitionLabel(NetworkTransitionEnum);
+    rstate::msg::NetworkTransitionDescription generateNetworkTransitionDescription(NetworkTransitionEnum,
+                                                                                   NetworkStateEnum,
+                                                                                   NetworkStateEnum);
 
     class State {
     public:
@@ -47,19 +55,20 @@ namespace rstate {
         virtual void enter(Node *) = 0;
 
         virtual rstate::msg::NetworkState getNetworkState() = 0;
+        virtual rstate::srv::GetAvailableNetworkTransitions::Response getAvailableNetworkTransitions() = 0;
         virtual GoalResponse handleGoal(Node *,
                                         std::shared_ptr<const rstate::srv::NetworkTransitionSendGoal::Request>) = 0;
         virtual CancelResponse handleCancel(Node *,
                                             const std::shared_ptr<GoalHandle<rstate::msg::NetworkTransitionFeedback>>) = 0;
         virtual void handleAccepted(Node *, const std::shared_ptr<GoalHandle<rstate::msg::NetworkTransitionFeedback>>) = 0;
 
-        static NetworkTransitionResult executeCommands(
+        static NetworkTransitionResultEnum executeCommands(
             Node *,
             std::vector<std::shared_ptr<CmdIface>>,
             const std::shared_ptr<GoalHandle<rstate::msg::NetworkTransitionFeedback>>);
         static void executeCommandsCancel(std::vector<std::shared_ptr<CmdIface>>,
                                           const std::shared_ptr<GoalHandle<rstate::msg::NetworkTransitionFeedback>>);
-        static NetworkShutdownResult executeCommandsShutdown(
+        static NetworkShutdownResultEnum executeCommandsShutdown(
             Node *,
             std::vector<std::shared_ptr<CmdIface>>,
             const std::shared_ptr<GoalHandle<rstate::msg::NetworkTransitionFeedback>>);
@@ -72,6 +81,7 @@ namespace rstate {
         void enter(Node *);
 
         rstate::msg::NetworkState getNetworkState();
+        rstate::srv::GetAvailableNetworkTransitions::Response getAvailableNetworkTransitions();
         GoalResponse handleGoal(Node *, std::shared_ptr<const rstate::srv::NetworkTransitionSendGoal::Request>);
         CancelResponse handleCancel(Node *, const std::shared_ptr<GoalHandle<rstate::msg::NetworkTransitionFeedback>>);
         void handleAccepted(Node *, const std::shared_ptr<GoalHandle<rstate::msg::NetworkTransitionFeedback>>);
@@ -94,6 +104,7 @@ namespace rstate {
         void onShutdown(Node *, const std::shared_ptr<GoalHandle<rstate::msg::NetworkTransitionFeedback>>);
 
         rstate::msg::NetworkState getNetworkState();
+        rstate::srv::GetAvailableNetworkTransitions::Response getAvailableNetworkTransitions();
         GoalResponse handleGoal(Node *, std::shared_ptr<const rstate::srv::NetworkTransitionSendGoal::Request>);
         CancelResponse handleCancel(Node *, const std::shared_ptr<GoalHandle<rstate::msg::NetworkTransitionFeedback>>);
         void handleAccepted(Node *, const std::shared_ptr<GoalHandle<rstate::msg::NetworkTransitionFeedback>>);
@@ -115,6 +126,7 @@ namespace rstate {
         void onShutdown(Node *, const std::shared_ptr<GoalHandle<rstate::msg::NetworkTransitionFeedback>>);
 
         rstate::msg::NetworkState getNetworkState();
+        rstate::srv::GetAvailableNetworkTransitions::Response getAvailableNetworkTransitions();
         GoalResponse handleGoal(Node *, std::shared_ptr<const rstate::srv::NetworkTransitionSendGoal::Request>);
         CancelResponse handleCancel(Node *, const std::shared_ptr<GoalHandle<rstate::msg::NetworkTransitionFeedback>>);
         void handleAccepted(Node *, const std::shared_ptr<GoalHandle<rstate::msg::NetworkTransitionFeedback>>);
@@ -132,6 +144,7 @@ namespace rstate {
         void enter(Node *);
 
         rstate::msg::NetworkState getNetworkState();
+        rstate::srv::GetAvailableNetworkTransitions::Response getAvailableNetworkTransitions();
         GoalResponse handleGoal(Node *, std::shared_ptr<const rstate::srv::NetworkTransitionSendGoal::Request>);
         CancelResponse handleCancel(Node *, const std::shared_ptr<GoalHandle<rstate::msg::NetworkTransitionFeedback>>);
         void handleAccepted(Node *, const std::shared_ptr<GoalHandle<rstate::msg::NetworkTransitionFeedback>>);
@@ -149,6 +162,7 @@ namespace rstate {
         void enter(Node *);
 
         rstate::msg::NetworkState getNetworkState();
+        rstate::srv::GetAvailableNetworkTransitions::Response getAvailableNetworkTransitions();
         GoalResponse handleGoal(Node *, std::shared_ptr<const rstate::srv::NetworkTransitionSendGoal::Request>);
         CancelResponse handleCancel(Node *, const std::shared_ptr<GoalHandle<rstate::msg::NetworkTransitionFeedback>>);
         void handleAccepted(Node *, const std::shared_ptr<GoalHandle<rstate::msg::NetworkTransitionFeedback>>);
@@ -166,6 +180,7 @@ namespace rstate {
         void enter(Node *);
 
         rstate::msg::NetworkState getNetworkState();
+        rstate::srv::GetAvailableNetworkTransitions::Response getAvailableNetworkTransitions();
         GoalResponse handleGoal(Node *, std::shared_ptr<const rstate::srv::NetworkTransitionSendGoal::Request>);
         CancelResponse handleCancel(Node *, const std::shared_ptr<GoalHandle<rstate::msg::NetworkTransitionFeedback>>);
         void handleAccepted(Node *, const std::shared_ptr<GoalHandle<rstate::msg::NetworkTransitionFeedback>>);
@@ -183,6 +198,7 @@ namespace rstate {
         void enter(Node *);
 
         rstate::msg::NetworkState getNetworkState();
+        rstate::srv::GetAvailableNetworkTransitions::Response getAvailableNetworkTransitions();
         GoalResponse handleGoal(Node *, std::shared_ptr<const rstate::srv::NetworkTransitionSendGoal::Request>);
         CancelResponse handleCancel(Node *, const std::shared_ptr<GoalHandle<rstate::msg::NetworkTransitionFeedback>>);
         void handleAccepted(Node *, const std::shared_ptr<GoalHandle<rstate::msg::NetworkTransitionFeedback>>);
@@ -200,6 +216,7 @@ namespace rstate {
         void enter(Node *);
 
         rstate::msg::NetworkState getNetworkState();
+        rstate::srv::GetAvailableNetworkTransitions::Response getAvailableNetworkTransitions();
         GoalResponse handleGoal(Node *, std::shared_ptr<const rstate::srv::NetworkTransitionSendGoal::Request>);
         CancelResponse handleCancel(Node *, const std::shared_ptr<GoalHandle<rstate::msg::NetworkTransitionFeedback>>);
         void handleAccepted(Node *, const std::shared_ptr<GoalHandle<rstate::msg::NetworkTransitionFeedback>>);
@@ -217,6 +234,7 @@ namespace rstate {
         void enter(Node *);
 
         rstate::msg::NetworkState getNetworkState();
+        rstate::srv::GetAvailableNetworkTransitions::Response getAvailableNetworkTransitions();
         GoalResponse handleGoal(Node *, std::shared_ptr<const rstate::srv::NetworkTransitionSendGoal::Request>);
         CancelResponse handleCancel(Node *, const std::shared_ptr<GoalHandle<rstate::msg::NetworkTransitionFeedback>>);
         void handleAccepted(Node *, const std::shared_ptr<GoalHandle<rstate::msg::NetworkTransitionFeedback>>);
@@ -234,6 +252,7 @@ namespace rstate {
         void enter(Node *);
 
         rstate::msg::NetworkState getNetworkState();
+        rstate::srv::GetAvailableNetworkTransitions::Response getAvailableNetworkTransitions();
         GoalResponse handleGoal(Node *, std::shared_ptr<const rstate::srv::NetworkTransitionSendGoal::Request>);
         CancelResponse handleCancel(Node *, const std::shared_ptr<GoalHandle<rstate::msg::NetworkTransitionFeedback>>);
         void handleAccepted(Node *, const std::shared_ptr<GoalHandle<rstate::msg::NetworkTransitionFeedback>>);
@@ -256,6 +275,7 @@ namespace rstate {
         void onShutdown(Node *, const std::shared_ptr<GoalHandle<rstate::msg::NetworkTransitionFeedback>>);
 
         rstate::msg::NetworkState getNetworkState();
+        rstate::srv::GetAvailableNetworkTransitions::Response getAvailableNetworkTransitions();
         GoalResponse handleGoal(Node *, std::shared_ptr<const rstate::srv::NetworkTransitionSendGoal::Request>);
         CancelResponse handleCancel(Node *, const std::shared_ptr<GoalHandle<rstate::msg::NetworkTransitionFeedback>>);
         void handleAccepted(Node *, const std::shared_ptr<GoalHandle<rstate::msg::NetworkTransitionFeedback>>);
@@ -273,6 +293,7 @@ namespace rstate {
         void enter(Node *);
 
         rstate::msg::NetworkState getNetworkState();
+        rstate::srv::GetAvailableNetworkTransitions::Response getAvailableNetworkTransitions();
         GoalResponse handleGoal(Node *, std::shared_ptr<const rstate::srv::NetworkTransitionSendGoal::Request>);
         CancelResponse handleCancel(Node *, const std::shared_ptr<GoalHandle<rstate::msg::NetworkTransitionFeedback>>);
         void handleAccepted(Node *, const std::shared_ptr<GoalHandle<rstate::msg::NetworkTransitionFeedback>>);
@@ -295,6 +316,7 @@ namespace rstate {
         void onShutdown(Node *, const std::shared_ptr<GoalHandle<rstate::msg::NetworkTransitionFeedback>>);
 
         rstate::msg::NetworkState getNetworkState();
+        rstate::srv::GetAvailableNetworkTransitions::Response getAvailableNetworkTransitions();
         GoalResponse handleGoal(Node *, std::shared_ptr<const rstate::srv::NetworkTransitionSendGoal::Request>);
         CancelResponse handleCancel(Node *, const std::shared_ptr<GoalHandle<rstate::msg::NetworkTransitionFeedback>>);
         void handleAccepted(Node *, const std::shared_ptr<GoalHandle<rstate::msg::NetworkTransitionFeedback>>);
@@ -312,6 +334,7 @@ namespace rstate {
         void enter(Node *);
 
         rstate::msg::NetworkState getNetworkState();
+        rstate::srv::GetAvailableNetworkTransitions::Response getAvailableNetworkTransitions();
         GoalResponse handleGoal(Node *, std::shared_ptr<const rstate::srv::NetworkTransitionSendGoal::Request>);
         CancelResponse handleCancel(Node *, const std::shared_ptr<GoalHandle<rstate::msg::NetworkTransitionFeedback>>);
         void handleAccepted(Node *, const std::shared_ptr<GoalHandle<rstate::msg::NetworkTransitionFeedback>>);

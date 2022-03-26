@@ -10,10 +10,15 @@ namespace rstate {
 
     rstate::msg::NetworkState Arming::getNetworkState() {
         rstate::msg::NetworkState network_state;
-        network_state.id = (uint)NetworkState::Arming;
+        network_state.id = (uint)NetworkStateEnum::Arming;
         network_state.label = "arming";
 
         return network_state;
+    }
+
+    rstate::srv::GetAvailableNetworkTransitions::Response Arming::getAvailableNetworkTransitions() {
+        rstate::srv::GetAvailableNetworkTransitions::Response response;
+        return response;
     }
 
     GoalResponse Arming::handleGoal(Node *node,

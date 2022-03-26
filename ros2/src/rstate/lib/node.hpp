@@ -10,6 +10,7 @@
 #include <rclcpp_lifecycle/lifecycle_node.hpp>
 #include <rstate/msg/network_state.hpp>
 #include <rstate/msg/network_transition_description.hpp>
+#include <rstate/msg/network_transition_event.hpp>
 #include <rstate/msg/network_transition_feedback.hpp>
 #include <rstate/srv/get_available_network_states.hpp>
 #include <rstate/srv/get_available_network_transitions.hpp>
@@ -30,6 +31,8 @@ namespace rstate {
 
     // Forward declaration to resolve circular dependency/include
     class State;
+    enum class NetworkStateEnum;
+    enum class NetworkTransitionEnum;
 
     class Node : public rclcpp_lifecycle::LifecycleNode {
     public:
@@ -49,6 +52,7 @@ namespace rstate {
         std::vector<std::shared_ptr<CmdIface>> cmdsOnShutdownArmed;
 
         void setState(State &);
+        void publishNetworkTransitionEvent(NetworkTransitionEnum, NetworkStateEnum, NetworkStateEnum);
 
     private:
         LifecycleCallbackReturn on_configure(const rclcpp_lifecycle::State &);
@@ -58,6 +62,8 @@ namespace rstate {
         LifecycleCallbackReturn on_shutdown(const rclcpp_lifecycle::State &state);
 
         State *currentState;
+
+        rclcpp_lifecycle::LifecyclePublisher<rstate::msg::NetworkTransitionEvent>::SharedPtr publisherNetworkTransitionEvent;
 
         rclcpp::Service<rstate::srv::GetNetworkState>::SharedPtr serviceGetNetworkState;
         rclcpp::Service<rstate::srv::GetAvailableNetworkTransitions>::SharedPtr serviceGetAvailableNetworkTransistions;

@@ -21,7 +21,7 @@ pub fn gen_gui_elem_id() -> u32 {
 
 // Trait definition for all members referenced in the GuiElems HashMap
 pub trait GuiElem {
-    fn draw(&self, ui: &mut egui::Ui);
+    fn draw(&mut self, ui: &mut egui::Ui);
     fn update_data(&mut self, data: &Value);
     fn deregister(&self);
 }

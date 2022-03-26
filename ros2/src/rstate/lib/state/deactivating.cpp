@@ -10,10 +10,15 @@ namespace rstate {
 
     rstate::msg::NetworkState Deactivating::getNetworkState() {
         rstate::msg::NetworkState network_state;
-        network_state.id = (uint)NetworkState::Deactivating;
+        network_state.id = (uint)NetworkStateEnum::Deactivating;
         network_state.label = "deactivating";
 
         return network_state;
+    }
+
+    rstate::srv::GetAvailableNetworkTransitions::Response Deactivating::getAvailableNetworkTransitions() {
+        rstate::srv::GetAvailableNetworkTransitions::Response response;
+        return response;
     }
 
     GoalResponse Deactivating::handleGoal(Node *node,

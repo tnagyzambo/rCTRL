@@ -38,7 +38,7 @@ impl Logger {
 }
 
 impl GuiElem for Logger {
-    fn draw(&self, ui: &mut egui::Ui) {
+    fn draw(&mut self, ui: &mut egui::Ui) {
         let theme = CodeTheme::from_memory(ui.ctx());
 
         let layouter = |ui: &egui::Ui, string: &str| {

@@ -10,20 +10,34 @@ namespace rstate {
 
     rstate::msg::NetworkState Armed::getNetworkState() {
         rstate::msg::NetworkState network_state;
-        network_state.id = (uint)NetworkState::Armed;
+        network_state.id = (uint)NetworkStateEnum::Armed;
         network_state.label = "armed";
 
         return network_state;
     }
 
+    rstate::srv::GetAvailableNetworkTransitions::Response Armed::getAvailableNetworkTransitions() {
+        rstate::srv::GetAvailableNetworkTransitions::Response response;
+        response.available_transitions = {
+            generateNetworkTransitionDescription(
+                NetworkTransitionEnum::Disarm, NetworkStateEnum::Armed, NetworkStateEnum::Active),
+            generateNetworkTransitionDescription(
+                NetworkTransitionEnum::Shutdown, NetworkStateEnum::Armed, NetworkStateEnum::Finalized)};
+        return response;
+    }
+
     GoalResponse Armed::handleGoal(Node *node,
                                    std::shared_ptr<const rstate::srv::NetworkTransitionSendGoal::Request> goal) {
         switch (goal->transition.id) {
-        case (int)NetworkTransition::Disarm:
+        case (int)NetworkTransitionEnum::Disarm:
             this->onTransition = &Armed::onDisarm;
+            node->publishNetworkTransitionEvent(
+                NetworkTransitionEnum::Disarm, NetworkStateEnum::Armed, NetworkStateEnum::Active);
             return GoalResponse::ACCEPT_AND_EXECUTE;
-        case (int)NetworkTransition::Shutdown:
+        case (int)NetworkTransitionEnum::Shutdown:
             this->onTransition = &Armed::onShutdown;
+            node->publishNetworkTransitionEvent(
+                NetworkTransitionEnum::Shutdown, NetworkStateEnum::Armed, NetworkStateEnum::Finalized);
             return GoalResponse::ACCEPT_AND_EXECUTE;
         default:
             RCLCPP_INFO(node->get_logger(), "Received transition request with invalid goal: %d", goal->transition.id);
@@ -49,13 +63,13 @@ namespace rstate {
         node->setState(Disarming::getInstance());
 
         switch (executeCommands(node, node->cmdsOnDisarm, goalHandle)) {
-        case NetworkTransitionResult::Success:
+        case NetworkTransitionResultEnum::Success:
             node->setState(Active::getInstance());
             break;
-        case NetworkTransitionResult::Cancelled:
+        case NetworkTransitionResultEnum::Cancelled:
             node->setState(Armed::getInstance());
             break;
-        case NetworkTransitionResult::Failure:
+        case NetworkTransitionResultEnum::Failure:
             // SHUTDOWN
             break;
         }
@@ -66,9 +80,9 @@ namespace rstate {
         node->setState(ShuttingDown::getInstance());
 
         switch (executeCommandsShutdown(node, node->cmdsOnShutdownArmed, goalHandle)) {
-        case NetworkShutdownResult::Success:
+        case NetworkShutdownResultEnum::Success:
             break;
-        case NetworkShutdownResult::Failure:
+        case NetworkShutdownResultEnum::Failure:
             RCLCPP_ERROR(node->get_logger(), "The network was not shutdown successfully");
             break;
         }

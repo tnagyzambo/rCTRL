@@ -61,6 +61,7 @@ if [ "${FAST}" = false ]; then
 fi
 
 cp index.html dist/index.html
+cp web/* dist/
 
 echo "Finished: dist/${CRATE_NAME_SNAKE_CASE}.wasm"
 
@@ -76,4 +77,3 @@ if [ "${OPEN}" = true ]; then
     open http://localhost:8080/index.html
   fi
 fi
-

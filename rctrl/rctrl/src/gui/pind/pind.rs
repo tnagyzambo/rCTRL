@@ -2,12 +2,7 @@ use crate::gui::{gui_elem::gen_gui_elem_id, gui_elem::GuiElem, App, RStatePanel}
 use crate::ws_lock::WsLock;
 use eframe::{egui, epi};
 use gloo_console::log;
-use rctrl_rosbridge::lifecycle_msgs::msg::{State, Transition, TransitionDescription};
-use serde_json::Value;
-use std::collections::HashMap;
 use std::rc::Rc;
-use std::sync::Mutex;
-use web_sys::{Performance, Window};
 
 pub struct PInD {
     ws_lock: Rc<WsLock>,
@@ -51,7 +46,7 @@ impl epi::App for PInD {
         let Self { ws_lock, rstate_panel } = self;
 
         egui::CentralPanel::default().show(ctx, |ui| {
-            let rstate_panel = self.rstate_panel.draw(ui);
+            let rstate_panel = self.rstate_panel.draw(ctx, ui);
         });
     }
 }

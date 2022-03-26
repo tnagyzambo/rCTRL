@@ -10,10 +10,15 @@ namespace rstate {
 
     rstate::msg::NetworkState Disarming::getNetworkState() {
         rstate::msg::NetworkState network_state;
-        network_state.id = (uint)NetworkState::Disarming;
+        network_state.id = (uint)NetworkStateEnum::Disarming;
         network_state.label = "disarming";
 
         return network_state;
+    }
+
+    rstate::srv::GetAvailableNetworkTransitions::Response Disarming::getAvailableNetworkTransitions() {
+        rstate::srv::GetAvailableNetworkTransitions::Response response;
+        return response;
     }
 
     GoalResponse Disarming::handleGoal(Node *node,
