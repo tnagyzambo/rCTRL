@@ -1,5 +1,5 @@
-use crate::gui::gui_elem::GuiElem;
-use crate::gui::logger_hl::{highlight, CodeTheme};
+use super::logger_hl::{highlight, CodeTheme};
+use crate::gui::gui_elem::{gen_gui_elem_id, GuiElem};
 use crate::ws_lock::WsLock;
 use eframe::egui;
 use gloo_console::log;
@@ -9,31 +9,36 @@ use std::sync::Mutex;
 
 /// Main [`Logger`] structure.
 pub struct Logger {
+    id: u32,
+    op: String,
+    topic: String,
     ws_lock: Rc<WsLock>,
-    pub open: bool,
     logs: Vec<rctrl_rosbridge::rosout::msg::log::Log>,
 }
 
 impl Logger {
     pub fn new_shared(ws_lock: &Rc<WsLock>) -> Rc<Mutex<Self>> {
         let logger = Self {
+            id: gen_gui_elem_id(),
+            op: ("publish").to_owned(),
+            topic: ("/rosout").to_owned(),
             ws_lock: Rc::clone(&ws_lock),
-            open: true,
             logs: Vec::new(),
         };
 
-        let op = ("publish").to_owned();
-        let topic = ("/rosout").to_owned();
+        let op = logger.op.clone();
+        let topic = logger.topic.clone();
+        let id = logger.id.clone();
         let logger_lock = Rc::new(Mutex::new(logger));
         let logger_lock_c = Rc::clone(&logger_lock);
-        ws_lock.add_gui_elem(op, topic, logger_lock_c);
+        ws_lock.add_gui_elem(op, topic, id, logger_lock_c);
 
         return logger_lock;
     }
 }
 
 impl GuiElem for Logger {
-    fn draw(&self, ui: &mut egui::Ui) {
+    fn draw(&mut self, ui: &mut egui::Ui) {
         let theme = CodeTheme::from_memory(ui.ctx());
 
         let layouter = |ui: &egui::Ui, string: &str| {
@@ -44,10 +49,16 @@ impl GuiElem for Logger {
         let text_style = egui::TextStyle::Body;
         let row_height = ui.text_style_height(&text_style);
         egui::ScrollArea::vertical()
+            .auto_shrink([false; 2])
+            .hscroll(true)
+            .always_show_scroll(true)
             .stick_to_bottom()
             .show_rows(ui, row_height, self.logs.len(), |ui, row_range| {
                 for row in row_range {
                     ui.horizontal(|ui| {
+                        ui.set_max_height(row_height);
+                        ui.set_min_height(row_height);
+
                         let mut log = String::new();
                         if true {
                             log.push_str("[");
@@ -84,12 +95,11 @@ impl GuiElem for Logger {
                     });
                 }
             });
-
         ui.ctx().request_repaint();
     }
 
-    fn update_data(&mut self, data: Value) {
-        match serde_json::from_value::<rctrl_rosbridge::rosout::msg::log::Log>(data) {
+    fn update_data(&mut self, data: &Value) {
+        match serde_json::from_value::<rctrl_rosbridge::rosout::msg::log::Log>(data.clone()) {
             Ok(values) => {
                 self.logs.push(values);
             }
@@ -97,5 +107,9 @@ impl GuiElem for Logger {
                 log!(format!("Logger::update_data() failed: {}", e));
             }
         }
+    }
+
+    fn deregister(&self) {
+        self.ws_lock.remove_gui_elem(self.op.clone(), self.topic.clone(), self.id.clone())
     }
 }

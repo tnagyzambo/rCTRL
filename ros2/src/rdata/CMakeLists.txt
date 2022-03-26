@@ -63,7 +63,7 @@ install(DIRECTORY include/
 install(TARGETS rdata_node rdata_vsensor
         LIBRARY DESTINATION lib
         ARCHIVE DESTINATION lib
-        RUNTIME DESTINATION bin
+        RUNTIME DESTINATION lib/${PROJECT_NAME}
         INCLUDES DESTINATION include)
 
 ament_package()

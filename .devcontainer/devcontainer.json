@@ -2,7 +2,7 @@
     "dockerFile": "Dockerfile",
     "build": {
         "args": {
-            "WORKSPACE": "${containerWorkspaceFolder}"
+            "WORKSPACE": "${containerWorkspaceFolder}",
         }
     },
     "remoteUser": "ros",
@@ -26,14 +26,12 @@
     },
     "extensions": [
         "bungcip.better-toml",
+        "ajshort.msg",
         "ms-azuretools.vscode-docker",
-        "ms-iot.vscode-ros",
-        "ms-vscode.cpptools",
-        "ms-vscode.cmake-tools",
-        "xaver.clang-format",
+        "llvm-vs-code-extensions.vscode-clangd",
+        "vadimcn.vscode-lldb",
         "twxs.cmake",
-        "yzhang.markdown-all-in-one",
-        "jebbs.plantuml",
+        "bierner.markdown-mermaid",
         "spmeesseman.vscode-taskexplorer",
         "rust-lang.rust",
     ]

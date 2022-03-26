@@ -1,8 +1,8 @@
 FROM ubuntu:20.04 AS base
 
 # Create non-root user
-ARG USER_ID=1000
-ARG GROUP_ID=1000
+ENV USER_ID=1000
+ENV GROUP_ID=1000
 RUN addgroup --gid $GROUP_ID ros
 RUN adduser --disabled-password --gecos '' --uid $USER_ID --gid $GROUP_ID ros
 
@@ -16,13 +16,20 @@ RUN apt-get update
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy software-properties-common pkg-config wget curl jq libssl-dev 
 RUN apt-get update
 
-# Install compile tools
+# Install compile toolsc
 RUN wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -
 RUN apt-add-repository "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-14 main"
-RUN apt-get update 
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy clang-14 lldb python3-pip
+RUN apt update 
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy clang-14 lldb-14 python3-pip
+RUN update-alternatives --install /bin/lldb lldb /bin/lldb-14 100
+RUN update-alternatives --install /bin/lldb-server lldb-server /bin/lldb-server-14 100
 ENV CC=/bin/clang-14
 ENV CXX=/bin/clang++-14
+
+# Install clang tools
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy clangd-12 clang-format-12
+RUN update-alternatives --install /bin/clangd clangd /bin/clangd-12 100
+RUN update-alternatives --install /bin/clang-format clang-format /bin/clang-format-12 100
 
 # Install cmake (building from source takes > 8Gb memory)
 RUN wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null
@@ -45,7 +52,7 @@ RUN cargo install wasm-bindgen-cli
 RUN cargo install basic-http-server
 
 USER root
-ARG WASM_OPT_RELEASE=105
+ENV WASM_OPT_RELEASE=105
 RUN wget https://github.com/WebAssembly/binaryen/archive/refs/tags/version_${WASM_OPT_RELEASE}.tar.gz
 RUN tar -xf version_${WASM_OPT_RELEASE}.tar.gz -C /lib
 RUN rm version_${WASM_OPT_RELEASE}.tar.gz
@@ -69,7 +76,7 @@ RUN apt-get update
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy libcurl4-openssl-dev
 
 # Install toml++ dev dependencies
-ARG TOML11_RELEASE=2.5.0
+ENV TOML11_RELEASE=2.5.0
 RUN wget https://github.com/marzer/tomlplusplus/archive/refs/tags/v${TOML11_RELEASE}.tar.gz
 RUN tar -xf v${TOML11_RELEASE}.tar.gz -C /lib
 RUN rm v${TOML11_RELEASE}.tar.gz
@@ -79,7 +86,7 @@ RUN cd /lib/tomlplusplus-${TOML11_RELEASE} && cmake --build build
 RUN cd /lib/tomlplusplus-${TOML11_RELEASE} && cmake --install build
 
 # Install fmtlib dev dependencies
-ARG FMTLIB_RELEASE=8.1.1
+ENV FMTLIB_RELEASE=8.1.1
 RUN wget https://github.com/fmtlib/fmt/archive/refs/tags/${FMTLIB_RELEASE}.tar.gz
 RUN tar -xf ${FMTLIB_RELEASE}.tar.gz -C /lib
 RUN rm ${FMTLIB_RELEASE}.tar.gz
@@ -94,10 +101,15 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy ros-galactic-rosbridge-su
 
 # influxdb
 # REFERENCE: https://docs.influxdata.com/influxdb/v2.0/install/?t=Linux
-ARG INFLUX_RELEASE=influxdb2-2.0.7-arm64.deb
-RUN wget https://dl.influxdata.com/influxdb/releases/${INFLUX_RELEASE}
-RUN dpkg -i ${INFLUX_RELEASE}
-RUN rm ${INFLUX_RELEASE}
+ENV INFLUX_RELEASE=2.0.7
+RUN arch="$(uname -m)"; \
+        case "$arch" in \
+            armhf) export INFLUX_ARCH='arm64' ;; \
+            x86_64) export INFLUX_ARCH='amd64' ;; \
+        esac \
+        && wget https://dl.influxdata.com/influxdb/releases/influxdb2-${INFLUX_RELEASE}-${INFLUX_ARCH}.deb \
+        && dpkg -i influxdb2-${INFLUX_RELEASE}-${INFLUX_ARCH}.deb \
+        && rm influxdb2-${INFLUX_RELEASE}-${INFLUX_ARCH}.deb
 # RUN service influxdb start
 
 # Add influx credentials file
@@ -123,5 +135,3 @@ ENV INFLUXD_CONFIG_PATH = "/home/ros/rdata/influx"
 COPY resources/setup.sh /home/ros/setup.sh
 USER root
 RUN chmod +x /home/ros/setup.sh
-
-

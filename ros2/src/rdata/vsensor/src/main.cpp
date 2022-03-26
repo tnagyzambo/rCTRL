@@ -1,7 +1,6 @@
 #include <vsensor_node.hpp>
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
     auto period = 500ms;
 
     // Multi threaded executor to allow for potentially different sampling periods

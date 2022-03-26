@@ -33,7 +33,7 @@ install(TARGETS ${PROJECT_NAME}
         EXPORT export_${PROJECT_NAME}
         LIBRARY DESTINATION lib
         ARCHIVE DESTINATION lib
-        RUNTIME DESTINATION bin
+        RUNTIME DESTINATION lib/${PROJECT_NAME}
         INCLUDES DESTINATION include)
 
 ament_package()

@@ -9,8 +9,8 @@
 #include <rclcpp_lifecycle/lifecycle_node.hpp>
 
 #include <rdata/iface.hpp>
-#include <rutil/fmt.hpp>
 #include <rutil/except.hpp>
+#include <rutil/fmt.hpp>
 
 #include <rdata/srv/create_logger.hpp>
 #include <rdata/srv/remove_logger.hpp>
@@ -23,11 +23,9 @@
 
 using namespace std::chrono_literals;
 
-namespace rdata::vsensor
-{
+namespace rdata::vsensor {
     template <typename T>
-    class Node : public rclcpp_lifecycle::LifecycleNode
-    {
+    class Node : public rclcpp_lifecycle::LifecycleNode {
     public:
         Node(const char *, std::chrono::milliseconds);
         ~Node();
@@ -44,11 +42,16 @@ namespace rdata::vsensor
         uint calcElapsedTime();
 
     private:
-        rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_configure(const rclcpp_lifecycle::State &);
-        rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_activate(const rclcpp_lifecycle::State &);
-        rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_deactivate(const rclcpp_lifecycle::State &);
-        rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_cleanup(const rclcpp_lifecycle::State &);
-        rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_shutdown(const rclcpp_lifecycle::State &state);
+        rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_configure(
+            const rclcpp_lifecycle::State &);
+        rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_activate(
+            const rclcpp_lifecycle::State &);
+        rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_deactivate(
+            const rclcpp_lifecycle::State &);
+        rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_cleanup(
+            const rclcpp_lifecycle::State &);
+        rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_shutdown(
+            const rclcpp_lifecycle::State &state);
 
         std::chrono::high_resolution_clock::time_point startTime = std::chrono::high_resolution_clock::now();
 
@@ -57,8 +60,7 @@ namespace rdata::vsensor
         std::string createLoggerTopicName();
     };
 
-    class Bool : public Node<rdata::msg::LogBool>
-    {
+    class Bool : public Node<rdata::msg::LogBool> {
     public:
         Bool(const char *, std::chrono::milliseconds);
         ~Bool();
@@ -69,8 +71,7 @@ namespace rdata::vsensor
         void timerCallback();
     };
 
-    class F64 : public Node<rdata::msg::LogF64>
-    {
+    class F64 : public Node<rdata::msg::LogF64> {
     public:
         F64(const char *, std::chrono::milliseconds);
         ~F64();
@@ -81,8 +82,7 @@ namespace rdata::vsensor
         void timerCallback();
     };
 
-    class I64 : public Node<rdata::msg::LogI64>
-    {
+    class I64 : public Node<rdata::msg::LogI64> {
     public:
         I64(const char *, std::chrono::milliseconds);
         ~I64();
@@ -91,8 +91,7 @@ namespace rdata::vsensor
         void timerCallback();
     };
 
-    class Str : public Node<rdata::msg::LogStr>
-    {
+    class Str : public Node<rdata::msg::LogStr> {
     public:
         Str(const char *, std::chrono::milliseconds);
         ~Str();
@@ -101,8 +100,7 @@ namespace rdata::vsensor
         void timerCallback();
     };
 
-    class U64 : public Node<rdata::msg::LogU64>
-    {
+    class U64 : public Node<rdata::msg::LogU64> {
     public:
         U64(const char *, std::chrono::milliseconds);
         ~U64();
@@ -113,4 +111,4 @@ namespace rdata::vsensor
 
 // Implementation of templated functions
 #include "vsensor_node.tpp"
-}
+} // namespace rdata::vsensor
