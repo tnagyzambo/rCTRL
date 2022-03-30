@@ -12,14 +12,14 @@
 #include <rutil/except.hpp>
 #include <rutil/fmt.hpp>
 
-#include <rdata/srv/create_logger.hpp>
-#include <rdata/srv/remove_logger.hpp>
+#include <rdata_msgs/srv/create_logger.hpp>
+#include <rdata_msgs/srv/remove_logger.hpp>
 
-#include <rdata/msg/log_bool.hpp>
-#include <rdata/msg/log_f64.hpp>
-#include <rdata/msg/log_i64.hpp>
-#include <rdata/msg/log_str.hpp>
-#include <rdata/msg/log_u64.hpp>
+#include <rdata_msgs/msg/log_bool.hpp>
+#include <rdata_msgs/msg/log_f64.hpp>
+#include <rdata_msgs/msg/log_i64.hpp>
+#include <rdata_msgs/msg/log_str.hpp>
+#include <rdata_msgs/msg/log_u64.hpp>
 
 using namespace std::chrono_literals;
 
@@ -35,8 +35,8 @@ namespace rdata::vsensor {
         std::chrono::milliseconds period;
         rclcpp::TimerBase::SharedPtr timer;
 
-        rclcpp::Client<rdata::srv::CreateLogger>::SharedPtr clCreateLogger;
-        rclcpp::Client<rdata::srv::RemoveLogger>::SharedPtr clRemoveLogger;
+        rclcpp::Client<rdata_msgs::srv::CreateLogger>::SharedPtr clCreateLogger;
+        rclcpp::Client<rdata_msgs::srv::RemoveLogger>::SharedPtr clRemoveLogger;
         typename rclcpp_lifecycle::LifecyclePublisher<T>::SharedPtr logger;
 
         uint calcElapsedTime();
@@ -60,7 +60,7 @@ namespace rdata::vsensor {
         std::string createLoggerTopicName();
     };
 
-    class Bool : public Node<rdata::msg::LogBool> {
+    class Bool : public Node<rdata_msgs::msg::LogBool> {
     public:
         Bool(const char *, std::chrono::milliseconds);
         ~Bool();
@@ -71,7 +71,7 @@ namespace rdata::vsensor {
         void timerCallback();
     };
 
-    class F64 : public Node<rdata::msg::LogF64> {
+    class F64 : public Node<rdata_msgs::msg::LogF64> {
     public:
         F64(const char *, std::chrono::milliseconds);
         ~F64();
@@ -82,7 +82,7 @@ namespace rdata::vsensor {
         void timerCallback();
     };
 
-    class I64 : public Node<rdata::msg::LogI64> {
+    class I64 : public Node<rdata_msgs::msg::LogI64> {
     public:
         I64(const char *, std::chrono::milliseconds);
         ~I64();
@@ -91,7 +91,7 @@ namespace rdata::vsensor {
         void timerCallback();
     };
 
-    class Str : public Node<rdata::msg::LogStr> {
+    class Str : public Node<rdata_msgs::msg::LogStr> {
     public:
         Str(const char *, std::chrono::milliseconds);
         ~Str();
@@ -100,7 +100,7 @@ namespace rdata::vsensor {
         void timerCallback();
     };
 
-    class U64 : public Node<rdata::msg::LogU64> {
+    class U64 : public Node<rdata_msgs::msg::LogU64> {
     public:
         U64(const char *, std::chrono::milliseconds);
         ~U64();

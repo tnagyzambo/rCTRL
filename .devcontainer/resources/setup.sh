@@ -5,7 +5,7 @@
 nohup influxd > .devcontainer/influxd.log 2>&1 &
 
 # Wait for influxd to start
-sleep 15s
+sleep 40s
 
 # Inital setup of influx
 # REFERENCE: https://docs.influxdata.com/influxdb/v2.0/reference/cli/influx/setup/#flags

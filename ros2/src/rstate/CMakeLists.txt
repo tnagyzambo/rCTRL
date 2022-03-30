@@ -12,21 +12,10 @@ find_package(rclcpp_action REQUIRED)
 find_package(lifecycle_msgs REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 find_package(rutil REQUIRED)
+find_package(rstate_msgs REQUIRED)
 find_package(rdata REQUIRED)
 
 include_directories(include)
-
-rosidl_generate_interfaces(${PROJECT_NAME}
-                           "msg/NetworkState.msg"
-                           "msg/NetworkTransition.msg"
-                           "msg/NetworkTransitionDescription.msg"
-                           "msg/NetworkTransitionEvent.msg"
-                           "msg/NetworkTransitionFeedback.msg"
-                           "srv/GetAvailableNetworkStates.srv"
-                           "srv/GetAvailableNetworkTransitions.srv"
-                           "srv/GetNetworkState.srv"
-                           "srv/NetworkTransitionCancelGoal.srv"
-                           "srv/NetworkTransitionSendGoal.srv")
 
 # rstate executable
 add_executable(rstate_node src/main.cpp
@@ -59,9 +48,8 @@ ament_target_dependencies(rstate_node rclcpp
                                       rclcpp_action
                                       lifecycle_msgs
                                       rutil
+                                      rstate_msgs
                                       rdata)
-
-rosidl_target_interfaces(rstate_node ${PROJECT_NAME} "rosidl_typesupport_cpp")
 
 install(TARGETS rstate_node
         DESTINATION lib/${PROJECT_NAME})

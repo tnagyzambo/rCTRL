@@ -2,39 +2,104 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "ros2 build",
+            "label": "ros2-build",
             "type": "shell",
             "command": "clear && cd ros2 && colcon build --cmake-args '-DCMAKE_BUILD_TYPE=RelWithDebInfo'",
         },
         {
-            "label": "rctrl build",
+            "label": "rctrl-build",
             "type": "shell",
             "command": "clear && cd rctrl && bash web_build.sh",
         },
         {
-            "label": "rctrl run",
+            "label": "rctrl-run",
             "type": "shell",
             "command": "clear && cd rctrl && bash web_start.sh",
         },
         {
-            "label": "rctrl test",
+            "label": "rctrl-test",
             "type": "shell",
             "command": "clear && cargo test --manifest-path=rctrl/rctrl_rosbridge/Cargo.toml",
         },
         {
-            "label": "rctrl docs",
+            "label": "rctrl-docs",
             "type": "shell",
             "command": "clear && cargo doc --manifest-path=rctrl/Cargo.toml --target wasm32-unknown-unknown --workspace --document-private-items",
         },
         {
-            "label": "rdata_example run",
+            "label": "rdata-build",
             "type": "shell",
-            "command": "source ros2/install/setup.bash; ros2 launch ros2/launch/rdata_example.xml",
+            "command": "clear && cd ros2 && colcon build --packages-select rdata --cmake-args '-DCMAKE_BUILD_TYPE=RelWithDebInfo'",
         },
-        // {
-        //     "label": "debug",
-        //     "type": "shell",
-        //     "command": "source install/setup.bash; ros2 run --prefix 'lldb-server platform --listen \"*:3000\"'",
-        // },
+        {
+            "label": "rdata-build msgs",
+            "type": "shell",
+            "command": "clear && cd ros2 && colcon build --packages-select rdata_msgs --cmake-args '-DCMAKE_BUILD_TYPE=RelWithDebInfo'",
+        },
+        {
+            "label": "rdata-run",
+            "type": "shell",
+            "command": "clear && source ros2/install/setup.bash && ros2 run rdata rdata_node",
+        },
+        {
+            "label": "rdata-launch example",
+            "type": "shell",
+            "command": "clear && source ros2/install/setup.bash && ros2 launch ros2/launch/rdata_example.xml",
+        },
+        {
+            "label": "micro_ros_agent-build",
+            "type": "shell",
+            "command": "clear && cd ros2 && colcon build --packages-select micro_ros_agent --cmake-args '-DCMAKE_BUILD_TYPE=RelWithDebInfo'",
+        },
+        {
+            "label": "micro_ros_agent-run",
+            "type": "shell",
+            "command": "clear && source ros2/install/setup.bash && ros2 run micro_ros_agent micro_ros_agent udp4 --port 8080",
+        },
+        {
+            "label": "rstate-build",
+            "type": "shell",
+            "command": "clear && cd ros2 && colcon build --packages-select rstate --cmake-args '-DCMAKE_BUILD_TYPE=RelWithDebInfo'",
+        },
+        {
+            "label": "rstate-build msgs",
+            "type": "shell",
+            "command": "clear && cd ros2 && colcon build --packages-select rstate_msgs --cmake-args '-DCMAKE_BUILD_TYPE=RelWithDebInfo'",
+        },
+        {
+            "label": "rstate-run",
+            "type": "shell",
+            "command": "clear && source ros2/install/setup.bash && ros2 run rstate rstate_node",
+        },
+        {
+            "label": "uros_lib-builder pull",
+            "type": "shell",
+            "command": "clear && docker pull microros/micro_ros_static_library_builder:galactic",
+        },
+        {
+            "label": "uros_lib-build",
+            "type": "shell",
+            "command": "clear && cd uros/.pio/libdeps/portenta_h7_m7/micro_ros_arduino && docker run -it --rm -v $(pwd):/project --env MICROROS_LIBRARY_FOLDER=extras microros/micro_ros_static_library_builder:galactic -p portenta-m7",
+        },
+        {
+            "label": "uros_lib-clean",
+            "type": "shell",
+            "command": "clear && cd uros/ && rm -r .pio/libdeps/portenta_h7_m7/micro_ros_arduino ; pio lib install",
+        },
+        {
+            "label": "uros_lib-update",
+            "type": "shell",
+            "command": "clear && rsync -av --progress ros2/src/{cmake,*_msgs} uros/.pio/libdeps/portenta_h7_m7/micro_ros_arduino/extras/library_generation/extra_packages --exclude micro_ros_agent",
+        },
+        {
+            "label": "uros-build",
+            "type": "shell",
+            "command": "clear && cd uros && pio run",
+        },
+        {
+            "label": "uros-upload",
+            "type": "shell",
+            "command": "clear && cd uros && pio run -t upload",
+        },
     ]
 }

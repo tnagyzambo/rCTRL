@@ -7,11 +7,11 @@
     },
     "remoteUser": "ros",
     "runArgs": [
-        "--network=host",
         "--cap-add=SYS_PTRACE",
         "--security-opt",
         "seccomp=unconfined",
     ],
+    "appPort": [ "8080:8080/udp" ],
     "postStartCommand": "bash -i -c /home/ros/setup.sh",
     "containerEnv": {
         "DISPLAY": "${localEnv:DISPLAY}"
@@ -34,5 +34,8 @@
         "bierner.markdown-mermaid",
         "spmeesseman.vscode-taskexplorer",
         "rust-lang.rust",
-    ]
+    ],
+    "mounts": [
+		"source=/dev,target=/dev,type=bind,bind-propagation=shared"
+	]
 }

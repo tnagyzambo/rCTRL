@@ -5,6 +5,7 @@
 #### Folders ####
 
 .cache/
+.pio/
 build/
 install/
 log/

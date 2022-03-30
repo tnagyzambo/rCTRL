@@ -13,18 +13,20 @@ RUN locale-gen en_US.UTF-8
 
 # Install dev dependencies
 RUN apt-get update
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy software-properties-common pkg-config wget curl jq libssl-dev 
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy wget curl git 
+RUN apt-get update
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy software-properties-common pkg-config jq libssl-dev 
 RUN apt-get update
 
-# Install compile toolsc
-RUN wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -
-RUN apt-add-repository "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-14 main"
-RUN apt update 
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy clang-14 lldb-14 python3-pip
-RUN update-alternatives --install /bin/lldb lldb /bin/lldb-14 100
-RUN update-alternatives --install /bin/lldb-server lldb-server /bin/lldb-server-14 100
-ENV CC=/bin/clang-14
-ENV CXX=/bin/clang++-14
+# Install compile tools
+RUN apt update
+RUN add-apt-repository ppa:ubuntu-toolchain-r/test
+RUN apt update
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy gcc-11 g++-11 gdb gdbserver python3-pip
+RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 1010
+RUN update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-11 1010
+ENV CC=/bin/gcc
+ENV CXX=/bin/g++
 
 # Install clang tools
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy clangd-12 clang-format-12
@@ -91,13 +93,16 @@ RUN wget https://github.com/fmtlib/fmt/archive/refs/tags/${FMTLIB_RELEASE}.tar.g
 RUN tar -xf ${FMTLIB_RELEASE}.tar.gz -C /lib
 RUN rm ${FMTLIB_RELEASE}.tar.gz
 RUN mkdir /lib/fmt-${FMTLIB_RELEASE}/build
-RUN cd /lib/fmt-${FMTLIB_RELEASE} && cmake -S . -B build
-RUN cd /lib/fmt-${FMTLIB_RELEASE} && cmake --build build
+RUN cd /lib/fmt-${FMTLIB_RELEASE} && cmake -S . -B build -DCMAKE_POSITION_INDEPENDENT_CODE=ON
+RUN cd /lib/fmt-${FMTLIB_RELEASE} && cmake --build build 
 RUN cd /lib/fmt-${FMTLIB_RELEASE} && cmake --install build
 
 # Install rosbridge
 RUN apt-get update
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy ros-galactic-rosbridge-suite
+
+# Install uros agent dependancies
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy ros-galactic-rmw-fastrtps-shared-cpp ros-galactic-rosidl-typesupport-fastrtps-cpp ros-galactic-micro-ros-msgs
 
 # influxdb
 # REFERENCE: https://docs.influxdata.com/influxdb/v2.0/install/?t=Linux

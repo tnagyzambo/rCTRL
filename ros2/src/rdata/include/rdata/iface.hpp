@@ -2,8 +2,8 @@
 
 #include <rutil/except.hpp>
 
-#include <rdata/srv/create_logger.hpp>
-#include <rdata/srv/remove_logger.hpp>
+#include <rdata_msgs/srv/create_logger.hpp>
+#include <rdata_msgs/srv/remove_logger.hpp>
 
 using namespace std::chrono_literals;
 
@@ -27,9 +27,9 @@ namespace rdata::iface {
 
     inline void createLogger(const char *serviceName,
                              rclcpp::node_interfaces::NodeBaseInterface::SharedPtr callingNode,
-                             rclcpp::Client<rdata::srv::CreateLogger>::SharedPtr clCreateLogger,
+                             rclcpp::Client<rdata_msgs::srv::CreateLogger>::SharedPtr clCreateLogger,
                              const char *topicName) {
-        auto request = std::make_shared<rdata::srv::CreateLogger::Request>();
+        auto request = std::make_shared<rdata_msgs::srv::CreateLogger::Request>();
         request->topic = topicName;
 
         // It is required to properly coordinate the various lifecycle nodes to avoid waiting for a service that does
@@ -42,7 +42,7 @@ namespace rdata::iface {
         // is received.
         // This way we can return immediately from this method and allow other work to be done by the
         // executor in `spin` while waiting for the response.
-        using ServiceResponseFuture = rclcpp::Client<rdata::srv::CreateLogger>::SharedFuture;
+        using ServiceResponseFuture = rclcpp::Client<rdata_msgs::srv::CreateLogger>::SharedFuture;
         auto responseReceivedCallback = [callingNode](ServiceResponseFuture future) {
             // Handle service response here
             // Currently I don't think this service call can fail so this is mostly placeholder
@@ -54,9 +54,9 @@ namespace rdata::iface {
 
     inline void removeLogger(const char *serviceName,
                              rclcpp::node_interfaces::NodeBaseInterface::SharedPtr callingNode,
-                             rclcpp::Client<rdata::srv::RemoveLogger>::SharedPtr clRemoveLogger,
+                             rclcpp::Client<rdata_msgs::srv::RemoveLogger>::SharedPtr clRemoveLogger,
                              const char *topicName) {
-        auto request = std::make_shared<rdata::srv::RemoveLogger::Request>();
+        auto request = std::make_shared<rdata_msgs::srv::RemoveLogger::Request>();
         request->topic = topicName;
 
         // It is required to properly coordinate the various lifecycle nodes to avoid waiting for a service that does
@@ -65,7 +65,7 @@ namespace rdata::iface {
             throw rutil::except::service_error(serviceName);
         }
 
-        using ServiceResponseFuture = rclcpp::Client<rdata::srv::RemoveLogger>::SharedFuture;
+        using ServiceResponseFuture = rclcpp::Client<rdata_msgs::srv::RemoveLogger>::SharedFuture;
         auto responseReceivedCallback = [callingNode](ServiceResponseFuture future) {
             auto result = future.get();
             return;

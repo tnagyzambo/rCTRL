@@ -4,7 +4,8 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/ros2/src/**",
-                "/opt/ros/${ROS_DISTRO}/include/**"
+                "/opt/ros/${ROS_DISTRO}/include/**",
+                "${workspaceFolder}/uros/.pio/**"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/clang++-14",
