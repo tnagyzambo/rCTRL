@@ -2,21 +2,6 @@
 
 .devcontainer/*.log
 
-#### Folders ####
-
-.cache/
-.pio/
-build/
-install/
-log/
-
-#### Rust ####
-
-debug/
-target/
-dist/
-**/*.rs.bk
-
 #### macOS ####
 
 # General

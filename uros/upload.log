@@ -1,0 +1,147 @@
+Processing portenta_h7_m7 (platform: ststm32; board: portenta_h7_m7; framework: arduino)
+--------------------------------------------------------------------------------
+Verbose mode can be enabled via `-v, --verbose` option
+CONFIGURATION: https://docs.platformio.org/page/boards/ststm32/portenta_h7_m7.html
+PLATFORM: ST STM32 (15.2.0) > Arduino Portenta H7 (M7 core)
+HARDWARE: STM32H747XIH6 480MHz, 511.35KB RAM, 768KB Flash
+DEBUG: Current (cmsis-dap) External (cmsis-dap, jlink, stlink)
+PACKAGES: 
+ - framework-arduino-mbed 2.6.1 
+ - tool-dfuutil 1.9.200310 
+ - tool-openocd 2.1100.211028 (11.0) 
+ - tool-stm32duino 1.0.1 
+ - toolchain-gccarmnoneeabi 1.70201.0 (7.2.1)
+LDF: Library Dependency Finder -> https://bit.ly/configure-pio-ldf
+LDF Modes: Finder ~ chain, Compatibility ~ soft
+Found 32 compatible libraries
+Scanning dependencies...
+Dependency Graph
+|-- <micro_ros_arduino> 2.0.4-galactic+sha.8e17d5b
+|   |-- <Ethernet> 1.0.0
+|   |   |-- <SocketWrapper> 1.0
+|   |-- <SPI>
+|   |-- <WiFi> 1.0
+|   |   |-- <SocketWrapper> 1.0
+Building in release mode
+Checking size .pio/build/portenta_h7_m7/firmware.elf
+Advanced Memory Usage is available via "PlatformIO Home > Project Inspect"
+RAM:   [==        ]  17.3% (used 90672 bytes from 523624 bytes)
+Flash: [====      ]  38.2% (used 300072 bytes from 786432 bytes)
+Configuring upload protocol...
+AVAILABLE: cmsis-dap, dfu, jlink, mbed, stlink
+CURRENT: upload_protocol = dfu
+Looking for upload port...
+Processing portenta_h7_m7 (platform: ststm32; board: portenta_h7_m7; framework: arduino)
+--------------------------------------------------------------------------------
+Verbose mode can be enabled via `-v, --verbose` option
+CONFIGURATION: https://docs.platformio.org/page/boards/ststm32/portenta_h7_m7.html
+PLATFORM: ST STM32 (15.2.0) > Arduino Portenta H7 (M7 core)
+HARDWARE: STM32H747XIH6 480MHz, 511.35KB RAM, 768KB Flash
+DEBUG: Current (cmsis-dap) External (cmsis-dap, jlink, stlink)
+PACKAGES: 
+ - framework-arduino-mbed 2.6.1 
+ - tool-dfuutil 1.9.200310 
+ - tool-openocd 2.1100.211028 (11.0) 
+ - tool-stm32duino 1.0.1 
+ - toolchain-gccarmnoneeabi 1.70201.0 (7.2.1)
+LDF: Library Dependency Finder -> https://bit.ly/configure-pio-ldf
+LDF Modes: Finder ~ chain, Compatibility ~ soft
+Found 32 compatible libraries
+Scanning dependencies...
+Dependency Graph
+|-- <micro_ros_arduino> 2.0.4-galactic+sha.8e17d5b
+|   |-- <Ethernet> 1.0.0
+|   |   |-- <SocketWrapper> 1.0
+|   |-- <SPI>
+|   |-- <WiFi> 1.0
+|   |   |-- <SocketWrapper> 1.0
+Building in release mode
+Checking size .pio/build/portenta_h7_m7/firmware.elf
+Advanced Memory Usage is available via "PlatformIO Home > Project Inspect"
+RAM:   [==        ]  17.3% (used 90672 bytes from 523624 bytes)
+Flash: [====      ]  38.2% (used 300072 bytes from 786432 bytes)
+Configuring upload protocol...
+AVAILABLE: cmsis-dap, dfu, jlink, mbed, stlink
+CURRENT: upload_protocol = dfu
+Looking for upload port...
+Auto-detected: /dev/cu.usbmodem14202
+Forcing reset using 1200bps open/close on port /dev/cu.usbmodem14202
+Waiting for the new upload port...
+Uploading .pio/build/portenta_h7_m7/firmware.bin
+dfu-util 0.9
+
+Copyright 2005-2009 Weston Schmidt, Harald Welte and OpenMoko Inc.
+Copyright 2010-2020 Tormod Volden and Stefan Schmidt
+This program is Free Software and has ABSOLUTELY NO WARRANTY
+Please report bugs to http://sourceforge.net/p/dfu-util/tickets/
+
+Opening DFU capable USB device...
+ID 2341:035b
+Run-time device DFU version 011a
+Claiming USB DFU Interface...
+Setting Alternate Setting #0 ...
+Determining device status: state = dfuIDLE, status = 0
+dfuIDLE, continuing
+DFU mode device DFU version 011a
+Device returned transfer size 4096
+DfuSe interface name: "Internal Flash   "
+Downloading to address = 0x08040000, size = 301124
+
+Erase   	[                         ]   0%            0 bytes
+Erase   	[                         ]   0%            0 bytes
+Erase   	[=                        ]   4%        12288 bytes
+Erase   	[==                       ]   8%        24576 bytes
+Erase   	[===                      ]  12%        36864 bytes
+Erase   	[====                     ]  16%        49152 bytes
+Erase   	[=====                    ]  20%        61440 bytes
+Erase   	[======                   ]  24%        73728 bytes
+Erase   	[=======                  ]  28%        86016 bytes
+Erase   	[========                 ]  32%        98304 bytes
+Erase   	[=========                ]  36%       110592 bytes
+Erase   	[==========               ]  40%       122880 bytes
+Erase   	[==========               ]  43%       131072 bytes
+Erase   	[===========              ]  44%       135168 bytes
+Erase   	[============             ]  48%       147456 bytes
+Erase   	[=============            ]  53%       159744 bytes
+Erase   	[==============           ]  57%       172032 bytes
+Erase   	[===============          ]  61%       184320 bytes
+Erase   	[================         ]  65%       196608 bytes
+Erase   	[=================        ]  68%       204800 bytes
+Erase   	[==================       ]  72%       217088 bytes
+Erase   	[===================      ]  76%       229376 bytes
+Erase   	[====================     ]  80%       241664 bytes
+Erase   	[=====================    ]  84%       253952 bytes
+Erase   	[======================   ]  88%       266240 bytes
+Erase   	[=======================  ]  92%       278528 bytes
+Erase   	[======================== ]  96%       290816 bytes
+Download	[                         ]   0%            0 bytes
+Download	[                         ]   1%         4096 bytes
+Download	[=                        ]   4%        12288 bytes
+Download	[==                       ]   8%        24576 bytes
+Download	[===                      ]  12%        36864 bytes
+Download	[====                     ]  16%        49152 bytes
+Download	[=====                    ]  20%        61440 bytes
+Download	[======                   ]  24%        73728 bytes
+Download	[=======                  ]  28%        86016 bytes
+Download	[========                 ]  32%        98304 bytes
+Download	[=========                ]  36%       110592 bytes
+Download	[==========               ]  40%       122880 bytes
+Download	[===========              ]  44%       135168 bytes
+Download	[============             ]  48%       147456 bytes
+Download	[=============            ]  53%       159744 bytes
+Download	[==============           ]  57%       172032 bytes
+Download	[===============          ]  61%       184320 bytes
+Download	[================         ]  65%       196608 bytes
+Download	[=================        ]  68%       204800 bytes
+Download	[==================       ]  72%       217088 bytes
+Download	[===================      ]  76%       229376 bytes
+Download	[====================     ]  80%       241664 bytes
+Download	[=====================    ]  84%       253952 bytes
+Download	[======================   ]  88%       266240 bytes
+Download	[=======================  ]  92%       278528 bytes
+Download	[======================== ]  96%       290816 bytes
+Download	[=========================] 100%       301124 bytes
+Download done.
+File downloaded successfully
+Transitioning to dfuMANIFEST state
+========================= [SUCCESS] Took 13.97 seconds =========================

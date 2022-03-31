@@ -1,0 +1,25 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build",
+            "type": "shell",
+            "command": "clear && bash web_build.sh",
+        },
+        {
+            "label": "run",
+            "type": "shell",
+            "command": "clear && bash web_start.sh",
+        },
+        {
+            "label": "test",
+            "type": "shell",
+            "command": "clear && cargo test --manifest-path=rctrl_rosbridge/Cargo.toml",
+        },
+        {
+            "label": "docs",
+            "type": "shell",
+            "command": "clear && cargo doc --manifest-path=Cargo.toml --target wasm32-unknown-unknown --workspace --document-private-items",
+        },
+    ]
+}

@@ -61,6 +61,7 @@ RUN rm version_${WASM_OPT_RELEASE}.tar.gz
 RUN mkdir /lib/binaryen-version_${WASM_OPT_RELEASE}/build
 RUN cd /lib/binaryen-version_${WASM_OPT_RELEASE} && cmake . && make
 ENV PATH="/lib/binaryen-version_${WASM_OPT_RELEASE}/bin:${PATH}"
+ENV LD_LIBRARY_PATH="/lib/binaryen-version_${WASM_OPT_RELEASE}/lib:${LD_LIBRARY_PATH}"
 
 # Install ROS2
 RUN apt-get update 

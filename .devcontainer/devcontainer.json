@@ -11,7 +11,7 @@
         "--security-opt",
         "seccomp=unconfined",
     ],
-    "appPort": [ "8080:8080/udp" ],
+    "appPort": [ "8090:8090/udp" ],
     "postStartCommand": "bash -i -c /home/ros/setup.sh",
     "containerEnv": {
         "DISPLAY": "${localEnv:DISPLAY}"

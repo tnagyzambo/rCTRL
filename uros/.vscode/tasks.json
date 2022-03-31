@@ -1,0 +1,35 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "lib-builder pull",
+            "type": "shell",
+            "command": "clear && docker pull microros/micro_ros_static_library_builder:galactic",
+        },
+        {
+            "label": "lib-build",
+            "type": "shell",
+            "command": "clear && cd .pio/libdeps/portenta_h7_m7/micro_ros_arduino && docker run -it --rm -v $(pwd):/project --env MICROROS_LIBRARY_FOLDER=extras microros/micro_ros_static_library_builder:galactic -p portenta-m7",
+        },
+        {
+            "label": "lib-clean",
+            "type": "shell",
+            "command": "clear && rm -r .pio/libdeps/portenta_h7_m7/micro_ros_arduino ; pio lib install",
+        },
+        {
+            "label": "lib-update",
+            "type": "shell",
+            "command": "clear && cd ../ && rsync -av --progress ros2/src/{cmake,*_msgs} uros/.pio/libdeps/portenta_h7_m7/micro_ros_arduino/extras/library_generation/extra_packages --exclude micro_ros_agent",
+        },
+        {
+            "label": "fw-build",
+            "type": "shell",
+            "command": "clear && pio run",
+        },
+        {
+            "label": "fw-upload",
+            "type": "shell",
+            "command": "clear && pio run -t upload",
+        },
+    ]
+}
