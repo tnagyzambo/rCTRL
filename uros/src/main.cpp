@@ -5,14 +5,14 @@
 #include <rcl/error_handling.h>
 #include <rclc/rclc.h>
 #include <rclc/executor.h>
-#include <custom_msgs/msg/float64.h>
+#include <rdata_msgs/msg/log_f64.h>
 
 #if !defined(TARGET_STM32F4) && !defined(ARDUINO_TEENSY41) && !defined(TARGET_PORTENTA_H7_M7)
 #error This example is only available for Arduino Portenta, Arduino Teensy41 and STM32F4
 #endif
 
 rcl_publisher_t publisher;
-custom_msgs__msg__Float64 msg;
+rdata_msgs__msg__LogF64 msg;
 rclc_support_t support;
 rcl_allocator_t allocator;
 rcl_node_t node;
@@ -36,7 +36,7 @@ void timer_callback(rcl_timer_t * timer, int64_t last_call_time)
   RCLC_UNUSED(last_call_time);
   if (timer != NULL) {
     RCSOFTCHECK(rcl_publish(&publisher, &msg, NULL));
-    msg.data = msg.data + 1.0;
+    msg.value = msg.value + 1.0;
   }
 }
 
@@ -63,14 +63,14 @@ void setup() {
   RCCHECK(rclc_publisher_init_best_effort(
     &publisher,
     &node,
-    ROSIDL_GET_MSG_TYPE_SUPPORT(custom_msgs, msg, Float64),
+    ROSIDL_GET_MSG_TYPE_SUPPORT(rdata_msgs, msg, LogF64),
     "topic_name"));
 
-  msg.data = 0.0;
+  msg.value = 0.0;
 }
 
 void loop() {
     RCSOFTCHECK(rcl_publish(&publisher, &msg, NULL));
-    msg.data = msg.data + 1.0;
+    msg.value = msg.value + 1.0;
     delay(100);
 }
