@@ -2,8 +2,9 @@ cmake_minimum_required(VERSION 3.16)
 project(rstate_msgs)
 
 # Include .cmake modules
-include(../cmake/compile_commands.cmake)
+include(../cmake/compile_commands_msgs.cmake)
 
+# Find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 
@@ -24,15 +25,6 @@ set(srv_files
 # Create ros2 interfaces
 rosidl_generate_interfaces(${PROJECT_NAME}
                            ${msg_files}
-                           ${srv_files}
-                           ADD_LINTER_TESTS)
-
-
-if(BUILD_TESTING)
-        find_package(ament_lint_auto REQUIRED)
-        ament_lint_auto_find_test_dependencies()
-endif()
-
-ament_export_dependencies(rosidl_default_runtime)
+                           ${srv_files})
 
 ament_package()
