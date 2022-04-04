@@ -98,6 +98,10 @@ RUN cd /lib/fmt-${FMTLIB_RELEASE} && cmake -S . -B build
 RUN cd /lib/fmt-${FMTLIB_RELEASE} && cmake --build build
 RUN cd /lib/fmt-${FMTLIB_RELEASE} && cmake --install build
 
+# Install gpiod dev dependencies
+RUN apt-get update 
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy gpiod libgpiod-dev
+
 # Install rosbridge
 RUN apt-get update
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy ros-galactic-rosbridge-suite
