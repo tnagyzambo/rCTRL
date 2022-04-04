@@ -2,10 +2,11 @@
 
 namespace rdata::vsensor {
     // Virtual boolean sensor
-    Bool::Bool(const char *nodeName, std::chrono::milliseconds period) : Node<rdata::msg::LogBool>(nodeName, period) {
-        this->clCreateLogger = this->create_client<rdata::srv::CreateLogger>(rdata::iface::srv_create_logger_bool);
-        this->clRemoveLogger = this->create_client<rdata::srv::RemoveLogger>(rdata::iface::srv_remove_logger_bool);
-        this->logger = this->create_publisher<rdata::msg::LogBool>(this->loggerTopicName, 10);
+    Bool::Bool(const char *nodeName, std::chrono::milliseconds period)
+        : Node<rdata_msgs::msg::LogBool>(nodeName, period) {
+        this->clCreateLogger = this->create_client<rdata_msgs::srv::CreateLogger>(rdata::iface::srv_create_logger_bool);
+        this->clRemoveLogger = this->create_client<rdata_msgs::srv::RemoveLogger>(rdata::iface::srv_remove_logger_bool);
+        this->logger = this->create_publisher<rdata_msgs::msg::LogBool>(this->loggerTopicName, 10);
 
         RCLCPP_INFO(this->get_logger(),
                     "Created virtual bool sensor with period '%sms'",
@@ -19,7 +20,7 @@ namespace rdata::vsensor {
     }
 
     void Bool::timerCallback() {
-        auto message = rdata::msg::LogBool();
+        auto message = rdata_msgs::msg::LogBool();
         message.measurment = "virtual_bool";
         message.sensor = this->nodeName;
         message.value = !this->prevOutput;
@@ -29,10 +30,10 @@ namespace rdata::vsensor {
     }
 
     // Virtual float sensor
-    F64::F64(const char *nodeName, std::chrono::milliseconds period) : Node<rdata::msg::LogF64>(nodeName, period) {
-        this->clCreateLogger = this->create_client<rdata::srv::CreateLogger>(rdata::iface::srv_create_logger_f64);
-        this->clRemoveLogger = this->create_client<rdata::srv::RemoveLogger>(rdata::iface::srv_remove_logger_f64);
-        this->logger = this->create_publisher<rdata::msg::LogF64>(this->loggerTopicName, 10);
+    F64::F64(const char *nodeName, std::chrono::milliseconds period) : Node<rdata_msgs::msg::LogF64>(nodeName, period) {
+        this->clCreateLogger = this->create_client<rdata_msgs::srv::CreateLogger>(rdata::iface::srv_create_logger_f64);
+        this->clRemoveLogger = this->create_client<rdata_msgs::srv::RemoveLogger>(rdata::iface::srv_remove_logger_f64);
+        this->logger = this->create_publisher<rdata_msgs::msg::LogF64>(this->loggerTopicName, 10);
         this->sinPeriod = 2 * 3.14 / (100 * period.count());
 
         RCLCPP_INFO(
@@ -46,7 +47,7 @@ namespace rdata::vsensor {
     }
 
     void F64::timerCallback() {
-        auto message = rdata::msg::LogF64();
+        auto message = rdata_msgs::msg::LogF64();
         uint ms = this->calcElapsedTime();
 
         message.measurment = "virtual_float";
@@ -57,10 +58,10 @@ namespace rdata::vsensor {
     }
 
     // Virtual int sensor
-    I64::I64(const char *nodeName, std::chrono::milliseconds period) : Node<rdata::msg::LogI64>(nodeName, period) {
-        this->clCreateLogger = this->create_client<rdata::srv::CreateLogger>(rdata::iface::srv_create_logger_i64);
-        this->clRemoveLogger = this->create_client<rdata::srv::RemoveLogger>(rdata::iface::srv_remove_logger_i64);
-        this->logger = this->create_publisher<rdata::msg::LogI64>(this->loggerTopicName, 10);
+    I64::I64(const char *nodeName, std::chrono::milliseconds period) : Node<rdata_msgs::msg::LogI64>(nodeName, period) {
+        this->clCreateLogger = this->create_client<rdata_msgs::srv::CreateLogger>(rdata::iface::srv_create_logger_i64);
+        this->clRemoveLogger = this->create_client<rdata_msgs::srv::RemoveLogger>(rdata::iface::srv_remove_logger_i64);
+        this->logger = this->create_publisher<rdata_msgs::msg::LogI64>(this->loggerTopicName, 10);
 
         RCLCPP_INFO(
             this->get_logger(), "Created virtual i64 sensor with period '%sms'", std::to_string(period.count()).c_str());
@@ -73,7 +74,7 @@ namespace rdata::vsensor {
     }
 
     void I64::timerCallback() {
-        auto message = rdata::msg::LogI64();
+        auto message = rdata_msgs::msg::LogI64();
 
         message.measurment = "virtual_int";
         message.sensor = this->nodeName;
@@ -83,10 +84,10 @@ namespace rdata::vsensor {
     }
 
     // Virtual string sensor
-    Str::Str(const char *nodeName, std::chrono::milliseconds period) : Node<rdata::msg::LogStr>(nodeName, period) {
-        this->clCreateLogger = this->create_client<rdata::srv::CreateLogger>(rdata::iface::srv_create_logger_str);
-        this->clRemoveLogger = this->create_client<rdata::srv::RemoveLogger>(rdata::iface::srv_remove_logger_str);
-        this->logger = this->create_publisher<rdata::msg::LogStr>(this->loggerTopicName, 10);
+    Str::Str(const char *nodeName, std::chrono::milliseconds period) : Node<rdata_msgs::msg::LogStr>(nodeName, period) {
+        this->clCreateLogger = this->create_client<rdata_msgs::srv::CreateLogger>(rdata::iface::srv_create_logger_str);
+        this->clRemoveLogger = this->create_client<rdata_msgs::srv::RemoveLogger>(rdata::iface::srv_remove_logger_str);
+        this->logger = this->create_publisher<rdata_msgs::msg::LogStr>(this->loggerTopicName, 10);
 
         RCLCPP_INFO(this->get_logger(),
                     "Created virtual string sensor with period '%sms'",
@@ -100,7 +101,7 @@ namespace rdata::vsensor {
     }
 
     void Str::timerCallback() {
-        auto message = rdata::msg::LogStr();
+        auto message = rdata_msgs::msg::LogStr();
         uint ms = this->calcElapsedTime();
 
         message.measurment = "virtual_string";
@@ -111,10 +112,10 @@ namespace rdata::vsensor {
     }
 
     // Virtual uint sensor
-    U64::U64(const char *nodeName, std::chrono::milliseconds period) : Node<rdata::msg::LogU64>(nodeName, period) {
-        this->clCreateLogger = this->create_client<rdata::srv::CreateLogger>(rdata::iface::srv_create_logger_u64);
-        this->clRemoveLogger = this->create_client<rdata::srv::RemoveLogger>(rdata::iface::srv_remove_logger_u64);
-        this->logger = this->create_publisher<rdata::msg::LogU64>(this->loggerTopicName, 10);
+    U64::U64(const char *nodeName, std::chrono::milliseconds period) : Node<rdata_msgs::msg::LogU64>(nodeName, period) {
+        this->clCreateLogger = this->create_client<rdata_msgs::srv::CreateLogger>(rdata::iface::srv_create_logger_u64);
+        this->clRemoveLogger = this->create_client<rdata_msgs::srv::RemoveLogger>(rdata::iface::srv_remove_logger_u64);
+        this->logger = this->create_publisher<rdata_msgs::msg::LogU64>(this->loggerTopicName, 10);
 
         RCLCPP_INFO(
             this->get_logger(), "Created virtual u64 sensor with period '%sms'", std::to_string(period.count()).c_str());
@@ -127,7 +128,7 @@ namespace rdata::vsensor {
     }
 
     void U64::timerCallback() {
-        auto message = rdata::msg::LogU64();
+        auto message = rdata_msgs::msg::LogU64();
 
         message.measurment = "virtual_uint";
         message.sensor = this->nodeName;

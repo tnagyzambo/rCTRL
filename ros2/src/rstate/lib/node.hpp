@@ -8,15 +8,15 @@
 #include <rclcpp/node.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_lifecycle/lifecycle_node.hpp>
-#include <rstate/msg/network_state.hpp>
-#include <rstate/msg/network_transition_description.hpp>
-#include <rstate/msg/network_transition_event.hpp>
-#include <rstate/msg/network_transition_feedback.hpp>
-#include <rstate/srv/get_available_network_states.hpp>
-#include <rstate/srv/get_available_network_transitions.hpp>
-#include <rstate/srv/get_network_state.hpp>
-#include <rstate/srv/network_transition_cancel_goal.hpp>
-#include <rstate/srv/network_transition_send_goal.hpp>
+#include <rstate_msgs/msg/network_state.hpp>
+#include <rstate_msgs/msg/network_transition_description.hpp>
+#include <rstate_msgs/msg/network_transition_event.hpp>
+#include <rstate_msgs/msg/network_transition_feedback.hpp>
+#include <rstate_msgs/srv/get_available_network_states.hpp>
+#include <rstate_msgs/srv/get_available_network_transitions.hpp>
+#include <rstate_msgs/srv/get_network_state.hpp>
+#include <rstate_msgs/srv/network_transition_cancel_goal.hpp>
+#include <rstate_msgs/srv/network_transition_send_goal.hpp>
 #include <rutil/fmt.hpp>
 #include <state/state.hpp>
 #include <string>
@@ -63,24 +63,24 @@ namespace rstate {
 
         State *currentState;
 
-        rclcpp_lifecycle::LifecyclePublisher<rstate::msg::NetworkTransitionEvent>::SharedPtr publisherNetworkTransitionEvent;
+        rclcpp_lifecycle::LifecyclePublisher<rstate_msgs::msg::NetworkTransitionEvent>::SharedPtr publisherNetworkTransitionEvent;
 
-        rclcpp::Service<rstate::srv::GetNetworkState>::SharedPtr serviceGetNetworkState;
-        rclcpp::Service<rstate::srv::GetAvailableNetworkTransitions>::SharedPtr serviceGetAvailableNetworkTransistions;
-        rclcpp::Service<rstate::srv::GetAvailableNetworkStates>::SharedPtr serviceGetAvailableNetworkStates;
+        rclcpp::Service<rstate_msgs::srv::GetNetworkState>::SharedPtr serviceGetNetworkState;
+        rclcpp::Service<rstate_msgs::srv::GetAvailableNetworkTransitions>::SharedPtr serviceGetAvailableNetworkTransistions;
+        rclcpp::Service<rstate_msgs::srv::GetAvailableNetworkStates>::SharedPtr serviceGetAvailableNetworkStates;
 
-        void serviceGetNetworkStateCallback(const std::shared_ptr<rstate::srv::GetNetworkState::Request>,
-                                            const std::shared_ptr<rstate::srv::GetNetworkState::Response>);
+        void serviceGetNetworkStateCallback(const std::shared_ptr<rstate_msgs::srv::GetNetworkState::Request>,
+                                            const std::shared_ptr<rstate_msgs::srv::GetNetworkState::Response>);
         void serviceGetAvailableNetworkTransistionsCallback(
-            const std::shared_ptr<rstate::srv::GetAvailableNetworkTransitions::Request>,
-            const std::shared_ptr<rstate::srv::GetAvailableNetworkTransitions::Response>);
+            const std::shared_ptr<rstate_msgs::srv::GetAvailableNetworkTransitions::Request>,
+            const std::shared_ptr<rstate_msgs::srv::GetAvailableNetworkTransitions::Response>);
         void serviceGetNetworkAvailableStatesCallback(
-            const std::shared_ptr<rstate::srv::GetAvailableNetworkStates::Request>,
-            const std::shared_ptr<rstate::srv::GetAvailableNetworkStates::Response>);
+            const std::shared_ptr<rstate_msgs::srv::GetAvailableNetworkStates::Request>,
+            const std::shared_ptr<rstate_msgs::srv::GetAvailableNetworkStates::Response>);
 
-        std::shared_ptr<ActionServer<rstate::srv::NetworkTransitionCancelGoal,
-                                     rstate::srv::NetworkTransitionSendGoal,
-                                     rstate::msg::NetworkTransitionFeedback>>
+        std::shared_ptr<ActionServer<rstate_msgs::srv::NetworkTransitionCancelGoal,
+                                     rstate_msgs::srv::NetworkTransitionSendGoal,
+                                     rstate_msgs::msg::NetworkTransitionFeedback>>
             actionServer;
 
         // Map to hold exectution buffers for transitions

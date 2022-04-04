@@ -13,7 +13,9 @@ RUN locale-gen en_US.UTF-8
 
 # Install dev dependencies
 RUN apt-get update
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy software-properties-common pkg-config wget curl jq libssl-dev 
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy wget git curl
+RUN apt-get update
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy software-properties-common pkg-config jq libssl-dev 
 RUN apt-get update
 
 # Install compile toolsc
@@ -59,6 +61,7 @@ RUN rm version_${WASM_OPT_RELEASE}.tar.gz
 RUN mkdir /lib/binaryen-version_${WASM_OPT_RELEASE}/build
 RUN cd /lib/binaryen-version_${WASM_OPT_RELEASE} && cmake . && make
 ENV PATH="/lib/binaryen-version_${WASM_OPT_RELEASE}/bin:${PATH}"
+ENV LD_LIBRARY_PATH="/lib/binaryen-version_${WASM_OPT_RELEASE}/lib:${LD_LIBRARY_PATH}"
 
 # Install ROS2
 RUN apt-get update 

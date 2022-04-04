@@ -8,16 +8,16 @@ namespace rstate {
 
     void Inactive::enter(Node *node) { RCLCPP_INFO(node->get_logger(), "Network is inactive"); }
 
-    rstate::msg::NetworkState Inactive::getNetworkState() {
-        rstate::msg::NetworkState network_state;
+    rstate_msgs::msg::NetworkState Inactive::getNetworkState() {
+        rstate_msgs::msg::NetworkState network_state;
         network_state.id = (uint)NetworkStateEnum::Inactive;
         network_state.label = "inactive";
 
         return network_state;
     }
 
-    rstate::srv::GetAvailableNetworkTransitions::Response Inactive::getAvailableNetworkTransitions() {
-        rstate::srv::GetAvailableNetworkTransitions::Response response;
+    rstate_msgs::srv::GetAvailableNetworkTransitions::Response Inactive::getAvailableNetworkTransitions() {
+        rstate_msgs::srv::GetAvailableNetworkTransitions::Response response;
         response.available_transitions = {
             generateNetworkTransitionDescription(
                 NetworkTransitionEnum::CleanUp, NetworkStateEnum::Inactive, NetworkStateEnum::Unconfigured),
@@ -29,7 +29,7 @@ namespace rstate {
     }
 
     GoalResponse Inactive::handleGoal(Node *node,
-                                      std::shared_ptr<const rstate::srv::NetworkTransitionSendGoal::Request> goal) {
+                                      std::shared_ptr<const rstate_msgs::srv::NetworkTransitionSendGoal::Request> goal) {
         switch (goal->transition.id) {
         case (int)NetworkTransitionEnum::CleanUp:
             this->onTransition = &Inactive::onCleanUp;
@@ -53,20 +53,20 @@ namespace rstate {
     }
 
     CancelResponse Inactive::handleCancel(
-        Node *node, const std::shared_ptr<GoalHandle<rstate::msg::NetworkTransitionFeedback>> goalHandle) {
+        Node *node, const std::shared_ptr<GoalHandle<rstate_msgs::msg::NetworkTransitionFeedback>> goalHandle) {
         RCLCPP_INFO(node->get_logger(), "Received request to cancel transition");
         (void)goalHandle;
         return CancelResponse::ACCEPT;
     }
 
-    void Inactive::handleAccepted(Node *node,
-                                  const std::shared_ptr<GoalHandle<rstate::msg::NetworkTransitionFeedback>> goalHandle) {
+    void Inactive::handleAccepted(
+        Node *node, const std::shared_ptr<GoalHandle<rstate_msgs::msg::NetworkTransitionFeedback>> goalHandle) {
         std::thread{std::bind(Inactive::onTransition, this, std::placeholders::_1, std::placeholders::_2), node, goalHandle}
             .detach();
     }
 
     void Inactive::onCleanUp(Node *node,
-                             const std::shared_ptr<GoalHandle<rstate::msg::NetworkTransitionFeedback>> goalHandle) {
+                             const std::shared_ptr<GoalHandle<rstate_msgs::msg::NetworkTransitionFeedback>> goalHandle) {
         node->setState(CleaningUp::getInstance());
 
         switch (executeCommands(node, node->cmdsOnCleanUp, goalHandle)) {
@@ -83,7 +83,7 @@ namespace rstate {
     }
 
     void Inactive::onActivate(Node *node,
-                              const std::shared_ptr<GoalHandle<rstate::msg::NetworkTransitionFeedback>> goalHandle) {
+                              const std::shared_ptr<GoalHandle<rstate_msgs::msg::NetworkTransitionFeedback>> goalHandle) {
         node->setState(Activating::getInstance());
 
         switch (executeCommands(node, node->cmdsOnActivate, goalHandle)) {
@@ -100,7 +100,7 @@ namespace rstate {
     }
 
     void Inactive::onShutdown(Node *node,
-                              const std::shared_ptr<GoalHandle<rstate::msg::NetworkTransitionFeedback>> goalHandle) {
+                              const std::shared_ptr<GoalHandle<rstate_msgs::msg::NetworkTransitionFeedback>> goalHandle) {
         node->setState(ShuttingDown::getInstance());
 
         switch (executeCommandsShutdown(node, node->cmdOnShutdownInactive, goalHandle)) {

@@ -23,61 +23,61 @@ namespace rdata {
         this->influxClient = std::make_unique<influx::Client>();
 
         // Bool
-        this->srvCreateLoggerBool = this->create_service<rdata::srv::CreateLogger>(
+        this->srvCreateLoggerBool = this->create_service<rdata_msgs::srv::CreateLogger>(
             iface::srv_create_logger_bool,
             std::bind(&Node::createLoggerBool, this, std::placeholders::_1, std::placeholders::_2));
         RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::srv::created(iface::srv_create_logger_bool).c_str());
 
         // F64
-        this->srvCreateLoggerF64 = this->create_service<rdata::srv::CreateLogger>(
+        this->srvCreateLoggerF64 = this->create_service<rdata_msgs::srv::CreateLogger>(
             iface::srv_create_logger_f64,
             std::bind(&Node::createLoggerF64, this, std::placeholders::_1, std::placeholders::_2));
         RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::srv::created(iface::srv_create_logger_f64).c_str());
 
         // I64
-        this->srvCreateLoggerI64 = this->create_service<rdata::srv::CreateLogger>(
+        this->srvCreateLoggerI64 = this->create_service<rdata_msgs::srv::CreateLogger>(
             iface::srv_create_logger_i64,
             std::bind(&Node::createLoggerI64, this, std::placeholders::_1, std::placeholders::_2));
         RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::srv::created(iface::srv_create_logger_i64).c_str());
 
         // Str
-        this->srvCreateLoggerStr = this->create_service<rdata::srv::CreateLogger>(
+        this->srvCreateLoggerStr = this->create_service<rdata_msgs::srv::CreateLogger>(
             iface::srv_create_logger_str,
             std::bind(&Node::createLoggerStr, this, std::placeholders::_1, std::placeholders::_2));
         RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::srv::created(iface::srv_create_logger_str).c_str());
 
         // U64
-        this->srvCreateLoggerU64 = this->create_service<rdata::srv::CreateLogger>(
+        this->srvCreateLoggerU64 = this->create_service<rdata_msgs::srv::CreateLogger>(
             iface::srv_create_logger_u64,
             std::bind(&Node::createLoggerU64, this, std::placeholders::_1, std::placeholders::_2));
         RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::srv::created(iface::srv_create_logger_u64).c_str());
 
         // Bool
-        this->srvRemoveLoggerBool = this->create_service<rdata::srv::RemoveLogger>(
+        this->srvRemoveLoggerBool = this->create_service<rdata_msgs::srv::RemoveLogger>(
             iface::srv_remove_logger_bool,
             std::bind(&Node::removeLoggerBool, this, std::placeholders::_1, std::placeholders::_2));
         RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::srv::created(iface::srv_remove_logger_bool).c_str());
 
         // F64
-        this->srvRemoveLoggerF64 = this->create_service<rdata::srv::RemoveLogger>(
+        this->srvRemoveLoggerF64 = this->create_service<rdata_msgs::srv::RemoveLogger>(
             iface::srv_remove_logger_f64,
             std::bind(&Node::removeLoggerF64, this, std::placeholders::_1, std::placeholders::_2));
         RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::srv::created(iface::srv_remove_logger_f64).c_str());
 
         // I64
-        this->srvRemoveLoggerI64 = this->create_service<rdata::srv::RemoveLogger>(
+        this->srvRemoveLoggerI64 = this->create_service<rdata_msgs::srv::RemoveLogger>(
             iface::srv_remove_logger_i64,
             std::bind(&Node::removeLoggerI64, this, std::placeholders::_1, std::placeholders::_2));
         RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::srv::created(iface::srv_remove_logger_i64).c_str());
 
         // Str
-        this->srvRemoveLoggerStr = this->create_service<rdata::srv::RemoveLogger>(
+        this->srvRemoveLoggerStr = this->create_service<rdata_msgs::srv::RemoveLogger>(
             iface::srv_remove_logger_str,
             std::bind(&Node::removeLoggerStr, this, std::placeholders::_1, std::placeholders::_2));
         RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::srv::created(iface::srv_remove_logger_str).c_str());
 
         // U64
-        this->srvRemoveLoggerU64 = this->create_service<rdata::srv::RemoveLogger>(
+        this->srvRemoveLoggerU64 = this->create_service<rdata_msgs::srv::RemoveLogger>(
             iface::srv_remove_logger_u64,
             std::bind(&Node::removeLoggerU64, this, std::placeholders::_1, std::placeholders::_2));
         RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::srv::created(iface::srv_remove_logger_u64).c_str());
@@ -163,16 +163,16 @@ namespace rdata {
     // will know the type of datalogger that they will be requisting at compile time (avoid last minute decision making)
     // These functions will append the created subscriber to the approriate vector
     // These functions cannot be templated as it would require templated function pointers in the std::bind of the callback function
-    void Node::createLoggerBool(const std::shared_ptr<rdata::srv::CreateLogger::Request> request,
-                                std::shared_ptr<rdata::srv::CreateLogger::Response> response) {
+    void Node::createLoggerBool(const std::shared_ptr<rdata_msgs::srv::CreateLogger::Request> request,
+                                std::shared_ptr<rdata_msgs::srv::CreateLogger::Response> response) {
         auto callbackGroup = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
         auto opts = rclcpp::SubscriptionOptions();
         opts.callback_group = callbackGroup;
 
-        auto subPtr = this->create_subscription<rdata::msg::LogBool>(
+        auto subPtr = this->create_subscription<rdata_msgs::msg::LogBool>(
             request->topic.c_str(), 10, std::bind(&Node::callbackLogBool, this, std::placeholders::_1), opts);
 
-        rdata::Logger<rdata::msg::LogBool> logger = {
+        rdata::Logger<rdata_msgs::msg::LogBool> logger = {
             subPtr,
             callbackGroup,
             opts,
@@ -186,16 +186,16 @@ namespace rdata {
         response->completed = true;
     }
 
-    void Node::createLoggerF64(const std::shared_ptr<rdata::srv::CreateLogger::Request> request,
-                               std::shared_ptr<rdata::srv::CreateLogger::Response> response) {
+    void Node::createLoggerF64(const std::shared_ptr<rdata_msgs::srv::CreateLogger::Request> request,
+                               std::shared_ptr<rdata_msgs::srv::CreateLogger::Response> response) {
         auto callbackGroup = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
         auto opts = rclcpp::SubscriptionOptions();
         opts.callback_group = callbackGroup;
 
-        auto subPtr = this->create_subscription<rdata::msg::LogF64>(
+        auto subPtr = this->create_subscription<rdata_msgs::msg::LogF64>(
             request->topic.c_str(), 10, std::bind(&Node::callbackLogF64, this, std::placeholders::_1), opts);
 
-        rdata::Logger<rdata::msg::LogF64> logger = {
+        rdata::Logger<rdata_msgs::msg::LogF64> logger = {
             subPtr,
             callbackGroup,
             opts,
@@ -209,16 +209,16 @@ namespace rdata {
         response->completed = true;
     }
 
-    void Node::createLoggerI64(const std::shared_ptr<rdata::srv::CreateLogger::Request> request,
-                               std::shared_ptr<rdata::srv::CreateLogger::Response> response) {
+    void Node::createLoggerI64(const std::shared_ptr<rdata_msgs::srv::CreateLogger::Request> request,
+                               std::shared_ptr<rdata_msgs::srv::CreateLogger::Response> response) {
         auto callbackGroup = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
         auto opts = rclcpp::SubscriptionOptions();
         opts.callback_group = callbackGroup;
 
-        auto subPtr = this->create_subscription<rdata::msg::LogI64>(
+        auto subPtr = this->create_subscription<rdata_msgs::msg::LogI64>(
             request->topic.c_str(), 10, std::bind(&Node::callbackLogI64, this, std::placeholders::_1), opts);
 
-        rdata::Logger<rdata::msg::LogI64> logger = {
+        rdata::Logger<rdata_msgs::msg::LogI64> logger = {
             subPtr,
             callbackGroup,
             opts,
@@ -232,16 +232,16 @@ namespace rdata {
         response->completed = true;
     }
 
-    void Node::createLoggerStr(const std::shared_ptr<rdata::srv::CreateLogger::Request> request,
-                               std::shared_ptr<rdata::srv::CreateLogger::Response> response) {
+    void Node::createLoggerStr(const std::shared_ptr<rdata_msgs::srv::CreateLogger::Request> request,
+                               std::shared_ptr<rdata_msgs::srv::CreateLogger::Response> response) {
         auto callbackGroup = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
         auto opts = rclcpp::SubscriptionOptions();
         opts.callback_group = callbackGroup;
 
-        auto subPtr = this->create_subscription<rdata::msg::LogStr>(
+        auto subPtr = this->create_subscription<rdata_msgs::msg::LogStr>(
             request->topic.c_str(), 10, std::bind(&Node::callbackLogStr, this, std::placeholders::_1), opts);
 
-        rdata::Logger<rdata::msg::LogStr> logger = {
+        rdata::Logger<rdata_msgs::msg::LogStr> logger = {
             subPtr,
             callbackGroup,
             opts,
@@ -255,16 +255,16 @@ namespace rdata {
         response->completed = true;
     }
 
-    void Node::createLoggerU64(const std::shared_ptr<rdata::srv::CreateLogger::Request> request,
-                               std::shared_ptr<rdata::srv::CreateLogger::Response> response) {
+    void Node::createLoggerU64(const std::shared_ptr<rdata_msgs::srv::CreateLogger::Request> request,
+                               std::shared_ptr<rdata_msgs::srv::CreateLogger::Response> response) {
         auto callbackGroup = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
         auto opts = rclcpp::SubscriptionOptions();
         opts.callback_group = callbackGroup;
 
-        auto subPtr = this->create_subscription<rdata::msg::LogU64>(
+        auto subPtr = this->create_subscription<rdata_msgs::msg::LogU64>(
             request->topic.c_str(), 10, std::bind(&Node::callbackLogU64, this, std::placeholders::_1), opts);
 
-        rdata::Logger<rdata::msg::LogU64> logger = {
+        rdata::Logger<rdata_msgs::msg::LogU64> logger = {
             subPtr,
             callbackGroup,
             opts,
@@ -279,8 +279,8 @@ namespace rdata {
     }
 
     // Service functions to remove data loggers by topic name
-    void Node::removeLoggerBool(const std::shared_ptr<rdata::srv::RemoveLogger::Request> request,
-                                std::shared_ptr<rdata::srv::RemoveLogger::Response> response) {
+    void Node::removeLoggerBool(const std::shared_ptr<rdata_msgs::srv::RemoveLogger::Request> request,
+                                std::shared_ptr<rdata_msgs::srv::RemoveLogger::Response> response) {
         auto loggersTranformed = removeLoggerByTopic(this->loggersBool, request->topic.c_str());
         int loggersRemoved = this->loggersBool.size() - loggersTranformed.size();
         this->loggersBool = loggersTranformed;
@@ -294,8 +294,8 @@ namespace rdata {
         response->completed = true;
     }
 
-    void Node::removeLoggerF64(const std::shared_ptr<rdata::srv::RemoveLogger::Request> request,
-                               std::shared_ptr<rdata::srv::RemoveLogger::Response> response) {
+    void Node::removeLoggerF64(const std::shared_ptr<rdata_msgs::srv::RemoveLogger::Request> request,
+                               std::shared_ptr<rdata_msgs::srv::RemoveLogger::Response> response) {
         auto loggersTranformed = removeLoggerByTopic(this->loggersF64, request->topic.c_str());
         int loggersRemoved = this->loggersF64.size() - loggersTranformed.size();
         this->loggersF64 = loggersTranformed;
@@ -309,8 +309,8 @@ namespace rdata {
         response->completed = true;
     }
 
-    void Node::removeLoggerI64(const std::shared_ptr<rdata::srv::RemoveLogger::Request> request,
-                               std::shared_ptr<rdata::srv::RemoveLogger::Response> response) {
+    void Node::removeLoggerI64(const std::shared_ptr<rdata_msgs::srv::RemoveLogger::Request> request,
+                               std::shared_ptr<rdata_msgs::srv::RemoveLogger::Response> response) {
 
         auto loggersTranformed = removeLoggerByTopic(this->loggersI64, request->topic.c_str());
         int loggersRemoved = this->loggersI64.size() - loggersTranformed.size();
@@ -325,8 +325,8 @@ namespace rdata {
         response->completed = true;
     }
 
-    void Node::removeLoggerStr(const std::shared_ptr<rdata::srv::RemoveLogger::Request> request,
-                               std::shared_ptr<rdata::srv::RemoveLogger::Response> response) {
+    void Node::removeLoggerStr(const std::shared_ptr<rdata_msgs::srv::RemoveLogger::Request> request,
+                               std::shared_ptr<rdata_msgs::srv::RemoveLogger::Response> response) {
         auto loggersTranformed = removeLoggerByTopic(this->loggersStr, request->topic.c_str());
         int loggersRemoved = this->loggersStr.size() - loggersTranformed.size();
         this->loggersStr = loggersTranformed;
@@ -340,8 +340,8 @@ namespace rdata {
         response->completed = true;
     }
 
-    void Node::removeLoggerU64(const std::shared_ptr<rdata::srv::RemoveLogger::Request> request,
-                               std::shared_ptr<rdata::srv::RemoveLogger::Response> response) {
+    void Node::removeLoggerU64(const std::shared_ptr<rdata_msgs::srv::RemoveLogger::Request> request,
+                               std::shared_ptr<rdata_msgs::srv::RemoveLogger::Response> response) {
         auto loggersTranformed = removeLoggerByTopic(this->loggersU64, request->topic.c_str());
         int loggersRemoved = this->loggersU64.size() - loggersTranformed.size();
         this->loggersU64 = loggersTranformed;
@@ -357,13 +357,13 @@ namespace rdata {
 
     // The callbacks needed by the ros2 subscriptions cannot be templated so this must be done through overloading
     // The function call 'tryToWriteToInfluxDB()' can be templated however which lets us define uniform error handling logic once for all overloads
-    void Node::callbackLogBool(const rdata::msg::LogBool::SharedPtr msg) { tryToWriteToInfluxDB(msg); }
+    void Node::callbackLogBool(const rdata_msgs::msg::LogBool::SharedPtr msg) { tryToWriteToInfluxDB(msg); }
 
-    void Node::callbackLogF64(const rdata::msg::LogF64::SharedPtr msg) { tryToWriteToInfluxDB(msg); }
+    void Node::callbackLogF64(const rdata_msgs::msg::LogF64::SharedPtr msg) { tryToWriteToInfluxDB(msg); }
 
-    void Node::callbackLogI64(const rdata::msg::LogI64::SharedPtr msg) { tryToWriteToInfluxDB(msg); }
+    void Node::callbackLogI64(const rdata_msgs::msg::LogI64::SharedPtr msg) { tryToWriteToInfluxDB(msg); }
 
-    void Node::callbackLogStr(const rdata::msg::LogStr::SharedPtr msg) { tryToWriteToInfluxDB(msg); }
+    void Node::callbackLogStr(const rdata_msgs::msg::LogStr::SharedPtr msg) { tryToWriteToInfluxDB(msg); }
 
-    void Node::callbackLogU64(const rdata::msg::LogU64::SharedPtr msg) { tryToWriteToInfluxDB(msg); }
+    void Node::callbackLogU64(const rdata_msgs::msg::LogU64::SharedPtr msg) { tryToWriteToInfluxDB(msg); }
 } // namespace rdata

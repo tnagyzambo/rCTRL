@@ -1,4 +1,3 @@
-#include "rstate/srv/detail/get_available_network_transitions__struct.hpp"
 #include <node.hpp>
 
 namespace rstate {
@@ -9,17 +8,20 @@ namespace rstate {
         this->setState(Unknown::getInstance());
 
         this->publisherNetworkTransitionEvent =
-            this->create_publisher<rstate::msg::NetworkTransitionEvent>("rstate/network_transition_event", 10);
+            this->create_publisher<rstate_msgs::msg::NetworkTransitionEvent>("rstate/network_transition_event", 10);
         this->publisherNetworkTransitionEvent->on_activate();
 
-        this->serviceGetNetworkState = this->create_service<rstate::srv::GetNetworkState>(
+        this->serviceGetNetworkState = this->create_service<rstate_msgs::srv::GetNetworkState>(
             "rstate/get_network_state",
             std::bind(&Node::serviceGetNetworkStateCallback, this, std::placeholders::_1, std::placeholders::_2));
 
-        this->serviceGetAvailableNetworkTransistions = this->create_service<rstate::srv::GetAvailableNetworkTransitions>(
-            "rstate/get_available_network_transitions",
-            std::bind(
-                &Node::serviceGetAvailableNetworkTransistionsCallback, this, std::placeholders::_1, std::placeholders::_2));
+        this->serviceGetAvailableNetworkTransistions =
+            this->create_service<rstate_msgs::srv::GetAvailableNetworkTransitions>(
+                "rstate/get_available_network_transitions",
+                std::bind(&Node::serviceGetAvailableNetworkTransistionsCallback,
+                          this,
+                          std::placeholders::_1,
+                          std::placeholders::_2));
 
         // Map toml sections to vectors that will store commands to execute in order
         this->transitionMap = {
@@ -51,7 +53,7 @@ namespace rstate {
         try {
             toml::table toml = toml::parse_file("/workspaces/rCTRL/ros2/src/rstate/config.toml");
             readConfig(toml);
-        } catch (except::config_parse_error e) {
+        } catch (except::config_parse_error &e) {
             RCLCPP_ERROR(this->get_logger(), "Failed to configure!\nError: %s", e.what());
             return LifecycleCallbackReturn::FAILURE;
         }
@@ -72,9 +74,9 @@ namespace rstate {
 
         // Bind action server call backs to State interface method
         // Provide a reference to the State currently held by the rstate Node as an execution context
-        this->actionServer = std::make_shared<ActionServer<rstate::srv::NetworkTransitionCancelGoal,
-                                                           rstate::srv::NetworkTransitionSendGoal,
-                                                           rstate::msg::NetworkTransitionFeedback>>(
+        this->actionServer = std::make_shared<ActionServer<rstate_msgs::srv::NetworkTransitionCancelGoal,
+                                                           rstate_msgs::srv::NetworkTransitionSendGoal,
+                                                           rstate_msgs::msg::NetworkTransitionFeedback>>(
             static_cast<rclcpp_lifecycle::LifecycleNode *>(this),
             "rstate/change_network_state",
             std::bind(&State::handleGoal, std::ref(this->currentState), this, std::placeholders::_1),
@@ -141,7 +143,7 @@ namespace rstate {
     void Node::publishNetworkTransitionEvent(NetworkTransitionEnum transition,
                                              NetworkStateEnum start_state,
                                              NetworkStateEnum goal_state) {
-        rstate::msg::NetworkTransitionEvent transitionEvent;
+        rstate_msgs::msg::NetworkTransitionEvent transitionEvent;
         transitionEvent.timestamp = 0; // FIX
         transitionEvent.transition.id = (uint)transition;
         transitionEvent.transition.label = generateNetworkTransitionLabel(transition);
@@ -153,15 +155,15 @@ namespace rstate {
         this->publisherNetworkTransitionEvent->publish(transitionEvent);
     }
 
-    void Node::serviceGetNetworkStateCallback(const std::shared_ptr<rstate::srv::GetNetworkState::Request> request,
-                                              const std::shared_ptr<rstate::srv::GetNetworkState::Response> response) {
+    void Node::serviceGetNetworkStateCallback(const std::shared_ptr<rstate_msgs::srv::GetNetworkState::Request> request,
+                                              const std::shared_ptr<rstate_msgs::srv::GetNetworkState::Response> response) {
         (void)request;
         response->current_state = this->currentState->getNetworkState();
     }
 
     void Node::serviceGetAvailableNetworkTransistionsCallback(
-        const std::shared_ptr<rstate::srv::GetAvailableNetworkTransitions::Request> request,
-        const std::shared_ptr<rstate::srv::GetAvailableNetworkTransitions::Response> response) {
+        const std::shared_ptr<rstate_msgs::srv::GetAvailableNetworkTransitions::Request> request,
+        const std::shared_ptr<rstate_msgs::srv::GetAvailableNetworkTransitions::Response> response) {
         (void)request;
         *response = this->currentState->getAvailableNetworkTransitions();
     }
@@ -185,7 +187,7 @@ namespace rstate {
                 // Get view of valid toml array
                 cmdsView = util::toml::viewOfArray(transitionView, "cmd");
                 cmdsFound = true;
-            } catch (rstate::except::config_parse_error e) {
+            } catch (rstate::except::config_parse_error &e) {
                 RCLCPP_DEBUG(this->get_logger(), "No commands found in section '%s'", transitionName);
             }
             if (cmdsFound) {
@@ -215,7 +217,7 @@ namespace rstate {
             toml::node_view<toml::node> cmdTypeView;
             try {
                 cmdTypeView = util::toml::viewOfTable(cmdView, cmdTypeName);
-            } catch (rstate::except::config_parse_error e) {
+            } catch (rstate::except::config_parse_error &e) {
                 // Cmd was not of type cmdType
                 // Catch and ignore
                 // Exit current loop iteration
