@@ -28,6 +28,7 @@ target_link_libraries(${PROJECT_NAME} tomlplusplus::tomlplusplus
                                       gpiod)
 
 ament_target_dependencies(${PROJECT_NAME} rclcpp
+                                          rutil
                                           rgpio_msgs)
 
 ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)

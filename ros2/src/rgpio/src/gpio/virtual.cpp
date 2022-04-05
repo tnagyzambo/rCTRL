@@ -34,7 +34,7 @@ rgpio::gpio::Virtual::~Virtual() {
 
 void rgpio::gpio::Virtual::setLineAsInput() {
     RCLCPP_INFO(this->node->get_logger(),
-                "Chip '%d' line '%d' has been set as an input (VIRUAL)",
+                "Chip '%d' line '%d' has been set as an input (VIRTUAL)",
                 this->chipNumber.value,
                 this->lineNumber.value);
 }
