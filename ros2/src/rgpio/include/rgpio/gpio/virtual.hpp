@@ -1,9 +1,7 @@
 #pragma once
 
-#include <helper.hpp>
-#include <iface.hpp>
 #include <rclcpp/rclcpp.hpp>
-
+#include <rgpio/gpio/gpio.hpp>
 #include <rgpio_msgs/msg/sim_input.hpp>
 #include <rgpio_msgs/msg/sim_output.hpp>
 
@@ -11,9 +9,9 @@
 // virtual IOs will inherit this class
 namespace rgpio {
     namespace gpio {
-        class Virtual : public Iface {
+        class Virtual : public Gpio {
         public:
-            Virtual(rclcpp::Node &, std::string, chip_number, line_number);
+            Virtual(rclcpp::Node *, std::string, chip_number, line_number);
             ~Virtual();
 
             void setLineAsInput();
@@ -23,7 +21,7 @@ namespace rgpio {
             void setLine(line_level::level);
 
         private:
-            rclcpp::Node &node;
+            rclcpp::Node *node;
             std::string name;
 
             chip_number chipNumber;

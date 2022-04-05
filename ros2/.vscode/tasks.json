@@ -37,6 +37,16 @@
             "command": "clear && colcon build --packages-select rgpio_msgs --cmake-args '-DCMAKE_BUILD_TYPE=RelWithDebInfo'",
         },
         {
+            "label": "rgpio-example build",
+            "type": "shell",
+            "command": "clear && colcon build --packages-select rgpio_example --cmake-args '-DCMAKE_BUILD_TYPE=RelWithDebInfo'",
+        },
+        {
+            "label": "rgpio-example run",
+            "type": "shell",
+            "command": "clear && source install/setup.bash && ros2 run rgpio_example rgpio_example_node",
+        },
+        {
             "label": "rgpio-run",
             "type": "shell",
             "command": "clear && source install/setup.bash && ros2 run rgpio rgpio_node",
@@ -55,6 +65,11 @@
             "label": "rstate-run",
             "type": "shell",
             "command": "clear && source install/setup.bash && ros2 run rstate rstate_node",
+        },
+        {
+            "label": "rutil-build",
+            "type": "shell",
+            "command": "clear && colcon build --packages-select rutil --cmake-args '-DCMAKE_BUILD_TYPE=RelWithDebInfo'",
         },
     ]
 }

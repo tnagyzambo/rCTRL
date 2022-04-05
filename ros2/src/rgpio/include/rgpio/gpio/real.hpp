@@ -2,17 +2,16 @@
 
 #include <gpiod.hpp>
 #include <rclcpp/rclcpp.hpp>
+#include <rgpio/gpio/gpio.hpp>
 #include <sstream>
-
-#include <helper.hpp>
-#include <iface.hpp>
+#include <rgpio/util/except.hpp>
 
 // This class implements all functions needed for accessing physical IOs, all real IOs will inherit this class
 namespace rgpio {
     namespace gpio {
-        class Real : public Iface {
+        class Real : public Gpio {
         public:
-            Real(rclcpp::Node &, std::string, chip_number, line_number);
+            Real(rclcpp::Node *, std::string, chip_number, line_number);
             ~Real();
 
             void setLineAsInput();
@@ -22,7 +21,7 @@ namespace rgpio {
             void setLine(line_level::level);
 
         private:
-            rclcpp::Node &node;
+            rclcpp::Node *node;
             std::string name;
 
             chip_number chipNumber;

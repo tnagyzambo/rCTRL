@@ -11,10 +11,6 @@ set(msg_files
     "msg/SimInput.msg"
     "msg/SimOutput.msg")
 
-set(srv_files
-    "srv/InputRead.srv"
-    "srv/OutputWrite.srv")
-
 # Create ros2 interfaces
 rosidl_generate_interfaces(${PROJECT_NAME}
                            ${msg_files}

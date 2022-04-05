@@ -15,32 +15,31 @@ find_package(rutil REQUIRED)
 find_package(rgpio_msgs REQUIRED)
 find_package(rdata REQUIRED)
 
-# rgpio executable
-add_executable(rgpio_node src/main.cpp
-                          lib/node.cpp
-                          lib/real.cpp
-                          lib/virtual.cpp
-                          lib/helper.cpp)
+include_directories(include)
 
-target_include_directories(rgpio_node PRIVATE lib)
+# rgpio library
+add_library(${PROJECT_NAME} SHARED src/input.cpp
+                                   src/output.cpp
+                                   src/gpio/real.cpp
+                                   src/gpio/virtual.cpp
+                                   src/util/util.cpp)
 
-target_link_libraries(rgpio_node tomlplusplus::tomlplusplus
-                                 gpiod)
+target_link_libraries(${PROJECT_NAME} tomlplusplus::tomlplusplus
+                                      gpiod)
 
-ament_target_dependencies(rgpio_node rclcpp 
-                                     rclcpp_lifecycle
-                                     lifecycle_msgs
-                                     rutil
-                                     rgpio_msgs
-                                     rdata)
+ament_target_dependencies(${PROJECT_NAME} rclcpp
+                                          rgpio_msgs)
+
+ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
+ament_export_dependencies(tomlplusplus)
 
 install(DIRECTORY include/
         DESTINATION include)
-                             
-install(TARGETS rgpio_node
+
+install(TARGETS ${PROJECT_NAME} EXPORT export_${PROJECT_NAME}
         LIBRARY DESTINATION lib
         ARCHIVE DESTINATION lib
         RUNTIME DESTINATION lib/${PROJECT_NAME}
         INCLUDES DESTINATION include)
-                             
+
 ament_package()

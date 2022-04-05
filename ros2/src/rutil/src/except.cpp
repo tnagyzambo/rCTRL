@@ -1,4 +1,4 @@
-#include <except.hpp>
+#include <rutil/except.hpp>
 
 namespace rutil::except {
     std::string service_error::buildMessage(const char *serviceName) {

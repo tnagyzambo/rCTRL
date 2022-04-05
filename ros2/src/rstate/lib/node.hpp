@@ -59,7 +59,7 @@ namespace rstate {
         LifecycleCallbackReturn on_activate(const rclcpp_lifecycle::State &);
         LifecycleCallbackReturn on_deactivate(const rclcpp_lifecycle::State &);
         LifecycleCallbackReturn on_cleanup(const rclcpp_lifecycle::State &);
-        LifecycleCallbackReturn on_shutdown(const rclcpp_lifecycle::State &state);
+        LifecycleCallbackReturn on_shutdown(const rclcpp_lifecycle::State &);
 
         State *currentState;
 
@@ -147,5 +147,4 @@ namespace rstate {
 
         return cmdPtr;
     }
-
 } // namespace rstate

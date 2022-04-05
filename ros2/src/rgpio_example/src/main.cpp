@@ -4,8 +4,9 @@ int main(int argc, char *argv[]) {
     rclcpp::init(argc, argv);
     rclcpp::executors::SingleThreadedExecutor executor;
 
-    auto rocketGpioNode = std::make_shared<rgpio::Node>();
-    executor.add_node(rocketGpioNode);
+    auto rgpioExampleNode = std::make_shared<rgpio_example::Node>();
+
+    executor.add_node(rgpioExampleNode->get_node_base_interface());
     executor.spin();
     rclcpp::shutdown();
 
