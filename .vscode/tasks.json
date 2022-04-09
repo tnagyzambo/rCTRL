@@ -28,5 +28,6 @@
                 "run rocketdata_vsensor"
             ],
         },
+        // Add or edit tasks for lifecycle node management
     ]
 }

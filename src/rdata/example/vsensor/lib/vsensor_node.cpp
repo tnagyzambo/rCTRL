@@ -1,5 +1,11 @@
 #include <vsensor_node.hpp>
 
+#include <cstdio>
+#include <iostream>
+#include <stdexcept>
+#include <string>
+#include <array>
+
 // Base class
 // VSensorNode::VSensorNode(std::string nodeName, std::chrono::milliseconds period) : Node(nodeName)
 // {
@@ -129,14 +135,31 @@ rdata::vsensor::F64::~F64()
     RCLCPP_INFO(this->get_logger(), "Destroyed virtual f64 sensor with period \"%sms\".", std::to_string(period.count()).c_str());
 }
 
+std::string exec(const char* cmd) {
+    std::array<char, 128> buffer;
+    std::string result;
+    std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
+    if (!pipe) {
+        throw std::runtime_error("popen() failed!");
+    }
+    while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
+        result += buffer.data();
+    }
+    return result;
+}
+
 void rdata::vsensor::F64::timerCallback()
 {
     auto message = rdata::msg::LogF64();
-    uint ms = this->calcElapsedTime();
+    //uint ms = this->calcElapsedTime(); // pedantic flag on compiler gives error
 
     message.measurment = "virtual_float";
     message.sensor = this->nodeName;
-    message.value = sin(this->sinPeriod * ms);
+    //message.value = sin(this->sinPeriod * ms);
+
+    auto temp = exec("sensors | grep 'temp1'"); // produces string of form 'temp1:        +45.0°C  '
+    auto subtemp = temp.substr(14,4);
+    message.value = stof(subtemp);
 
     this->logger->publish(message);
 }
@@ -213,3 +236,6 @@ void rdata::vsensor::F64::timerCallback()
 
 //     this->publisher->publish(message);
 // }
+
+
+

@@ -55,6 +55,10 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy libcurl4-openssl-dev
 # RUN cd /lib/${CURL_RELEASE} && cmake --build build
 # RUN cd /lib/${CURL_RELEASE} && cmake --install build
 
+# Install library for tracking CPU temperature
+RUN apt-get update
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy lm-sensors
+
 # Install toml++ dev dependencies
 ARG TOML11_RELEASE=2.5.0
 RUN wget https://github.com/marzer/tomlplusplus/archive/refs/tags/v${TOML11_RELEASE}.tar.gz
