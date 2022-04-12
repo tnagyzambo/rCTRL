@@ -1,0 +1,15 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "fw-build",
+            "type": "shell",
+            "command": "clear && pio run",
+        },
+        {
+            "label": "fw-upload",
+            "type": "shell",
+            "command": "clear && pio run -t upload",
+        },
+    ]
+}
