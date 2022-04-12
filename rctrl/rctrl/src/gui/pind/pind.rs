@@ -47,6 +47,19 @@ impl epi::App for PInD {
 
         egui::CentralPanel::default().show(ctx, |ui| {
             let rstate_panel = self.rstate_panel.draw(ctx, ui);
+
+            if ui.button("mv_1_open").clicked() {
+                let cmd = rctrl_rosbridge::protocol::CallService::<u8>::new("/recu/mv1_open");
+                self.ws_lock.add_ws_write(serde_json::to_string(&cmd).unwrap());
+            }
+            if ui.button("mv_1_close").clicked() {
+                let cmd = rctrl_rosbridge::protocol::CallService::<u8>::new("/recu/mv1_close");
+                self.ws_lock.add_ws_write(serde_json::to_string(&cmd).unwrap());
+            }
+            if ui.button("mv_2_open").clicked() {
+                let cmd = rctrl_rosbridge::protocol::CallService::<u8>::new("/recu/mv2_open");
+                self.ws_lock.add_ws_write(serde_json::to_string(&cmd).unwrap());
+            }
         });
     }
 }

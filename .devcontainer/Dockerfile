@@ -102,6 +102,10 @@ RUN cd /lib/fmt-${FMTLIB_RELEASE} && cmake --install build
 RUN apt-get update 
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy gpiod libgpiod-dev
 
+# Install i2c dev dependencies
+RUN apt-get update 
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy libi2c-dev
+
 # Install rosbridge
 RUN apt-get update
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy ros-galactic-rosbridge-suite
@@ -111,13 +115,20 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy ros-galactic-rosbridge-su
 ENV INFLUX_RELEASE=2.0.7
 RUN arch="$(uname -m)"; \
         case "$arch" in \
-            armhf) export INFLUX_ARCH='arm64' ;; \
+            aarch64) export INFLUX_ARCH='arm64' ;; \
             x86_64) export INFLUX_ARCH='amd64' ;; \
         esac \
         && wget https://dl.influxdata.com/influxdb/releases/influxdb2-${INFLUX_RELEASE}-${INFLUX_ARCH}.deb \
         && dpkg -i influxdb2-${INFLUX_RELEASE}-${INFLUX_ARCH}.deb \
         && rm influxdb2-${INFLUX_RELEASE}-${INFLUX_ARCH}.deb
 # RUN service influxdb start
+
+
+# Install i2c dev dependencies
+RUN apt-get update 
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy libi2c-dev
+
+
 
 # Add influx credentials file
 USER ros
