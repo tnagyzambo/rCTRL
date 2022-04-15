@@ -69,7 +69,7 @@ void setup() {
 
 	//PGA offset calibration loop
   	//Set false to skip
-	if (true) {
+	if (false) {
 		//Set mux to internal short
 		LoadCell.setInputMultiplexer(ADS122C04_MUX_SHORTED);
 		TankPS.setInputMultiplexer(ADS122C04_MUX_SHORTED);
