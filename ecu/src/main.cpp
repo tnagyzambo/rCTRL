@@ -1,17 +1,16 @@
+#include <Arduino_MachineControl.h>
 #include <Serial.h>
+
+using namespace machinecontrol;
 
 unsigned char data = 99;   // for incoming serial data
 
-bool status = false;
-
 void setup() {
-	pinMode(LEDR, OUTPUT);
-	pinMode(LEDG, OUTPUT);
-	pinMode(LEDB, OUTPUT);
+	//Set over current behavior of all channels to latch mode:
+  	digital_outputs.setLatch();
 
-	digitalWrite(LEDR, HIGH);
-	digitalWrite(LEDG, HIGH);
-	digitalWrite(LEDB, HIGH);
+	//At startup set all channels to CLOSED
+  	digital_outputs.setAll(0);
 
 	Serial.begin(9600);
 }
@@ -22,14 +21,10 @@ void loop() {
 
 		switch(data) {
 			case 1:
-				digitalWrite(LEDG, HIGH);
-				digitalWrite(LEDB, HIGH);
-				digitalWrite(LEDR, LOW);
+				digital_outputs.set(0, LOW);
 				break;
 			case 2:
-				digitalWrite(LEDR, HIGH);
-				digitalWrite(LEDB, HIGH);
-				digitalWrite(LEDG, LOW);
+				digital_outputs.set(0, HIGH);
 				break;
 			case 3:
 				digitalWrite(LEDR, HIGH);
