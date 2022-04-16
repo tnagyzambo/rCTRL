@@ -2,6 +2,7 @@
 #include <Serial.h>
 #include <Wire.h>
 #include <SparkFun_ADS122C04_ADC_Arduino_Library.h>
+#include <ArduinoJson.h>
 
 using namespace machinecontrol;
 
@@ -11,6 +12,10 @@ SFE_ADS122C04 TankPS;
 float res_divider 	= 0.28057; // Required for machine control
 float reference 	= 3.3;	// Machine control reference
 float CCPressureMax = 30.0;
+
+//JSON communication setup
+const int sensorJsonCapacity = JSON_OBJECT_SIZE(8); //right now we have, LC, tankps1, tankps2, ccPS0, ccPS1, thermo 1, 2, 3
+StaticJsonDocument<sensorJsonCapacity> sensorJson;
 
 unsigned char data = 99;   // for incoming serial data
 
@@ -111,9 +116,9 @@ void loop() {
 	float lc_value  = LoadCell.readLC(); //Use the read function. Units depend on calibration. The output voltage true voltage (aka raw/gain)
 
 	// Read pressure sensor 1 and 2 (Tank sensors)
-	float ps_value1 = TankPS.readPS(); //Read first pressure sensor in Bar. Default sense pin is the out+ pin (aka AIN2)
+	float tankPS0 = TankPS.readPS(); //Read first pressure sensor in Bar. Default sense pin is the out+ pin (aka AIN2)
 	TankPS.setInputMultiplexer(ADS122C04_MUX_AIN0_AVSS); //Setting it to out- (aka AIN0)
-	float ps_value2 = TankPS.readPS(); //Read second pressure sensor in Bar
+	float tankPS1 = TankPS.readPS(); //Read second pressure sensor in Bar
 	TankPS.setInputMultiplexer(ADS122C04_MUX_AIN2_AVSS); //Set back to default. 
 
 	// Read CC pressure sensors
@@ -121,11 +126,12 @@ void loop() {
 	// Read code is taken directly from machine control analog example
 	float raw_voltage_ch0 = analog_in.read(0);
 	float voltage_ch0 = (raw_voltage_ch0 * reference) / 65535 / res_divider;
-	float ccps1 = voltage_ch0/10.0*CCPressureMax; // P = (0-10V) v/10 (normalize) * 30 bar
+	float ccPS0 = voltage_ch0/10.0*CCPressureMax; // P = (0-10V) v/10 (normalize) * 30 bar
 
+	delay(150);
 	float raw_voltage_ch1 = analog_in.read(1);
 	float voltage_ch1 = (raw_voltage_ch1 * reference) / 65535 / res_divider;
-	float ccps2 = voltage_ch1/10.0*CCPressureMax;// P = (0-10V) v/10 (normalize) * 30 bar
+	float ccPS1 = voltage_ch1/10.0*CCPressureMax;// P = (0-10V) v/10 (normalize) * 30 bar
 
 	// Read thermocouples
 	// TODO find out why the heck changing channels takes 150 ms????
@@ -142,25 +148,43 @@ void loop() {
 	//Take CH2 measurement
 	float temp_ch2 = temp_probes.tc.readTemperature();
 
+	// Writing sensor JSON object for serialization
+	//Do not write objects with allocated memory. Otherwise the loop will cause a memory leak
+	sensorJson["LC0"] 	= lc_value;
+	sensorJson["tPS0"] 	= tankPS0;
+	sensorJson["tPS1"]	= tankPS1;
+	sensorJson["ccPS0"]	= ccPS0;
+	sensorJson["ccPS1"]	= ccPS1;
+	sensorJson["T0"]	= temp_ch0;
+	sensorJson["T1"]	= temp_ch1;
+	sensorJson["T2"] 	= temp_ch2;
 
+	// Write serialized object to serial com
+	//serializeJson(sensorJson, Serial); //more efficient but not human readable
+	serializeJsonPretty(sensorJson,Serial);//with line breaks for debugging
+	//serializeMsgPack(sensorJson,Serial); //Most efficient method but not technically a json anymore
+	
 	// Print statements to debug values
-	Serial.print(F("Loadcell:"));
-	Serial.print(lc_value, 3);
-	Serial.print(F("\t PS1:"));
-	Serial.print(ps_value1, 3); 
-	Serial.print(F("Bar\t PS2:"));
-	Serial.print(ps_value2,3);
-	Serial.print(F("Bar\t CCPS1:"));
-	Serial.print(ccps1,3);
-	Serial.print(F("Bar\t CCPS2:"));
-	Serial.print(ccps2,3);
-	Serial.print(F("Bar\t T 0,1,2:"));
-	Serial.print(temp_ch0,2);
-	Serial.print(F(",\t"));
-	Serial.print(temp_ch1,2);
-	Serial.print(F(",\t"));
-	Serial.print(temp_ch2,2);
-	Serial.print(F("°C\n"));
+	if (false)
+	{
+		Serial.print(F("Loadcell: "));
+		Serial.print(lc_value, 3);
+		Serial.print(F("\t PS1: "));
+		Serial.print(tankPS0, 3); 
+		Serial.print(F("Bar\t PS2: "));
+		Serial.print(tankPS1,3);
+		Serial.print(F("Bar\t ccPS0: "));
+		Serial.print(ccPS0,3);
+		Serial.print(F("Bar\t ccPS1: "));
+		Serial.print(ccPS1,3);
+		Serial.print(F("Bar\t T 0,1,2: "));
+		Serial.print(temp_ch0,2);
+		Serial.print(F(",\t"));
+		Serial.print(temp_ch1,2);
+		Serial.print(F(",\t"));
+		Serial.print(temp_ch2,2);
+		Serial.print(F("°C\n"));
+	}
 
 	if (Serial.available() > 0) {
 		data = (unsigned char)Serial.read();
