@@ -26,14 +26,14 @@ void setup() {
 	//At startup set all channels to CLOSED
   	digital_outputs.setAll(0);
 
-	//TODO up serial speeds?
+	//TODO: up serial speeds?
 	Serial.begin(9600);
 	while (!Serial)
     ; //Wait for user to open terminal
   	Serial.println(F("LoadCell and Pressure Sensor test"));
 
 	//----------------------Analog input setup--------------
-	analogReadResolution(16); //TODO find information on machine control ADC
+	analogReadResolution(16); //TODO: find information on machine control ADC
 	analog_in.set0_10V();
 
 	// ---------------------- I2C setup ----------------------------
@@ -55,7 +55,7 @@ void setup() {
 	}	
 
 	// Configure ADC modes
-	// TODO set datarates as low as possible based on loop freq for lower noise
+	// TODO: set datarates as low as possible based on loop freq for lower noise
 	LoadCell.configureADCmode(ADS122C04_LC_MODE, ADS122C04_DATA_RATE_600SPS); //1200SPS due to turbo enabled
 	LoadCell.setLCSlopeAndOffset(1,0); // 1, 0 is slope of 1 and offset of zero. Basically returning the differential voltage vin.
 
@@ -91,7 +91,7 @@ void setup() {
 		}
 
 		//Set offsets 
-		//TODO make setPGAOffset function do all of this with just a sample or time
+		//TODO: make setPGAOffset function do all of this with just a sample or time
 		LoadCell.setPGAOffset(loadcell_offset);
 		TankPS.setPGAOffset(TankPS_offset);
 
@@ -122,19 +122,19 @@ void loop() {
 	TankPS.setInputMultiplexer(ADS122C04_MUX_AIN2_AVSS); //Set back to default. 
 
 	// Read CC pressure sensors
-	// TODO create wrapper functions
+	// TODO: create wrapper functions
 	// Read code is taken directly from machine control analog example
 	float raw_voltage_ch0 = analog_in.read(0);
 	float voltage_ch0 = (raw_voltage_ch0 * reference) / 65535 / res_divider;
 	float ccPS0 = voltage_ch0/10.0*CCPressureMax; // P = (0-10V) v/10 (normalize) * 30 bar
 
-	delay(150);
+	delay(150); //TODO: trying to figure out why they read the same
 	float raw_voltage_ch1 = analog_in.read(1);
 	float voltage_ch1 = (raw_voltage_ch1 * reference) / 65535 / res_divider;
 	float ccPS1 = voltage_ch1/10.0*CCPressureMax;// P = (0-10V) v/10 (normalize) * 30 bar
 
 	// Read thermocouples
-	// TODO find out why the heck changing channels takes 150 ms????
+	// TODO: find out why the heck changing channels takes 150 ms????
 	//Set CH0, has internal 150 ms delay
 	temp_probes.selectChannel(0);
 	//Take CH0 measurement
@@ -161,17 +161,17 @@ void loop() {
 
 	// Write serialized object to serial com
 	//serializeJson(sensorJson, Serial); //more efficient but not human readable
-	serializeJsonPretty(sensorJson,Serial);//with line breaks for debugging
+	//serializeJsonPretty(sensorJson,Serial);//with line breaks for debugging
 	//serializeMsgPack(sensorJson,Serial); //Most efficient method but not technically a json anymore
 	
 	// Print statements to debug values
-	if (false)
+	if (true)
 	{
 		Serial.print(F("Loadcell: "));
 		Serial.print(lc_value, 3);
-		Serial.print(F("\t PS1: "));
+		Serial.print(F("\t tPS0: "));
 		Serial.print(tankPS0, 3); 
-		Serial.print(F("Bar\t PS2: "));
+		Serial.print(F("Bar\t tPS1: "));
 		Serial.print(tankPS1,3);
 		Serial.print(F("Bar\t ccPS0: "));
 		Serial.print(ccPS0,3);
