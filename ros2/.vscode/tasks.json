@@ -7,6 +7,11 @@
             "command": "clear && colcon build --cmake-args '-DCMAKE_BUILD_TYPE=RelWithDebInfo'",
         },
         {
+            "label": "ros2-clean",
+            "type": "shell",
+            "command": "clear && rm -R build install log",
+        },
+        {
             "label": "rdata-build",
             "type": "shell",
             "command": "clear && colcon build --packages-select rdata --cmake-args '-DCMAKE_BUILD_TYPE=RelWithDebInfo'",
@@ -101,5 +106,5 @@
             "type": "shell",
             "command": "clear && colcon build --packages-select rutil --cmake-args '-DCMAKE_BUILD_TYPE=RelWithDebInfo'",
         },
-    ]
+    ],
 }

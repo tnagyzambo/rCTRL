@@ -3,6 +3,7 @@
     "build": {
         "args": {
             "WORKSPACE": "${containerWorkspaceFolder}",
+            "BASE": "base_dev",
         }
     },
     "remoteUser": "ros",
@@ -35,5 +36,4 @@
         "spmeesseman.vscode-taskexplorer",
         "rust-lang.rust",
     ],
-    "mounts": ["type=bind,source=/dev/i2c-1,target=/dev/i2c-1"]
 }

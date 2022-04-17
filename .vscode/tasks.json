@@ -1,0 +1,75 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "rctrl-apache-run",
+            "type": "shell",
+            "command": "docker",
+            "args": [
+                "run", "-dit",
+                "--name", "rctrl_apache",
+                "-p", "8080:80",
+                "-v", "$PWD/rctrl/dist/:/usr/local/apache2/htdocs/",
+                "httpd:latest",
+            ],
+        },
+        {
+            "label": "xcompile-x86-arm64-build",
+            "type": "shell",
+            "command": "docker",
+            "args": [
+                "build", ".devcontainer",
+                "-f", ".devcontainer/Dockerfile",
+                "-t", "rctrl_xcompile_x86_arm46",
+                "--build-arg", "BASE=base_xcompile_x86_arm64",
+            ],
+        },
+        {
+            "label": "xcompile-x86-arm64-run",
+            "type": "shell",
+            "command": "docker",
+            "args": [
+                "run",
+                "--rm",
+                "-v", "${PWD}/ros2:/ros2_ws",
+                "--workdir", "/ros2_ws",
+                "-i", "rctrl_xcompile_x86_arm46:latest",
+                "/bin/bash", "-c", "source /opt/ros/galactic/setup.bash && colcon build",
+            ],
+        },
+        {
+            "label": "remote-sync-ros2",
+            "type": "shell",
+            "command": "rsync",
+            "args": [
+                "-a",
+                "ros2/launch", "ros2/install",
+                "${input:user}@${input:ip}:~/",
+            ],
+        },
+        {
+            "label": "remote-sync-rctrl",
+            "type": "shell",
+            "command": "rsync",
+            "args": [
+                "-a",
+                "rctrl/dist/*",
+                "${input:user}@${input:ip}:/var/www/rctrl/",
+            ],
+        }
+    ],
+    "inputs": [
+        {
+            "id": "ip",
+            "description": "Remote IP",
+            "type": "promptString",
+            "default": "192.168.2.2",
+        },
+        {
+            "id": "user",
+            "description": "Remote User",
+            "type": "promptString",
+            "default": "ros",
+        },
+    ]
+}
