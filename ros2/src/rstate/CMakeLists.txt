@@ -22,12 +22,9 @@ add_executable(rstate_node src/main.cpp
                            lib/cmd/service.cpp
                            lib/state/activating.cpp
                            lib/state/active.cpp
-                           lib/state/armed.cpp
-                           lib/state/arming.cpp
                            lib/state/cleaning_up.cpp
                            lib/state/configuring.cpp
                            lib/state/deactivating.cpp
-                           lib/state/disarming.cpp
                            lib/state/error_processing.cpp
                            lib/state/finalized.cpp
                            lib/state/inactive.cpp

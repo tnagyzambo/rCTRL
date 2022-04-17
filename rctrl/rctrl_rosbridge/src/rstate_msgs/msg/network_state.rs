@@ -20,18 +20,15 @@ pub enum NetworkState {
     Unconfigured = 1,
     Inactive = 2,
     Active = 3,
-    Armed = 4,
-    Finalized = 5,
+    Finalized = 4,
 
     // Transition states
     Configuring = 10,
     CleaningUp = 11,
     Activating = 12,
     Deactivating = 13,
-    Arming = 14,
-    Disarming = 15,
-    ShuttingDown = 16,
-    ErrorProcessing = 17,
+    ShuttingDown = 14,
+    ErrorProcessing = 15,
 }
 
 impl TryFrom<NetworkStateMsg> for NetworkState {

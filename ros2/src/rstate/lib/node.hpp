@@ -44,12 +44,9 @@ namespace rstate {
         std::vector<std::shared_ptr<CmdIface>> cmdsOnCleanUp;
         std::vector<std::shared_ptr<CmdIface>> cmdsOnActivate;
         std::vector<std::shared_ptr<CmdIface>> cmdsOnDeactivate;
-        std::vector<std::shared_ptr<CmdIface>> cmdsOnArm;
-        std::vector<std::shared_ptr<CmdIface>> cmdsOnDisarm;
         std::vector<std::shared_ptr<CmdIface>> cmdsOnShutdownUnconfigured;
         std::vector<std::shared_ptr<CmdIface>> cmdOnShutdownInactive;
         std::vector<std::shared_ptr<CmdIface>> cmdsOnShutdownActive;
-        std::vector<std::shared_ptr<CmdIface>> cmdsOnShutdownArmed;
 
         void setState(State &);
         void publishNetworkTransitionEvent(NetworkTransitionEnum, NetworkStateEnum, NetworkStateEnum);

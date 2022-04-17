@@ -2,8 +2,8 @@
 /// REFERENCE: <https://github.com/ros2/rcl_interfaces/blob/master/lifecycle_msgs/msg/TransitionEvent.msg>
 use serde_derive::Deserialize;
 
-use crate::rstate::msg::NetworkState;
-use crate::rstate::msg::NetworkTransition;
+use crate::rstate_msgs::msg::NetworkState;
+use crate::rstate_msgs::msg::NetworkTransition;
 
 #[derive(Deserialize, PartialEq, Debug)]
 pub struct NetworkTransitionEvent {

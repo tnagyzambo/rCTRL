@@ -31,12 +31,9 @@ namespace rstate {
             {"cleanup", &this->cmdsOnCleanUp},
             {"activate", &this->cmdsOnActivate},
             {"deactivate", &this->cmdsOnDeactivate},
-            {"arm", &this->cmdsOnArm},
-            {"disarm", &this->cmdsOnDisarm},
             {"shutdown_unconfigured", &this->cmdsOnShutdownUnconfigured},
             {"shutdown_inactive", &this->cmdOnShutdownInactive},
             {"shutdown_active", &this->cmdsOnShutdownActive},
-            {"shutdown_armed", &this->cmdsOnShutdownArmed},
         };
 
         // Place member functions needed to construct command type into map with lambda functions
@@ -127,12 +124,9 @@ namespace rstate {
         this->cmdsOnCleanUp.clear();
         this->cmdsOnActivate.clear();
         this->cmdsOnDeactivate.clear();
-        this->cmdsOnArm.clear();
-        this->cmdsOnDisarm.clear();
         this->cmdsOnShutdownUnconfigured.clear();
         this->cmdOnShutdownInactive.clear();
         this->cmdsOnShutdownActive.clear();
-        this->cmdsOnShutdownArmed.clear();
     }
 
     // Assign the state of the node and trigger enter() event
@@ -198,7 +192,7 @@ namespace rstate {
                 bool allowCancel = true;
                 if ((strcmp(transitionName, "shutdown_unconfigured") == 0) ||
                     (strcmp(transitionName, "shutdown_inactive") == 0) ||
-                    (strcmp(transitionName, "shutdown_active") == 0) || (strcmp(transitionName, "shutdown_armed") == 0)) {
+                    (strcmp(transitionName, "shutdown_active") == 0)) {
                     allowCancel = false;
                 };
 

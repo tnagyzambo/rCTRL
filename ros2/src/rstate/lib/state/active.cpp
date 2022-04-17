@@ -21,8 +21,6 @@ namespace rstate {
         rstate_msgs::srv::GetAvailableNetworkTransitions::Response response;
         response.available_transitions = {
             generateNetworkTransitionDescription(
-                NetworkTransitionEnum::Arm, NetworkStateEnum::Active, NetworkStateEnum::Armed),
-            generateNetworkTransitionDescription(
                 NetworkTransitionEnum::Deactivate, NetworkStateEnum::Active, NetworkStateEnum::Inactive),
             generateNetworkTransitionDescription(
                 NetworkTransitionEnum::Shutdown, NetworkStateEnum::Active, NetworkStateEnum::Finalized)};
@@ -32,11 +30,6 @@ namespace rstate {
     GoalResponse Active::handleGoal(Node *node,
                                     std::shared_ptr<const rstate_msgs::srv::NetworkTransitionSendGoal::Request> goal) {
         switch (goal->transition.id) {
-        case (int)NetworkTransitionEnum::Arm:
-            this->onTransition = &Active::onArm;
-            node->publishNetworkTransitionEvent(
-                NetworkTransitionEnum::Arm, NetworkStateEnum::Active, NetworkStateEnum::Armed);
-            return GoalResponse::ACCEPT_AND_EXECUTE;
         case (int)NetworkTransitionEnum::Deactivate:
             this->onTransition = &Active::onDeactivate;
             node->publishNetworkTransitionEvent(
@@ -64,23 +57,6 @@ namespace rstate {
                                 const std::shared_ptr<GoalHandle<rstate_msgs::msg::NetworkTransitionFeedback>> goalHandle) {
         std::thread{std::bind(Active::onTransition, this, std::placeholders::_1, std::placeholders::_2), node, goalHandle}
             .detach();
-    }
-
-    void Active::onArm(Node *node,
-                       const std::shared_ptr<GoalHandle<rstate_msgs::msg::NetworkTransitionFeedback>> goalHandle) {
-        node->setState(Arming::getInstance());
-
-        switch (executeCommands(node, node->cmdsOnArm, goalHandle)) {
-        case NetworkTransitionResultEnum::Success:
-            node->setState(Armed::getInstance());
-            break;
-        case NetworkTransitionResultEnum::Cancelled:
-            node->setState(Active::getInstance());
-            break;
-        case NetworkTransitionResultEnum::Failure:
-            // SHUTDOWN
-            break;
-        }
     }
 
     void Active::onDeactivate(Node *node,

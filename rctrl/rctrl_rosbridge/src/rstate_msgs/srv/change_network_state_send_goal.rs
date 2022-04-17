@@ -2,7 +2,7 @@ use serde_derive::{Deserialize, Serialize};
 use std::convert::From;
 use std::convert::TryFrom;
 
-use crate::rstate::msg::NetworkTransition;
+use crate::rstate_msgs::msg::NetworkTransition;
 
 #[derive(Serialize)]
 pub struct Request {

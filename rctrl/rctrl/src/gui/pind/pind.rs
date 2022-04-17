@@ -2,6 +2,7 @@ use crate::gui::{gui_elem::gen_gui_elem_id, gui_elem::GuiElem, App, RStatePanel}
 use crate::ws_lock::WsLock;
 use eframe::{egui, epi};
 use gloo_console::log;
+use rctrl_rosbridge::rstate_msgs::msg::NetworkState;
 use std::rc::Rc;
 
 pub struct PInD {

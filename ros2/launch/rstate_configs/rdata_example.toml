@@ -414,12 +414,6 @@
         [deactivate.cmd.service.cancel.response]
             success = true
 
-[arm]
-    # rdata cannot be armed
-
-[disarm]
-    # rdata cannot be disarmed
-
 # Shutdown must be specified for each primary network state
 # NOTE: The transition id must be precise to the current lifecycle state of the node
 # Shutdown from unconfigured: 5
@@ -633,78 +627,4 @@
             id = 7
             label = "shutdown"
         [shutdown_active.cmd.service.response]
-            success = true
-
-[shutdown_armed]
-    [[shutdown_armed.cmd]]
-    [shutdown_armed.cmd.service]
-        node = "vI64"
-        service = "change_state"
-        timeout_wait_for_srv = 100
-        timeout_request = 100
-        [shutdown_armed.cmd.service.request.transition]
-            id = 7
-            label = "shutdown"
-        [shutdown_armed.cmd.service.response]
-            success = true
-
-    [[shutdown_armed.cmd]]
-    [shutdown_armed.cmd.service]
-        node = "vBool"
-        service = "change_state"
-        timeout_wait_for_srv = 100
-        timeout_request = 100
-        [shutdown_armed.cmd.service.request.transition]
-            id = 7
-            label = "shutdown"
-        [shutdown_armed.cmd.service.response]
-            success = true
-
-    [[shutdown_armed.cmd]]
-    [shutdown_armed.cmd.service]
-        node = "vF64"
-        service = "change_state"
-        timeout_wait_for_srv = 100
-        timeout_request = 100
-        [shutdown_armed.cmd.service.request.transition]
-            id = 7
-            label = "shutdown"
-        [shutdown_armed.cmd.service.response]
-            success = true
-
-    [[shutdown_armed.cmd]]
-    [shutdown_armed.cmd.service]
-        node = "vStr"
-        service = "change_state"
-        timeout_wait_for_srv = 100
-        timeout_request = 100
-        [shutdown_armed.cmd.service.request.transition]
-            id = 7
-            label = "shutdown"
-        [shutdown_armed.cmd.service.response]
-            success = true
-
-    [[shutdown_armed.cmd]]
-    [shutdown_armed.cmd.service]
-        node = "vU64"
-        service = "change_state"
-        timeout_wait_for_srv = 100
-        timeout_request = 100
-        [shutdown_armed.cmd.service.request.transition]
-            id = 7
-            label = "shutdown"
-        [shutdown_armed.cmd.service.response]
-            success = true
-
-     # Shutdown rdata after nodes that write to it
-    [[shutdown_armed.cmd]]
-    [shutdown_armed.cmd.service]
-        node = "rdata"
-        service = "change_state"
-        timeout_wait_for_srv = 100
-        timeout_request = 100
-        [shutdown_armed.cmd.service.request.transition]
-            id = 7
-            label = "shutdown"
-        [shutdown_armed.cmd.service.response]
             success = true

@@ -21,21 +21,18 @@ namespace rstate {
         Unconfigured = 1,
         Inactive = 2,
         Active = 3,
-        Armed = 4,
-        Finalized = 5,
+        Finalized = 4,
 
         // Transistion states
         Configuring = 10,
         CleaningUp = 11,
         Activating = 12,
         Deactivating = 13,
-        Arming = 14,
-        Disarming = 15,
-        ShuttingDown = 16,
-        ErrorProcessing = 17
+        ShuttingDown = 14,
+        ErrorProcessing = 15
     };
 
-    enum class NetworkTransitionEnum { Configure, CleanUp, Activate, Deactivate, Arm, Disarm, Shutdown };
+    enum class NetworkTransitionEnum { Configure, CleanUp, Activate, Deactivate, Shutdown };
 
     enum class NetworkTransitionResultEnum { Success, Cancelled, Failure };
 
@@ -101,7 +98,6 @@ namespace rstate {
 
         void (Active::*onTransition)(Node *,
                                      const std::shared_ptr<GoalHandle<rstate_msgs::msg::NetworkTransitionFeedback>>);
-        void onArm(Node *, const std::shared_ptr<GoalHandle<rstate_msgs::msg::NetworkTransitionFeedback>>);
         void onDeactivate(Node *, const std::shared_ptr<GoalHandle<rstate_msgs::msg::NetworkTransitionFeedback>>);
         void onShutdown(Node *, const std::shared_ptr<GoalHandle<rstate_msgs::msg::NetworkTransitionFeedback>>);
 
@@ -116,49 +112,6 @@ namespace rstate {
         Active() {}
         Active(const Active &other);
         Active &operator=(const Active &other);
-    };
-
-    class Armed : public State {
-    public:
-        static State &getInstance();
-
-        void enter(Node *);
-
-        void (Armed::*onTransition)(Node *,
-                                    const std::shared_ptr<GoalHandle<rstate_msgs::msg::NetworkTransitionFeedback>>);
-        void onDisarm(Node *, const std::shared_ptr<GoalHandle<rstate_msgs::msg::NetworkTransitionFeedback>>);
-        void onShutdown(Node *, const std::shared_ptr<GoalHandle<rstate_msgs::msg::NetworkTransitionFeedback>>);
-
-        rstate_msgs::msg::NetworkState getNetworkState();
-        rstate_msgs::srv::GetAvailableNetworkTransitions::Response getAvailableNetworkTransitions();
-        GoalResponse handleGoal(Node *, std::shared_ptr<const rstate_msgs::srv::NetworkTransitionSendGoal::Request>);
-        CancelResponse handleCancel(Node *,
-                                    const std::shared_ptr<GoalHandle<rstate_msgs::msg::NetworkTransitionFeedback>>);
-        void handleAccepted(Node *, const std::shared_ptr<GoalHandle<rstate_msgs::msg::NetworkTransitionFeedback>>);
-
-    private:
-        Armed() {}
-        Armed(const Armed &other);
-        Armed &operator=(const Armed &other);
-    };
-
-    class Arming : public State {
-    public:
-        static State &getInstance();
-
-        void enter(Node *);
-
-        rstate_msgs::msg::NetworkState getNetworkState();
-        rstate_msgs::srv::GetAvailableNetworkTransitions::Response getAvailableNetworkTransitions();
-        GoalResponse handleGoal(Node *, std::shared_ptr<const rstate_msgs::srv::NetworkTransitionSendGoal::Request>);
-        CancelResponse handleCancel(Node *,
-                                    const std::shared_ptr<GoalHandle<rstate_msgs::msg::NetworkTransitionFeedback>>);
-        void handleAccepted(Node *, const std::shared_ptr<GoalHandle<rstate_msgs::msg::NetworkTransitionFeedback>>);
-
-    private:
-        Arming() {}
-        Arming(const Arming &other);
-        Arming &operator=(const Arming &other);
     };
 
     class CleaningUp : public State {
@@ -216,25 +169,6 @@ namespace rstate {
         Deactivating() {}
         Deactivating(const Deactivating &other);
         Deactivating &operator=(const Deactivating &other);
-    };
-
-    class Disarming : public State {
-    public:
-        static State &getInstance();
-
-        void enter(Node *);
-
-        rstate_msgs::msg::NetworkState getNetworkState();
-        rstate_msgs::srv::GetAvailableNetworkTransitions::Response getAvailableNetworkTransitions();
-        GoalResponse handleGoal(Node *, std::shared_ptr<const rstate_msgs::srv::NetworkTransitionSendGoal::Request>);
-        CancelResponse handleCancel(Node *,
-                                    const std::shared_ptr<GoalHandle<rstate_msgs::msg::NetworkTransitionFeedback>>);
-        void handleAccepted(Node *, const std::shared_ptr<GoalHandle<rstate_msgs::msg::NetworkTransitionFeedback>>);
-
-    private:
-        Disarming() {}
-        Disarming(const Disarming &other);
-        Disarming &operator=(const Disarming &other);
     };
 
     class ErrorProcessing : public State {

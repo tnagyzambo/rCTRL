@@ -15,9 +15,7 @@ pub enum NetworkTransition {
     CleanUp = 1,
     Activate = 2,
     Deactivate = 3,
-    Arm = 4,
-    Disarm = 5,
-    Shutdown = 6,
+    Shutdown = 4,
 }
 
 impl NetworkTransition {
@@ -27,8 +25,6 @@ impl NetworkTransition {
             NetworkTransition::CleanUp => "cleanup",
             NetworkTransition::Activate => "activate",
             NetworkTransition::Deactivate => "deactivate",
-            NetworkTransition::Arm => "arm",
-            NetworkTransition::Disarm => "disarm",
             NetworkTransition::Shutdown => "shutdown",
         }
     }
@@ -41,8 +37,6 @@ impl std::fmt::Display for NetworkTransition {
             NetworkTransition::CleanUp => "Clean Up",
             NetworkTransition::Activate => "Activate",
             NetworkTransition::Deactivate => "Deactivate",
-            NetworkTransition::Arm => "Arm",
-            NetworkTransition::Disarm => "Disarm",
             NetworkTransition::Shutdown => "Shutdown",
         };
         write!(f, "{}", label)
@@ -117,24 +111,6 @@ mod tests {
         let transition = NetworkTransition::Deactivate;
         let transition_json = serde_json::to_string(&transition).unwrap();
         assert_eq!(transition_json, r#"{"id":3,"label":"deactivate"}"#);
-
-        let _transition_deserialize: NetworkTransitionMsg = serde_json::from_str(&transition_json).unwrap();
-    }
-
-    #[test]
-    fn arm() {
-        let transition = NetworkTransition::Arm;
-        let transition_json = serde_json::to_string(&transition).unwrap();
-        assert_eq!(transition_json, r#"{"id":4,"label":"arm"}"#);
-
-        let _transition_deserialize: NetworkTransitionMsg = serde_json::from_str(&transition_json).unwrap();
-    }
-
-    #[test]
-    fn disarm() {
-        let transition = NetworkTransition::Disarm;
-        let transition_json = serde_json::to_string(&transition).unwrap();
-        assert_eq!(transition_json, r#"{"id":5,"label":"disarm"}"#);
 
         let _transition_deserialize: NetworkTransitionMsg = serde_json::from_str(&transition_json).unwrap();
     }

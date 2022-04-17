@@ -1,6 +1,6 @@
 use serde_derive::Deserialize;
 
-use crate::rstate::msg::NetworkTransitionDescription;
+use crate::rstate_msgs::msg::NetworkTransitionDescription;
 
 #[derive(Deserialize)]
 pub struct Response {

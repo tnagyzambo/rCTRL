@@ -3,7 +3,7 @@ use crate::ws_lock::WsLock;
 use eframe::egui;
 use gloo_console::log;
 use rctrl_rosbridge::lifecycle_msgs::msg::{State, Transition, TransitionDescription};
-use rctrl_rosbridge::rstate::msg::{ChangeNetworkStateFeedback, NetworkState, NetworkTransition, NetworkTransitionDescription};
+use rctrl_rosbridge::rstate_msgs::msg::{ChangeNetworkStateFeedback, NetworkState, NetworkTransition, NetworkTransitionDescription};
 use serde_json::Value;
 use std::rc::Rc;
 use std::sync::Mutex;
@@ -14,7 +14,7 @@ pub struct RStatePanel {
     rstate_lc_state: Rc<Mutex<RStateLcStateDisplay>>,
     rstate_lc_transitions: Rc<Mutex<RStateLcTransitions>>,
     rstate_network_panel: Rc<Mutex<RStateNetworkPanel>>,
-    rstate_network_state: Rc<Mutex<RStateNetworkStateDisplay>>,
+    pub rstate_network_state: Rc<Mutex<RStateNetworkStateDisplay>>,
     rstate_network_transitions: Rc<Mutex<RStateNetworkTransitions>>,
 }
 
@@ -497,7 +497,7 @@ impl GuiElem for RStateNetworkPanel {
     }
 }
 
-struct RStateNetworkStateDisplay {
+pub struct RStateNetworkStateDisplay {
     id: u32,
     op: String,
     topic: String,
@@ -549,7 +549,7 @@ impl GuiElem for RStateNetworkStateDisplay {
             let mut bg_color = egui::Color32::from_gray(10);
             let mut text_color = visuals.text_color();
             let outline_stroke = egui::Stroke::new(0.0, egui::Color32::BLACK);
-            if self.state == NetworkState::Active || self.state == NetworkState::Armed {
+            if self.state == NetworkState::Active {
                 bg_color = egui::Color32::from_rgb(27, 131, 4);
                 text_color = egui::Color32::BLACK;
             } else if self.state == NetworkState::Unknown
@@ -567,7 +567,7 @@ impl GuiElem for RStateNetworkStateDisplay {
     }
 
     fn update_data(&mut self, data: &Value) {
-        match serde_json::from_value::<rctrl_rosbridge::rstate::srv::get_network_state::Response>(data.clone()) {
+        match serde_json::from_value::<rctrl_rosbridge::rstate_msgs::srv::get_network_state::Response>(data.clone()) {
             Ok(values) => self.state = values.current_state,
             Err(e) => {
                 self.state = NetworkState::Unknown;
@@ -675,8 +675,6 @@ impl GuiElem for RStateNetworkTransitions {
                 NetworkTransition::Deactivate,
                 "Deactivate",
             );
-            self.draw_state_change_button(ui, self.is_enabled(&NetworkTransition::Arm), NetworkTransition::Arm, "Arm");
-            self.draw_state_change_button(ui, self.is_enabled(&NetworkTransition::Disarm), NetworkTransition::Disarm, "Disarm");
             self.draw_state_change_button(
                 ui,
                 self.is_enabled(&NetworkTransition::Shutdown),
@@ -687,7 +685,7 @@ impl GuiElem for RStateNetworkTransitions {
     }
 
     fn update_data(&mut self, data: &Value) {
-        match serde_json::from_value::<rctrl_rosbridge::rstate::srv::get_available_network_transitions::Response>(data.clone()) {
+        match serde_json::from_value::<rctrl_rosbridge::rstate_msgs::srv::get_available_network_transitions::Response>(data.clone()) {
             Ok(values) => {
                 self.available_transitions = values.available_transitions;
             }
@@ -821,7 +819,7 @@ impl RStateActionWindowConfirm {
 impl GuiElem for RStateActionWindowConfirm {
     fn draw(&mut self, ui: &mut egui::Ui) {
         if ui.button("Confirm").clicked() {
-            let args = rctrl_rosbridge::rstate::srv::change_network_state_send_goal::Request::from(self.cmd_on_confirm.clone());
+            let args = rctrl_rosbridge::rstate_msgs::srv::change_network_state_send_goal::Request::from(self.cmd_on_confirm.clone());
             let cmd = rctrl_rosbridge::protocol::CallService::new("/rstate/change_network_state/send_goal")
                 .with_args(&args)
                 .cmd();
@@ -830,11 +828,11 @@ impl GuiElem for RStateActionWindowConfirm {
     }
 
     fn update_data(&mut self, data: &Value) {
-        match serde_json::from_value::<rctrl_rosbridge::rstate::srv::change_network_state_send_goal::Response>(data.clone()) {
+        match serde_json::from_value::<rctrl_rosbridge::rstate_msgs::srv::change_network_state_send_goal::Response>(data.clone()) {
             Ok(values) => match values {
-                rctrl_rosbridge::rstate::srv::change_network_state_send_goal::Response::Reject => (),
-                rctrl_rosbridge::rstate::srv::change_network_state_send_goal::Response::AcceptAndExecute => self.cmd_running = true,
-                rctrl_rosbridge::rstate::srv::change_network_state_send_goal::Response::AcceptAndDefer => (),
+                rctrl_rosbridge::rstate_msgs::srv::change_network_state_send_goal::Response::Reject => (),
+                rctrl_rosbridge::rstate_msgs::srv::change_network_state_send_goal::Response::AcceptAndExecute => self.cmd_running = true,
+                rctrl_rosbridge::rstate_msgs::srv::change_network_state_send_goal::Response::AcceptAndDefer => (),
             },
             Err(e) => {
                 log!(format!("RStateActionWindowConfirm::update_data() failed: {}", e));
@@ -883,10 +881,10 @@ impl GuiElem for RStateActionWindowCancel {
     }
 
     fn update_data(&mut self, data: &Value) {
-        match serde_json::from_value::<rctrl_rosbridge::rstate::srv::change_network_state_cancel_goal::Response>(data.clone()) {
+        match serde_json::from_value::<rctrl_rosbridge::rstate_msgs::srv::change_network_state_cancel_goal::Response>(data.clone()) {
             Ok(values) => match values {
-                rctrl_rosbridge::rstate::srv::change_network_state_cancel_goal::Response::Reject => log!("RSTATE CANCEL RJECTED"), //self.cmd_running = false,
-                rctrl_rosbridge::rstate::srv::change_network_state_cancel_goal::Response::Accept => (), //self.cmd_running = true,
+                rctrl_rosbridge::rstate_msgs::srv::change_network_state_cancel_goal::Response::Reject => log!("RSTATE CANCEL RJECTED"), //self.cmd_running = false,
+                rctrl_rosbridge::rstate_msgs::srv::change_network_state_cancel_goal::Response::Accept => (), //self.cmd_running = true,
             },
             Err(e) => {
                 log!(format!("RStateActionWindowCancel::update_data() failed: {}", e));

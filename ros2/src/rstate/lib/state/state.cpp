@@ -138,9 +138,6 @@ namespace rstate {
         case (uint)NetworkStateEnum::Active:
             label = "active";
             break;
-        case (uint)NetworkStateEnum::Armed:
-            label = "armed";
-            break;
         case (uint)NetworkStateEnum::Finalized:
             label = "finalized";
             break;
@@ -155,12 +152,6 @@ namespace rstate {
             break;
         case (uint)NetworkStateEnum::Deactivating:
             label = "deactivating";
-            break;
-        case (uint)NetworkStateEnum::Arming:
-            label = "arming";
-            break;
-        case (uint)NetworkStateEnum::Disarming:
-            label = "disarming";
             break;
         case (uint)NetworkStateEnum::ShuttingDown:
             label = "shutting_down";
@@ -186,12 +177,6 @@ namespace rstate {
             break;
         case (uint)NetworkTransitionEnum::Deactivate:
             label = "deactivate";
-            break;
-        case (uint)NetworkTransitionEnum::Arm:
-            label = "arm";
-            break;
-        case (uint)NetworkTransitionEnum::Disarm:
-            label = "disarm";
             break;
         case (uint)NetworkTransitionEnum::Shutdown:
             label = "shutdown";
