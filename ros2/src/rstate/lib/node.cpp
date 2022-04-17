@@ -5,6 +5,8 @@ namespace rstate {
     Node::Node() : rclcpp_lifecycle::LifecycleNode("rstate") {
         RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::transition::constructing().c_str());
 
+        this->declare_parameter<std::string>("config_path", "/home/ros/rstate/config.toml");
+
         this->setState(Unknown::getInstance());
 
         this->publisherNetworkTransitionEvent =
@@ -51,7 +53,7 @@ namespace rstate {
         RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::transition::configuring().c_str());
 
         try {
-            toml::table toml = toml::parse_file("/workspaces/rCTRL/ros2/src/rstate/config.toml");
+            toml::table toml = toml::parse_file(this->get_parameter("config_path").as_string());
             readConfig(toml);
         } catch (except::config_parse_error &e) {
             RCLCPP_ERROR(this->get_logger(), "Failed to configure!\nError: %s", e.what());
