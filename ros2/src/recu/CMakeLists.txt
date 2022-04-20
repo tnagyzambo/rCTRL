@@ -11,6 +11,7 @@ find_package(rclcpp_lifecycle REQUIRED)
 find_package(lifecycle_msgs REQUIRED)
 find_package(recu_msgs REQUIRED)
 find_package(rutil REQUIRED)
+find_package(nlohmann_json REQUIRED)
 
 include_directories(include)
 
@@ -18,6 +19,8 @@ add_executable(recu_node src/main.cpp
                          lib/node.cpp)
 
 target_include_directories(recu_node PRIVATE lib)
+
+target_link_libraries(recu_node nlohmann_json::nlohmann_json)
 
 ament_target_dependencies(recu_node rclcpp
                                     rclcpp_lifecycle

@@ -343,7 +343,7 @@ impl RStateLcWindow {
     }
 
     fn draw(&mut self, ctx: &egui::Context, ui: &mut egui::Ui) {
-        let mut cmd_complete = false;
+        let cmd_complete = false;
 
         egui::Window::new(self.title.clone())
             .collapsible(false)

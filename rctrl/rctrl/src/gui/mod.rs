@@ -4,6 +4,7 @@ mod lifecycle_manager;
 mod logger;
 mod pind;
 mod rstate;
+mod valve_control;
 
 pub use gui::App;
 pub use gui::Gui;
@@ -12,3 +13,4 @@ use lifecycle_manager::LifecycleManager;
 use logger::Logger;
 use pind::PInD;
 use rstate::RStatePanel;
+use valve_control::ValveControl;

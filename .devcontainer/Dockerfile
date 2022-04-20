@@ -106,6 +106,16 @@ RUN cd /lib/fmt-${FMTLIB_RELEASE} && cmake -S . -B build
 RUN cd /lib/fmt-${FMTLIB_RELEASE} && cmake --build build
 RUN cd /lib/fmt-${FMTLIB_RELEASE} && cmake --install build
 
+# Install JSON dev dependencies
+ENV JSON_RELEASE=3.10.5
+RUN wget https://github.com/nlohmann/json/archive/refs/tags/v${JSON_RELEASE}.tar.gz
+RUN tar -xf v${JSON_RELEASE}.tar.gz -C /lib
+RUN rm v${JSON_RELEASE}.tar.gz
+RUN mkdir /lib/json-${JSON_RELEASE}/build
+RUN cd /lib/json-${JSON_RELEASE} && cmake -S . -B build
+RUN cd /lib/json-${JSON_RELEASE} && cmake --build build
+RUN cd /lib/json-${JSON_RELEASE} && cmake --install build
+
 # Install gpiod dev dependencies
 RUN apt-get update 
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy gpiod libgpiod-dev

@@ -1,13 +1,29 @@
-use crate::gui::{gui_elem::gen_gui_elem_id, gui_elem::GuiElem, App, RStatePanel};
+use crate::gui::{App, RStatePanel, ValveControl};
 use crate::ws_lock::WsLock;
 use eframe::{egui, epi};
-use gloo_console::log;
 use rctrl_rosbridge::rstate_msgs::msg::NetworkState;
 use std::rc::Rc;
+use wasm_bindgen::prelude::*;
+
+#[wasm_bindgen]
+extern "C" {
+    type Buffer;
+}
+
+#[wasm_bindgen(module = "fs")]
+extern "C" {
+    #[wasm_bindgen(js_name = readFileSync, catch)]
+    fn read_file(path: &str) -> Result<Buffer, JsValue>;
+}
 
 pub struct PInD {
     ws_lock: Rc<WsLock>,
     rstate_panel: RStatePanel,
+    texture: Option<egui::TextureHandle>,
+    valve_control_mv1: ValveControl,
+    valve_control_mv2: ValveControl,
+    valve_control_esv: ValveControl,
+    valve_control_pv: ValveControl,
 }
 
 impl PInD {
@@ -15,6 +31,11 @@ impl PInD {
         Self {
             ws_lock: Rc::clone(&ws_lock),
             rstate_panel: RStatePanel::new(ws_lock),
+            texture: None,
+            valve_control_mv1: ValveControl::new(ws_lock, "mv1".to_string(), "MV1".to_string()),
+            valve_control_mv2: ValveControl::new(ws_lock, "mv2".to_string(), "MV2".to_string()),
+            valve_control_esv: ValveControl::new(ws_lock, "esv".to_string(), "ESV".to_string()),
+            valve_control_pv: ValveControl::new(ws_lock, "pv".to_string(), "PV".to_string()),
         }
     }
 }
@@ -44,23 +65,49 @@ impl epi::App for PInD {
     /// Called each time the UI needs repainting, which may be many times per second.
     /// Put your widgets into a `SidePanel`, `TopPanel`, `CentralPanel`, `Window` or `Area`.
     fn update(&mut self, ctx: &egui::Context, frame: &epi::Frame) {
-        let Self { ws_lock, rstate_panel } = self;
+        let Self {
+            ws_lock,
+            rstate_panel,
+            texture,
+            valve_control_mv1,
+            valve_control_mv2,
+            valve_control_esv,
+            valve_control_pv,
+        } = self;
 
         egui::CentralPanel::default().show(ctx, |ui| {
-            let rstate_panel = self.rstate_panel.draw(ctx, ui);
+            let texture: &egui::TextureHandle = self.texture.get_or_insert_with(|| {
+                // Can not easily access filesystem from wasm, load at compile time
+                let bytes = include_bytes!("pnid.png");
+                let image = load_image_from_memory(bytes);
+                // Load the texture only once.
+                ui.ctx().load_texture("pnid", image.unwrap())
+            });
 
-            if ui.button("mv_1_open").clicked() {
-                let cmd = rctrl_rosbridge::protocol::CallService::<u8>::new("/recu/mv1_open");
-                self.ws_lock.add_ws_write(serde_json::to_string(&cmd).unwrap());
-            }
-            if ui.button("mv_1_close").clicked() {
-                let cmd = rctrl_rosbridge::protocol::CallService::<u8>::new("/recu/mv1_close");
-                self.ws_lock.add_ws_write(serde_json::to_string(&cmd).unwrap());
-            }
-            if ui.button("mv_2_open").clicked() {
-                let cmd = rctrl_rosbridge::protocol::CallService::<u8>::new("/recu/mv2_open");
-                self.ws_lock.add_ws_write(serde_json::to_string(&cmd).unwrap());
-            }
+            ui.add_space(100.0);
+            ui.horizontal(|ui| {
+                ui.add_space(250.0);
+                ui.image(texture, egui::Vec2::new(500.0, 500.0));
+            });
+
+            egui::Area::new("pnid_overlay").fixed_pos(egui::pos2(32.0, 32.0)).show(ctx, |ui| {
+                let rstate_panel = self.rstate_panel.draw(ctx, ui);
+
+                ui.add_space(75.0);
+                ui.horizontal(|ui| {
+                    ui.add_space(220.0);
+                    self.valve_control_esv.draw(ctx, ui);
+                    ui.add_space(210.0);
+                    self.valve_control_pv.draw(ctx, ui);
+                });
+                ui.add_space(230.0);
+                ui.horizontal(|ui| {
+                    ui.add_space(260.0);
+                    self.valve_control_mv1.draw(ctx, ui);
+                    ui.add_space(165.0);
+                    self.valve_control_mv2.draw(ctx, ui);
+                });
+            });
         });
     }
 }
@@ -86,5 +133,36 @@ impl App for PInD {
         let topic = "/rstate/get_available_network_transitions";
         let cmd = rctrl_rosbridge::protocol::CallService::<u8>::new(&topic);
         self.ws_lock.add_ws_write(serde_json::to_string(&cmd).unwrap());
+
+        let network_state = &self.rstate_panel.rstate_network_state.lock().unwrap().state;
+        if *network_state == NetworkState::Active {
+            // Request valve state
+            let topic = "/recu/mv1/get_state";
+            let cmd = rctrl_rosbridge::protocol::CallService::<u8>::new(&topic);
+            self.ws_lock.add_ws_write(serde_json::to_string(&cmd).unwrap());
+
+            // Request valve state
+            let topic = "/recu/mv2/get_state";
+            let cmd = rctrl_rosbridge::protocol::CallService::<u8>::new(&topic);
+            self.ws_lock.add_ws_write(serde_json::to_string(&cmd).unwrap());
+
+            // Request valve state
+            let topic = "/recu/bpv/get_state";
+            let cmd = rctrl_rosbridge::protocol::CallService::<u8>::new(&topic);
+            self.ws_lock.add_ws_write(serde_json::to_string(&cmd).unwrap());
+
+            // Request valve state
+            let topic = "/recu/pv/get_state";
+            let cmd = rctrl_rosbridge::protocol::CallService::<u8>::new(&topic);
+            self.ws_lock.add_ws_write(serde_json::to_string(&cmd).unwrap());
+        }
     }
+}
+
+fn load_image_from_memory(image_data: &[u8]) -> Result<egui::ColorImage, image::ImageError> {
+    let image = image::load_from_memory(image_data)?;
+    let size = [image.width() as _, image.height() as _];
+    let image_buffer = image.to_rgba8();
+    let pixels = image_buffer.as_flat_samples();
+    Ok(egui::ColorImage::from_rgba_unmultiplied(size, pixels.as_slice()))
 }

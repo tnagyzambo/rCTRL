@@ -58,7 +58,7 @@ namespace rtty {
         tty.c_oflag &= ~OPOST; // Prevent special interpretation of output bytes (e.g. newline chars)
         tty.c_oflag &= ~ONLCR; // Prevent conversion of newline to carriage return/line feed
         // VMIN and VTIME (c_cc)
-        tty.c_cc[VTIME] = 0; // Wait for up to 1s (10 deciseconds), returning as soon as any data is received.
+        tty.c_cc[VTIME] = 0;
         tty.c_cc[VMIN] = 1;
         // Baud Rate
         cfsetspeed(&tty, B9600);
@@ -70,36 +70,52 @@ namespace rtty {
         }
 
         this->srvMV1_Open = this->create_service<recu_msgs::srv::ArduinoAction>(
-            "recu/mv1_open", std::bind(&Node::MV1_Open, this, std::placeholders::_1, std::placeholders::_2));
-        RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::srv::created("recu/mv1_open").c_str());
+            "recu/mv1/open", std::bind(&Node::MV1_Open, this, std::placeholders::_1, std::placeholders::_2));
+        RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::srv::created("recu/mv1/open").c_str());
 
         this->srvMV1_Close = this->create_service<recu_msgs::srv::ArduinoAction>(
-            "recu/mv1_close", std::bind(&Node::MV1_Close, this, std::placeholders::_1, std::placeholders::_2));
-        RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::srv::created("recu/mv1_close").c_str());
+            "recu/mv1/close", std::bind(&Node::MV1_Close, this, std::placeholders::_1, std::placeholders::_2));
+        RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::srv::created("recu/mv1/close").c_str());
+
+        this->srvMV1_GetState = this->create_service<recu_msgs::srv::GetValveState>(
+            "recu/mv1/get_state", std::bind(&Node::MV1_GetState, this, std::placeholders::_1, std::placeholders::_2));
+        RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::srv::created("recu/mv1/get_state").c_str());
 
         this->srvMV2_Open = this->create_service<recu_msgs::srv::ArduinoAction>(
-            "recu/mv2_open", std::bind(&Node::MV2_Open, this, std::placeholders::_1, std::placeholders::_2));
-        RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::srv::created("recu/mv2_open").c_str());
+            "recu/mv2/open", std::bind(&Node::MV2_Open, this, std::placeholders::_1, std::placeholders::_2));
+        RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::srv::created("recu/mv2/open").c_str());
 
         this->srvMV2_Close = this->create_service<recu_msgs::srv::ArduinoAction>(
-            "recu/mv2_close", std::bind(&Node::MV2_Close, this, std::placeholders::_1, std::placeholders::_2));
-        RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::srv::created("recu/mv2_close").c_str());
+            "recu/mv2/close", std::bind(&Node::MV2_Close, this, std::placeholders::_1, std::placeholders::_2));
+        RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::srv::created("recu/mv2/close").c_str());
+
+        this->srvMV2_GetState = this->create_service<recu_msgs::srv::GetValveState>(
+            "recu/mv2/get_state", std::bind(&Node::MV2_GetState, this, std::placeholders::_1, std::placeholders::_2));
+        RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::srv::created("recu/mv2/get_state").c_str());
 
         this->srvPV_Open = this->create_service<recu_msgs::srv::ArduinoAction>(
-            "recu/pv_open", std::bind(&Node::PV_Open, this, std::placeholders::_1, std::placeholders::_2));
-        RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::srv::created("recu/pv_open").c_str());
+            "recu/pv/open", std::bind(&Node::PV_Open, this, std::placeholders::_1, std::placeholders::_2));
+        RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::srv::created("recu/pv/open").c_str());
 
         this->srvPV_Close = this->create_service<recu_msgs::srv::ArduinoAction>(
-            "recu/pv_close", std::bind(&Node::PV_Close, this, std::placeholders::_1, std::placeholders::_2));
-        RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::srv::created("recu/pv_close").c_str());
+            "recu/pv/close", std::bind(&Node::PV_Close, this, std::placeholders::_1, std::placeholders::_2));
+        RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::srv::created("recu/pv/close").c_str());
+
+        this->srvPV_GetState = this->create_service<recu_msgs::srv::GetValveState>(
+            "recu/pv/get_state", std::bind(&Node::PV_GetState, this, std::placeholders::_1, std::placeholders::_2));
+        RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::srv::created("recu/pv/get_state").c_str());
 
         this->srvESV_Open = this->create_service<recu_msgs::srv::ArduinoAction>(
-            "recu/esv_open", std::bind(&Node::ESV_Open, this, std::placeholders::_1, std::placeholders::_2));
-        RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::srv::created("recu/esv_open").c_str());
+            "recu/esv/open", std::bind(&Node::ESV_Open, this, std::placeholders::_1, std::placeholders::_2));
+        RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::srv::created("recu/esv/open").c_str());
 
         this->srvESV_Close = this->create_service<recu_msgs::srv::ArduinoAction>(
-            "recu/esv_close", std::bind(&Node::ESV_Close, this, std::placeholders::_1, std::placeholders::_2));
-        RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::srv::created("recu/esv_close").c_str());
+            "recu/esv/close", std::bind(&Node::ESV_Close, this, std::placeholders::_1, std::placeholders::_2));
+        RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::srv::created("recu/esv/close").c_str());
+
+        this->srvESV_GetState = this->create_service<recu_msgs::srv::GetValveState>(
+            "recu/esv/get_state", std::bind(&Node::ESV_GetState, this, std::placeholders::_1, std::placeholders::_2));
+        RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::srv::created("recu/esv/get_state").c_str());
 
         RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::state::inactive().c_str());
         return LifecycleCallbackReturn::SUCCESS;
@@ -154,12 +170,16 @@ namespace rtty {
     void Node::deleteAllPointers() {
         this->srvMV1_Open.reset();
         this->srvMV1_Close.reset();
+        this->srvMV1_GetState.reset();
         this->srvMV2_Open.reset();
         this->srvMV2_Close.reset();
+        this->srvMV2_GetState.reset();
         this->srvPV_Open.reset();
         this->srvPV_Close.reset();
+        this->srvPV_GetState.reset();
         this->srvESV_Open.reset();
         this->srvESV_Close.reset();
+        this->srvESV_GetState.reset();
     }
 
     void Node::serialRead() {
@@ -213,6 +233,16 @@ namespace rtty {
         this->serialWrite(EcuActions::MV1_Close);
     }
 
+    void Node::MV1_GetState(const std::shared_ptr<recu_msgs::srv::GetValveState::Request> request,
+                            std::shared_ptr<recu_msgs::srv::GetValveState::Response> response) {
+        (void)request;
+        recu_msgs::msg::ValveState valve_state;
+        valve_state.id = (uint)ValveState::Unknown;
+        valve_state.label = "unknown";
+
+        response->current_state = valve_state;
+    }
+
     void Node::MV2_Open(const std::shared_ptr<recu_msgs::srv::ArduinoAction::Request> request,
                         std::shared_ptr<recu_msgs::srv::ArduinoAction::Response> response) {
         (void)request;
@@ -225,6 +255,16 @@ namespace rtty {
         (void)request;
         (void)response;
         this->serialWrite(EcuActions::MV2_Close);
+    }
+
+    void Node::MV2_GetState(const std::shared_ptr<recu_msgs::srv::GetValveState::Request> request,
+                            std::shared_ptr<recu_msgs::srv::GetValveState::Response> response) {
+        (void)request;
+        recu_msgs::msg::ValveState valve_state;
+        valve_state.id = (uint)ValveState::Unknown;
+        valve_state.label = "unknown";
+
+        response->current_state = valve_state;
     }
 
     void Node::PV_Open(const std::shared_ptr<recu_msgs::srv::ArduinoAction::Request> request,
@@ -241,6 +281,16 @@ namespace rtty {
         this->serialWrite(EcuActions::PV_Close);
     }
 
+    void Node::PV_GetState(const std::shared_ptr<recu_msgs::srv::GetValveState::Request> request,
+                           std::shared_ptr<recu_msgs::srv::GetValveState::Response> response) {
+        (void)request;
+        recu_msgs::msg::ValveState valve_state;
+        valve_state.id = (uint)ValveState::Unknown;
+        valve_state.label = "unknown";
+
+        response->current_state = valve_state;
+    }
+
     void Node::ESV_Open(const std::shared_ptr<recu_msgs::srv::ArduinoAction::Request> request,
                         std::shared_ptr<recu_msgs::srv::ArduinoAction::Response> response) {
         (void)request;
@@ -253,5 +303,15 @@ namespace rtty {
         (void)request;
         (void)response;
         this->serialWrite(EcuActions::ESV_Close);
+    }
+
+    void Node::ESV_GetState(const std::shared_ptr<recu_msgs::srv::GetValveState::Request> request,
+                            std::shared_ptr<recu_msgs::srv::GetValveState::Response> response) {
+        (void)request;
+        recu_msgs::msg::ValveState valve_state;
+        valve_state.id = (uint)ValveState::Unknown;
+        valve_state.label = "unknown";
+
+        response->current_state = valve_state;
     }
 } // namespace rtty

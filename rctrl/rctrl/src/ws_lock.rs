@@ -4,6 +4,7 @@ use rctrl_rosbridge::protocol::{OpWrapper, PublishWrapper, ServiceResponseWrappe
 use reqwasm::websocket::{Message, WebSocketError};
 use serde::de::{value::MapDeserializer, Deserialize};
 use std::collections::VecDeque;
+use std::fmt;
 use std::rc::Rc;
 use std::sync::Mutex;
 
@@ -43,19 +44,15 @@ impl WsLock {
             Err(e) => {
                 //let mut hash_map = gui_elem_lock.write().unwrap();
                 // do stuff with gui_elem_lock to display error
-                log!("read_error");
+                log!(format!("Read Error: {}", e));
             }
         }
     }
 
     /// Only acessed from the async read loop in [`main()`](crate::app::main).
     pub fn write_msg_que_pop(&self) -> Option<String> {
-        // Scoping to drop the lock as soon as possible
-        let mut msg = Option::<String>::None;
-        {
-            let mut msg_queue = self.ws_write_lock.lock().unwrap();
-            msg = msg_queue.pop_front();
-        }
+        let mut msg_queue = self.ws_write_lock.lock().unwrap();
+        let msg = msg_queue.pop_front();
 
         return msg;
     }
@@ -226,6 +223,12 @@ impl WsLock {
 enum ReadError<'a> {
     WsError(WebSocketError),
     ParseError(ParseError<'a>),
+}
+
+impl<'a> fmt::Display for ReadError<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "WebSocket read error")
+    }
 }
 
 impl<'a> From<WebSocketError> for ReadError<'a> {

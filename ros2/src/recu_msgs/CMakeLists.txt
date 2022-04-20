@@ -7,10 +7,10 @@ include(../cmake/compile_commands.cmake)
 find_package(ament_cmake REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 
-set(msg_files)
+set(msg_files "msg/ValveState.msg")
 
-set(srv_files
-    "srv/ArduinoAction.srv")
+set(srv_files "srv/ArduinoAction.srv"
+              "srv/GetValveState.srv")
 
 # Create ros2 interfaces
 rosidl_generate_interfaces(${PROJECT_NAME}

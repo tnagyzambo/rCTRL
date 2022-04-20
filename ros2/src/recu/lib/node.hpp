@@ -10,8 +10,9 @@
 #include <rclcpp/executors.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_lifecycle/lifecycle_node.hpp>
+#include <recu_msgs/msg/valve_state.hpp>
 #include <recu_msgs/srv/arduino_action.hpp>
-#include <recu_msgs/srv/detail/arduino_action__struct.hpp>
+#include <recu_msgs/srv/get_valve_state.hpp>
 #include <rutil/fmt.hpp>
 #include <stdexcept>
 #include <stdio.h>
@@ -28,6 +29,12 @@ using namespace std::chrono_literals;
 
 namespace rtty {
     using LifecycleCallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
+
+    enum ValveState {
+        Closed,
+        Open,
+        Unknown,
+    };
 
     enum EcuActions {
         Nothing,
@@ -62,29 +69,41 @@ namespace rtty {
 
         rclcpp::Service<recu_msgs::srv::ArduinoAction>::SharedPtr srvMV1_Open;
         rclcpp::Service<recu_msgs::srv::ArduinoAction>::SharedPtr srvMV1_Close;
+        rclcpp::Service<recu_msgs::srv::GetValveState>::SharedPtr srvMV1_GetState;
         rclcpp::Service<recu_msgs::srv::ArduinoAction>::SharedPtr srvMV2_Open;
         rclcpp::Service<recu_msgs::srv::ArduinoAction>::SharedPtr srvMV2_Close;
+        rclcpp::Service<recu_msgs::srv::GetValveState>::SharedPtr srvMV2_GetState;
         rclcpp::Service<recu_msgs::srv::ArduinoAction>::SharedPtr srvPV_Open;
         rclcpp::Service<recu_msgs::srv::ArduinoAction>::SharedPtr srvPV_Close;
+        rclcpp::Service<recu_msgs::srv::GetValveState>::SharedPtr srvPV_GetState;
         rclcpp::Service<recu_msgs::srv::ArduinoAction>::SharedPtr srvESV_Open;
         rclcpp::Service<recu_msgs::srv::ArduinoAction>::SharedPtr srvESV_Close;
+        rclcpp::Service<recu_msgs::srv::GetValveState>::SharedPtr srvESV_GetState;
 
         void MV1_Open(const std::shared_ptr<recu_msgs::srv::ArduinoAction::Request>,
                       std::shared_ptr<recu_msgs::srv::ArduinoAction::Response>);
         void MV1_Close(const std::shared_ptr<recu_msgs::srv::ArduinoAction::Request>,
                        std::shared_ptr<recu_msgs::srv::ArduinoAction::Response>);
+        void MV1_GetState(const std::shared_ptr<recu_msgs::srv::GetValveState::Request>,
+                          std::shared_ptr<recu_msgs::srv::GetValveState::Response>);
         void MV2_Open(const std::shared_ptr<recu_msgs::srv::ArduinoAction::Request>,
                       std::shared_ptr<recu_msgs::srv::ArduinoAction::Response>);
         void MV2_Close(const std::shared_ptr<recu_msgs::srv::ArduinoAction::Request>,
                        std::shared_ptr<recu_msgs::srv::ArduinoAction::Response>);
+        void MV2_GetState(const std::shared_ptr<recu_msgs::srv::GetValveState::Request>,
+                          std::shared_ptr<recu_msgs::srv::GetValveState::Response>);
         void PV_Open(const std::shared_ptr<recu_msgs::srv::ArduinoAction::Request>,
                      std::shared_ptr<recu_msgs::srv::ArduinoAction::Response>);
         void PV_Close(const std::shared_ptr<recu_msgs::srv::ArduinoAction::Request>,
                       std::shared_ptr<recu_msgs::srv::ArduinoAction::Response>);
+        void PV_GetState(const std::shared_ptr<recu_msgs::srv::GetValveState::Request>,
+                         std::shared_ptr<recu_msgs::srv::GetValveState::Response>);
         void ESV_Open(const std::shared_ptr<recu_msgs::srv::ArduinoAction::Request>,
                       std::shared_ptr<recu_msgs::srv::ArduinoAction::Response>);
         void ESV_Close(const std::shared_ptr<recu_msgs::srv::ArduinoAction::Request>,
                        std::shared_ptr<recu_msgs::srv::ArduinoAction::Response>);
+        void ESV_GetState(const std::shared_ptr<recu_msgs::srv::GetValveState::Request>,
+                          std::shared_ptr<recu_msgs::srv::GetValveState::Response>);
 
         rclcpp::TimerBase::SharedPtr read_timer;
         int serial_port;

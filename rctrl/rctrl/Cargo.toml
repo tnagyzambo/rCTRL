@@ -31,3 +31,5 @@ strum = "0.23"
 strum_macros = "0.23"
 
 lazy_static = "1.4.0"
+
+image = "0.24.1"
