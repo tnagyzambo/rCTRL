@@ -20,6 +20,9 @@ const unsigned long LS_PERIOD = 100; //Lets see if 100 ms works
 unsigned long CURRENT_TIME;
 unsigned long HS_PREVIOUS;
 unsigned long LS_PREVIOUS;
+// TODO: checkout trying use the automatic data reading of the portenta.
+// It can read things and put them in ram without the cpu having to do anything.
+// This could significantly increase datarates
 
 // Sensor setup definitions
 SFE_ADS122C04 LoadCell;
@@ -35,6 +38,10 @@ float analog_to_pressure(const float analog_read);
 
 // JSON communication setup
 // TODO: investigate having a lowspeed and a highspeed JSON packet to avoid sending data we know all the time.
+// TODO: Create function to send data as the current implementation might cause a momery leak
+// https://arduinojson.org/v6/how-to/reuse-a-json-document/
+// Larger packets might allow us to reach higher data rates and lower the Serial usage.
+
 const int sensorJsonCapacity = JSON_OBJECT_SIZE(8); //right now we have, LC, tankps1, tankps2, ccPS0, ccPS1, thermo 1, 2, 3
 StaticJsonDocument<sensorJsonCapacity> sensorJson;
 
@@ -66,8 +73,7 @@ void setup() {
 	// TODO: test max I2C speed of machine control
 	// Do this testing in final configuration with proper wiring as this will have a major affect on the speeds we can reach
 	Wire.begin(); // No need to select I2C pins on the machine control
-  	Wire.setClock(400000); //Set to Fast mode (400kbps) (ADS122C04 can do up to Fm+ 1Mbps)
-
+  	Wire.setClock(1000000); //Set to Fast mode + (1Mbps). Lower this value if errors on the i2c start to occur. 
 	//------------- Set ADC modes ----------------
 	// First we intialize and check the address configuration. See comments on which address is which board
 	if (LoadCell.begin(0x40) == false) //Connect to the Load Cell using the defaults: Address 0x40 is the board without the direct connect connector. Defualt Wire port
