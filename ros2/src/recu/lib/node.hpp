@@ -7,6 +7,7 @@
 #include <functional>
 #include <iostream>
 #include <memory>
+#include <nlohmann/json.hpp>
 #include <rclcpp/executors.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_lifecycle/lifecycle_node.hpp>
@@ -24,11 +25,27 @@
 #include <unistd.h>
 
 using namespace std::chrono_literals;
+using json = nlohmann::json;
 
 // REFERENCE: https://blog.mbedded.ninja/programming/operating-systems/linux/linux-serial-ports-using-c-cpp/
 
-namespace rtty {
+namespace recu {
     using LifecycleCallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
+
+    struct JsonData {
+        bool stateMV1;
+        bool stateMV2;
+        bool statePV;
+        bool stateESV;
+        float loadCell;
+        float tempPressureSensor1;
+        float tempPressureSensor2;
+        float pressureChamber1;
+        float pressureChamber2;
+        float tempThermocouple1;
+        float tempThermocouple2;
+        float tempThermocouple3;
+    };
 
     enum ValveState {
         Closed,
@@ -66,6 +83,21 @@ namespace rtty {
         void serialRead();
         void serialHandleMsg();
         void serialWrite(EcuActions);
+
+        ValveState stateMV1 = Unknown;
+        ValveState stateMV2 = Unknown;
+        ValveState statePV = Unknown;
+        ValveState stateESV = Unknown;
+        float loadCell = 0.0;
+        float tempPressureSensor1 = 0.0;
+        float tempPressureSensor2 = 0.0;
+        float pressureChamber1 = 0.0;
+        float pressureChamber2 = 0.0;
+        float tempThermocouple1 = 0.0;
+        float tempThermocouple2 = 0.0;
+        float tempThermocouple3 = 0.0;
+
+        recu_msgs::srv::GetValveState::Response createValveStateResponse(ValveState);
 
         rclcpp::Service<recu_msgs::srv::ArduinoAction>::SharedPtr srvMV1_Open;
         rclcpp::Service<recu_msgs::srv::ArduinoAction>::SharedPtr srvMV1_Close;
@@ -110,4 +142,4 @@ namespace rtty {
         char read_buf[1024];
         uint read_buf_l;
     };
-} // namespace rtty
+} // namespace recu

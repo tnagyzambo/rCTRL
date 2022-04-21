@@ -35,6 +35,8 @@ float lc_value, tankPS0, tankPS1, ccPS0, ccPS1, temp_ch0, temp_ch1, temp_ch2;
 int temp_channel_select = 0;
 // Sensor functions
 float analog_to_pressure(const float analog_read);
+// Valve states
+bool mv1, mv2, pv, esv;
 
 // JSON communication setup
 // TODO: investigate having a lowspeed and a highspeed JSON packet to avoid sending data we know all the time.
@@ -53,11 +55,14 @@ void setup() {
 
 	//At startup set all channels to CLOSED
   	digital_outputs.setAll(0);
+	mv1 = false;
+	mv2 = false;
+	pv = false;
+	esv = false;
 
 	//TODO: Up Serial speed
 	Serial.begin(9600);
-	while (!Serial)
-    ; //Wait for user to open terminal
+	while (!Serial); //Wait for user to open terminal
   	Serial.println(F("LoadCell and Pressure Sensor test"));
 
 	// -------------------- Initialize variables for looping -------------------
@@ -148,7 +153,56 @@ void setup() {
 }
 
 void loop() {
-	CURRENT_TIME = millis(); // latest loop time	
+	if (Serial.available() > 0) {
+		data = (unsigned char)Serial.read();
+
+		switch(data) {
+			case 1:
+				// MV1 open
+				mv1 = true;
+				digital_outputs.set(0, LOW);
+				break;
+			case 2:
+				// MV1 close
+				mv1 = false;
+				digital_outputs.set(0, HIGH);
+				break;
+			case 3:
+				// MV2 open
+				mv2 = true;
+				digital_outputs.set(1, LOW);
+				break;
+			case 4:
+				// MV2 close
+				mv2 = false;
+				digital_outputs.set(1, HIGH);
+				break;
+			case 5:
+				// PV open
+				pv = true;
+				digital_outputs.set(2, LOW);
+				break;
+			case 6:
+				// PV close
+				pv = false;
+				digital_outputs.set(2, HIGH);
+				break;
+			case 7:
+				// ESV open
+				esv = true;
+				digital_outputs.set(3, LOW);
+				break;
+			case 8:
+				// ESV close
+				esv = false;
+				digital_outputs.set(3, HIGH);
+				break;
+			default:
+				break;
+		}
+	}
+
+	CURRENT_TIME = millis(); // latest loop time
 
 	// -----------Read Sensors-------------------
 	//LS loop
@@ -209,6 +263,10 @@ void loop() {
 		// Data transfer happens at HS
 		// Writing sensor JSON object for serialization
 		// Do not write objects with allocated memory. Otherwise the loop will cause a memory leak
+		sensorJson["mv1"]   = mv1;
+		sensorJson["mv2"]   = mv2;
+		sensorJson["pv"]    = pv;
+		sensorJson["esv"]   = esv;
 		sensorJson["LC0"] 	= lc_value;
 		sensorJson["tPS0"] 	= tankPS0;
 		sensorJson["tPS1"]	= tankPS1;
@@ -221,14 +279,15 @@ void loop() {
 		// Write serialized object to Serial com port
 		//serializeJson(sensorJson, Serial); //Efficient but not very readable
 		//serializeJsonPretty(sensorJson,Serial);//Easy to read in serial
-		//serializeMsgPack(sensorJson,Serial); //Most efficient method but cannot be displayed in serial
+		serializeMsgPack(sensorJson,Serial); //Most efficient method but cannot be displayed in serial
+		// Serial.print("\n");
 
 		// Set HS_PREVIOUS
 		HS_PREVIOUS = millis();
 	}
 	
 	// Print statements to debug values
-	if (true)
+	if (false)
 	{
 		Serial.print(F("Loadcell: "));
 		Serial.print(lc_value, 3);
@@ -249,26 +308,6 @@ void loop() {
 		Serial.print(F("°C\n"));
 	}
 
-	if (Serial.available() > 0) {
-		data = (unsigned char)Serial.read();
-
-		switch(data) {
-			case 1:
-				digital_outputs.set(0, LOW);
-				break;
-			case 2:
-				digital_outputs.set(0, HIGH);
-				break;
-			case 3:
-				digitalWrite(LEDR, HIGH);
-				digitalWrite(LEDG, HIGH);
-				digitalWrite(LEDB, LOW);
-				break;
-			default:
-				break;
-		}
-	}
-	// Serial.println("{\"configurations\":[{\"name\":\"Remote launch\",\"type\":\"lldb\",\"request\":\"launch\",\"program\":\"${workspaceFolder}/ros2/build/rstate/rstate_node\",\"initCommands\":[\"platform select remote-linux\",\"platform connect connect:localhost:3000\",\"settings set target.inherit-env true\"]}]}");
 	delay(1);
 }
 

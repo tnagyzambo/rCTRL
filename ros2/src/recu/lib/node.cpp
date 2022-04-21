@@ -1,6 +1,6 @@
 #include <node.hpp>
 
-namespace rtty {
+namespace recu {
     Node::Node() : rclcpp_lifecycle::LifecycleNode("recu") {
         RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::transition::constructing().c_str());
 
@@ -140,6 +140,11 @@ namespace rtty {
 
         this->read_timer->cancel();
 
+        this->stateMV1 = Unknown;
+        this->stateMV2 = Unknown;
+        this->statePV = Unknown;
+        this->stateESV = Unknown;
+
         RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::state::inactive().c_str());
 
         return LifecycleCallbackReturn::SUCCESS;
@@ -161,6 +166,11 @@ namespace rtty {
 
         this->serialClose();
         this->deleteAllPointers();
+
+        this->stateMV1 = Unknown;
+        this->stateMV2 = Unknown;
+        this->statePV = Unknown;
+        this->stateESV = Unknown;
 
         RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::state::finalized().c_str());
 
@@ -194,7 +204,7 @@ namespace rtty {
         // For bytes read, append to past reads
         // If newline is read, handle complete message
         for (int i = 0; i < n; i++) {
-            if (temp_buf[i] == '\n') {
+            if (temp_buf[i] == 0x00) {
                 this->serialHandleMsg();
             }
 
@@ -204,8 +214,55 @@ namespace rtty {
     }
 
     void Node::serialHandleMsg() {
-        std::string out(this->read_buf, this->read_buf_l);
-        std::cout << out << "\n";
+        json j = json::from_msgpack(this->read_buf);
+        JsonData data{
+            j["mv1"].get<bool>(),
+            j["mv2"].get<bool>(),
+            j["pv"].get<bool>(),
+            j["esv"].get<bool>(),
+            j["LC0"].get<float>(),
+            j["tPS0"].get<float>(),
+            j["tPS1"].get<float>(),
+            j["ccPS0"].get<float>(),
+            j["ccPS1"].get<float>(),
+            j["T0"].get<float>(),
+            j["T1"].get<float>(),
+            j["T2"].get<float>(),
+        };
+
+        if (data.stateMV1) {
+            this->stateMV1 = Open;
+        } else {
+            this->stateMV1 = Closed;
+        }
+
+        if (data.stateMV2) {
+            this->stateMV2 = Open;
+        } else {
+            this->stateMV2 = Closed;
+        }
+
+        if (data.statePV) {
+            this->statePV = Open;
+        } else {
+            this->statePV = Closed;
+        }
+
+        if (data.stateESV) {
+            this->stateESV = Open;
+        } else {
+            this->stateESV = Closed;
+        }
+
+        this->loadCell = data.loadCell;
+        this->tempPressureSensor1 = data.tempPressureSensor1;
+        this->tempPressureSensor2 = data.tempPressureSensor2;
+        this->pressureChamber1 = data.pressureChamber1;
+        this->pressureChamber2 = data.pressureChamber2;
+        this->tempThermocouple1 = data.tempThermocouple1;
+        this->tempThermocouple2 = data.tempThermocouple2;
+        this->tempThermocouple3 = data.tempThermocouple2;
+
         this->read_buf_l = 0;
     }
 
@@ -217,6 +274,26 @@ namespace rtty {
     void Node::serialClose() {
         this->read_timer->cancel();
         close(this->serial_port);
+    }
+
+    recu_msgs::srv::GetValveState::Response Node::createValveStateResponse(ValveState valveState) {
+        recu_msgs::srv::GetValveState::Response response;
+
+        response.current_state.id = valveState;
+
+        switch (valveState) {
+        case Closed:
+            response.current_state.label = "closed";
+            break;
+        case Open:
+            response.current_state.label = "open";
+            break;
+        case Unknown:
+            response.current_state.label = "unkown";
+            break;
+        }
+
+        return response;
     }
 
     void Node::MV1_Open(const std::shared_ptr<recu_msgs::srv::ArduinoAction::Request> request,
@@ -236,11 +313,7 @@ namespace rtty {
     void Node::MV1_GetState(const std::shared_ptr<recu_msgs::srv::GetValveState::Request> request,
                             std::shared_ptr<recu_msgs::srv::GetValveState::Response> response) {
         (void)request;
-        recu_msgs::msg::ValveState valve_state;
-        valve_state.id = (uint)ValveState::Unknown;
-        valve_state.label = "unknown";
-
-        response->current_state = valve_state;
+        *response = createValveStateResponse(this->stateMV1);
     }
 
     void Node::MV2_Open(const std::shared_ptr<recu_msgs::srv::ArduinoAction::Request> request,
@@ -260,11 +333,7 @@ namespace rtty {
     void Node::MV2_GetState(const std::shared_ptr<recu_msgs::srv::GetValveState::Request> request,
                             std::shared_ptr<recu_msgs::srv::GetValveState::Response> response) {
         (void)request;
-        recu_msgs::msg::ValveState valve_state;
-        valve_state.id = (uint)ValveState::Unknown;
-        valve_state.label = "unknown";
-
-        response->current_state = valve_state;
+        *response = createValveStateResponse(this->stateMV2);
     }
 
     void Node::PV_Open(const std::shared_ptr<recu_msgs::srv::ArduinoAction::Request> request,
@@ -284,11 +353,7 @@ namespace rtty {
     void Node::PV_GetState(const std::shared_ptr<recu_msgs::srv::GetValveState::Request> request,
                            std::shared_ptr<recu_msgs::srv::GetValveState::Response> response) {
         (void)request;
-        recu_msgs::msg::ValveState valve_state;
-        valve_state.id = (uint)ValveState::Unknown;
-        valve_state.label = "unknown";
-
-        response->current_state = valve_state;
+        *response = createValveStateResponse(this->statePV);
     }
 
     void Node::ESV_Open(const std::shared_ptr<recu_msgs::srv::ArduinoAction::Request> request,
@@ -308,10 +373,6 @@ namespace rtty {
     void Node::ESV_GetState(const std::shared_ptr<recu_msgs::srv::GetValveState::Request> request,
                             std::shared_ptr<recu_msgs::srv::GetValveState::Response> response) {
         (void)request;
-        recu_msgs::msg::ValveState valve_state;
-        valve_state.id = (uint)ValveState::Unknown;
-        valve_state.label = "unknown";
-
-        response->current_state = valve_state;
+        *response = createValveStateResponse(this->stateESV);
     }
-} // namespace rtty
+} // namespace recu
