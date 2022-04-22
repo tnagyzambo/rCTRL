@@ -140,6 +140,6 @@ namespace recu {
         rclcpp::TimerBase::SharedPtr read_timer;
         int serial_port;
         char read_buf[1024];
-        uint read_buf_l;
+        uint read_buf_l = 0;
     };
 } // namespace recu

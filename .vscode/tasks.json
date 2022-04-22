@@ -38,6 +38,19 @@
             ],
         },
         {
+            "label": "xcompile-x86-arm64-run-recu",
+            "type": "shell",
+            "command": "docker",
+            "args": [
+                "run",
+                "--rm",
+                "-v", "${PWD}/ros2:/ros2_ws",
+                "--workdir", "/ros2_ws",
+                "-i", "rctrl_xcompile_x86_arm46:latest",
+                "/bin/bash", "-c", "source /opt/ros/galactic/setup.bash && colcon build --packages-select recu",
+            ],
+        },
+        {
             "label": "remote-sync-ros2",
             "type": "shell",
             "command": "rsync",

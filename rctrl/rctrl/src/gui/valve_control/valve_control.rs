@@ -35,11 +35,19 @@ impl ValveControl {
                             let service = format!("/recu/{}/open", self.valve_name.to_owned());
                             let cmd = rctrl_rosbridge::protocol::CallService::<u8>::new(&service);
                             self.ws_lock.add_ws_write(serde_json::to_string(&cmd).unwrap());
+
+                            let service = format!("/recu/{}/get_state", self.valve_name.to_owned());
+                            let cmd = rctrl_rosbridge::protocol::CallService::<u8>::new(&service);
+                            self.ws_lock.add_ws_write(serde_json::to_string(&cmd).unwrap());
                         }
                     }
                     ValveState::Open => {
                         if ui.button("Close").clicked() {
                             let service = format!("/recu/{}/close", self.valve_name.to_owned());
+                            let cmd = rctrl_rosbridge::protocol::CallService::<u8>::new(&service);
+                            self.ws_lock.add_ws_write(serde_json::to_string(&cmd).unwrap());
+
+                            let service = format!("/recu/{}/get_state", self.valve_name.to_owned());
                             let cmd = rctrl_rosbridge::protocol::CallService::<u8>::new(&service);
                             self.ws_lock.add_ws_write(serde_json::to_string(&cmd).unwrap());
                         }

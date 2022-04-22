@@ -204,17 +204,25 @@ namespace recu {
         // For bytes read, append to past reads
         // If newline is read, handle complete message
         for (int i = 0; i < n; i++) {
-            if (temp_buf[i] == 0x00) {
-                this->serialHandleMsg();
+            if (temp_buf[i] == '\n') {
+                try {
+                    this->serialHandleMsg();
+                } catch (...) {
+                    RCLCPP_WARN(this->get_logger(), "Failed JSON deserialization");
+                }
+            } else {
+                this->read_buf[this->read_buf_l] = temp_buf[i];
+                this->read_buf_l++;
             }
-
-            this->read_buf[read_buf_l] = temp_buf[i];
-            this->read_buf_l++;
         }
     }
 
     void Node::serialHandleMsg() {
-        json j = json::from_msgpack(this->read_buf);
+        std::string str(this->read_buf, this->read_buf_l);
+        this->read_buf_l = 0;
+
+        json j = json::parse(str);
+
         JsonData data{
             j["mv1"].get<bool>(),
             j["mv2"].get<bool>(),
@@ -262,14 +270,9 @@ namespace recu {
         this->tempThermocouple1 = data.tempThermocouple1;
         this->tempThermocouple2 = data.tempThermocouple2;
         this->tempThermocouple3 = data.tempThermocouple2;
-
-        this->read_buf_l = 0;
     }
 
-    void Node::serialWrite(EcuActions action) {
-        RCLCPP_INFO(this->get_logger(), "Sending action '%d' to serial port", action);
-        write(this->serial_port, &action, sizeof(action));
-    }
+    void Node::serialWrite(EcuActions action) { write(this->serial_port, &action, sizeof(action)); }
 
     void Node::serialClose() {
         this->read_timer->cancel();
