@@ -35,6 +35,7 @@ float lc_value, tankPS0, tankPS1, ccPS0, ccPS1, temp_ch0, temp_ch1, temp_ch2;
 int temp_channel_select = 0;
 // Sensor functions
 float analog_to_pressure(const float analog_read);
+
 // Valve states
 bool mv1, mv2, pv, esv;
 
