@@ -44,7 +44,7 @@ bool mv1, mv2, pv, esv;
 // https://arduinojson.org/v6/how-to/reuse-a-json-document/
 // Larger packets might allow us to reach higher data rates and lower the Serial usage.
 
-const int sensorJsonCapacity = JSON_OBJECT_SIZE(8); //right now we have, LC, tankps1, tankps2, ccPS0, ccPS1, thermo 1, 2, 3
+const int sensorJsonCapacity = JSON_OBJECT_SIZE(12); //right now we have, LC, tankps1, tankps2, ccPS0, ccPS1, thermo 1, 2, 3
 StaticJsonDocument<sensorJsonCapacity> sensorJson;
 
 unsigned char data = 99;   // for incoming serial data
@@ -63,7 +63,7 @@ void setup() {
 	//TODO: Up Serial speed
 	Serial.begin(9600);
 	while (!Serial); //Wait for user to open terminal
-  	Serial.println(F("LoadCell and Pressure Sensor test"));
+  	// Serial.println(F("LoadCell and Pressure Sensor test"));
 
 	// -------------------- Initialize variables for looping -------------------
 	// Set the previous times to now so they aren't null during first comparison
@@ -105,13 +105,13 @@ void setup() {
 
 	// Print configurations to Serial
 	// Comment out if not needed
-	LoadCell.enableDebugging(Serial); // Enable debug messages on Serial
-	LoadCell.printADS122C04config(); // Print the configuration
-	LoadCell.disableDebugging(); // Enable debug messages on Serial
+	// LoadCell.enableDebugging(Serial); // Enable debug messages on Serial
+	// LoadCell.printADS122C04config(); // Print the configuration
+	// LoadCell.disableDebugging(); // Enable debug messages on Serial
 
-	TankPS.enableDebugging(Serial); // Enable debug messages on Serial
-	TankPS.printADS122C04config(); // Print the configuration
-	TankPS.disableDebugging(); // Enable debug messages on Serial
+	// TankPS.enableDebugging(Serial); // Enable debug messages on Serial
+	// TankPS.printADS122C04config(); // Print the configuration
+	// TankPS.disableDebugging(); // Enable debug messages on Serial
 
 	//PGA offset calibration loop
 	// TODO: make a wrapper function to clean up this
@@ -160,42 +160,42 @@ void loop() {
 			case 1:
 				// MV1 open
 				mv1 = true;
-				digital_outputs.set(0, LOW);
+				digital_outputs.set(0, HIGH);
 				break;
 			case 2:
 				// MV1 close
 				mv1 = false;
-				digital_outputs.set(0, HIGH);
+				digital_outputs.set(0, LOW);
 				break;
 			case 3:
 				// MV2 open
 				mv2 = true;
-				digital_outputs.set(1, LOW);
+				digital_outputs.set(1, HIGH);
 				break;
 			case 4:
 				// MV2 close
 				mv2 = false;
-				digital_outputs.set(1, HIGH);
+				digital_outputs.set(1, LOW);
 				break;
 			case 5:
 				// PV open
 				pv = true;
-				digital_outputs.set(2, LOW);
+				digital_outputs.set(2, HIGH);
 				break;
 			case 6:
 				// PV close
 				pv = false;
-				digital_outputs.set(2, HIGH);
+				digital_outputs.set(2, LOW);
 				break;
 			case 7:
 				// ESV open
 				esv = true;
-				digital_outputs.set(3, LOW);
+				digital_outputs.set(3, HIGH);
 				break;
 			case 8:
 				// ESV close
 				esv = false;
-				digital_outputs.set(3, HIGH);
+				digital_outputs.set(3, LOW);
 				break;
 			default:
 				break;
@@ -277,10 +277,10 @@ void loop() {
 		sensorJson["T2"] 	= temp_ch2;
 
 		// Write serialized object to Serial com port
-		//serializeJson(sensorJson, Serial); //Efficient but not very readable
+		serializeJson(sensorJson, Serial); //Efficient but not very readable
 		//serializeJsonPretty(sensorJson,Serial);//Easy to read in serial
-		serializeMsgPack(sensorJson,Serial); //Most efficient method but cannot be displayed in serial
-		// Serial.print("\n");
+		//serializeMsgPack(sensorJson,Serial); //Most efficient method but cannot be displayed in serial
+		Serial.print("\n");
 
 		// Set HS_PREVIOUS
 		HS_PREVIOUS = millis();
