@@ -1,11 +1,8 @@
-#include<Arduino_MachineControl.h>
-#include<vector>
-
+#include<valve.hpp>
 
 using namespace machinecontrol;
 
-enum valveState { Open, Closed};
-enum valveAction { OpenValve, CloseValve};
+
 // Templated based on the valve type and the output pin
 // the state being true means it is open
 // The valve type can be NO or NC
@@ -111,11 +108,63 @@ class autoSequence {
     // 
     // Reset auto sequence
 
+    using enum valveAction;
     //Create empty sequence variable
     std::vector<sequenceData> SequenceVector;
+    long int sequenceStartTime = INFINITY;
+    bool sequenceActive = false;
+    int eventCounter;
 
+    public:
     void addEvent(long int time, std::shared_ptr<valveInterface> valveID, valveAction action) {
         SequenceVector.push_back(sequenceData(time, valveID, action));
+    }
+
+    int runSequence(long int currentTime, int dataCase) {
+        if (SequenceVector.empty()) {
+            //Return to 0 state
+            //Stop sequence
+            return 0;
+        }
+
+        if (!sequenceActive) {
+            sequenceActive = true;
+            sequenceStartTime = currentTime;
+        }
+
+        for (auto eventPtr = std::begin(SequenceVector); eventPtr != std::end(SequenceVector); ++eventPtr) {
+            
+            // Check if the actuation time is good AND that true time is -INFINITY
+            if (eventPtr->actuationTime >= (currentTime-sequenceStartTime) && eventPtr->trueTime < 0) {
+                // Open or close valve
+                if (eventPtr->action == OpenValve) {
+                    eventPtr->valveID->open();
+                } else if(eventPtr->action == CloseValve) {
+                    eventPtr->valveID->close();
+                }
+                // Set trueTime so we don't keep calling it
+                eventPtr->trueTime = currentTime;
+                ++eventCounter;
+            }
+        }
+
+        // Return dataCase if we continue with sequence
+        // Return 0 if we are done
+        if (eventCounter >= SequenceVector.size()){
+            return 0; // Sequence over
+        } else {
+            return dataCase; // Continue sequence
+        }
+
+    }
+    
+    void resetSequence(){
+        // Set all times back to negative infinity
+        for (auto eventPtr = std::begin(SequenceVector); eventPtr != std::end(SequenceVector); ++eventPtr) {
+            eventPtr->trueTime = -INFINITY;
+        }
+        sequenceStartTime = INFINITY;
+        eventCounter = 0;
     }
 
 };

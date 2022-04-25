@@ -39,6 +39,7 @@ float analog_to_pressure(const float analog_read);
 // Valve states
 bool mv1, mv2, pv, esv;
 
+
 // JSON communication setup
 // TODO: investigate having a lowspeed and a highspeed JSON packet to avoid sending data we know all the time.
 // TODO: Create function to send data as the current implementation might cause a momery leak
