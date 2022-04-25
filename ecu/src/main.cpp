@@ -3,6 +3,7 @@
 #include <Wire.h>
 #include <SparkFun_ADS122C04_ADC_Arduino_Library.h>
 #include <ArduinoJson.h>
+#include <valve.hpp>
 
 using namespace machinecontrol;
 
@@ -36,8 +37,14 @@ int temp_channel_select = 0;
 // Sensor functions
 float analog_to_pressure(const float analog_read);
 
-// Valve states
-bool mv1, mv2, pv, esv;
+// Valve definition
+auto mv1 = std::make_shared<NormClosed>(NormClosed(0));
+auto mv2 = std::make_shared<NormClosed>(NormClosed(1));
+auto pv = std::make_shared<NormClosed>(NormClosed(2));
+auto bv = std::make_shared<NormOpen>(NormOpen(3));
+
+// Sequence decleration
+autoSequence testSequence;
 
 
 // JSON communication setup
@@ -52,15 +59,22 @@ StaticJsonDocument<sensorJsonCapacity> sensorJson;
 unsigned char data = 99;   // for incoming serial data
 
 void setup() {
+
+	//Sequence decleration
+	testSequence.addEvent(150,mv1,openValve);
+	testSequence.addEvent(300,mv1,closeValve);
+	testSequence.addEvent(500,mv2,openValve);
+	testSequence.addEvent(600,mv2,closeValve);
+	testSequence.addEvent(1000,pv,openValve);
+	testSequence.addEvent(1100,pv,closeValve);
+	testSequence.addEvent(1500,bv,openValve);
+	testSequence.addEvent(1600,bv,closeValve);
+
 	//Set over current behavior of all channels to latch mode:
   	digital_outputs.setLatch();
 
 	//At startup set all channels to CLOSED
   	digital_outputs.setAll(0);
-	mv1 = false;
-	mv2 = false;
-	pv = false;
-	esv = false;
 
 	//TODO: Up Serial speed
 	Serial.begin(9600);
@@ -155,49 +169,47 @@ void setup() {
 }
 
 void loop() {
+	CURRENT_TIME = millis(); // latest loop time
+
 	if (Serial.available() > 0) {
 		data = (unsigned char)Serial.read();
 
 		switch(data) {
 			case 1:
 				// MV1 open
-				mv1 = true;
-				digital_outputs.set(0, HIGH);
+				mv1->open();
 				break;
 			case 2:
 				// MV1 close
-				mv1 = false;
-				digital_outputs.set(0, LOW);
+				mv1->close();
 				break;
 			case 3:
 				// MV2 open
-				mv2 = true;
-				digital_outputs.set(1, HIGH);
+				mv2->open();
 				break;
 			case 4:
 				// MV2 close
-				mv2 = false;
-				digital_outputs.set(1, LOW);
+				mv2->close();
 				break;
 			case 5:
 				// PV open
-				pv = true;
-				digital_outputs.set(2, HIGH);
+				pv->open();
 				break;
 			case 6:
 				// PV close
-				pv = false;
-				digital_outputs.set(2, LOW);
+				pv->close();
 				break;
 			case 7:
-				// ESV open
-				esv = true;
-				digital_outputs.set(3, HIGH);
+				// BC open
+				bv->open();
 				break;
 			case 8:
-				// ESV close
-				esv = false;
-				digital_outputs.set(3, LOW);
+				// BV close
+				bv->close();
+				break;
+			case 9:
+				// Run autosequnce
+				data = testSequence.runSequence(CURRENT_TIME, data);
 				break;
 			default:
 				break;
@@ -265,10 +277,10 @@ void loop() {
 		// Data transfer happens at HS
 		// Writing sensor JSON object for serialization
 		// Do not write objects with allocated memory. Otherwise the loop will cause a memory leak
-		sensorJson["mv1"]   = mv1;
-		sensorJson["mv2"]   = mv2;
-		sensorJson["pv"]    = pv;
-		sensorJson["esv"]   = esv;
+		sensorJson["mv1"]   = mv1->isOpen();
+		sensorJson["mv2"]   = mv2->isOpen();
+		sensorJson["pv"]    = pv->isOpen();
+		sensorJson["esv"]   = bv->isOpen();
 		sensorJson["LC0"] 	= lc_value;
 		sensorJson["tPS0"] 	= tankPS0;
 		sensorJson["tPS1"]	= tankPS1;
