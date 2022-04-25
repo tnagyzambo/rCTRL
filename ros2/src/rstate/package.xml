@@ -15,7 +15,6 @@
   <build_depend>rosidl_default_generators</build_depend>
   <build_depend>rutil</build_depend>
   <build_depend>rstate_msgs</build_depend>
-  <build_depend>rdata</build_depend>
 
   <depend>action_msgs</depend>
   

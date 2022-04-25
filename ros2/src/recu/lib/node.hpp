@@ -11,6 +11,10 @@
 #include <rclcpp/executors.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_lifecycle/lifecycle_node.hpp>
+#include <rdata/iface.hpp>
+#include <rdata_msgs/msg/log_f64.hpp>
+#include <rdata_msgs/srv/create_logger.hpp>
+#include <rdata_msgs/srv/remove_logger.hpp>
 #include <recu_msgs/msg/valve_state.hpp>
 #include <recu_msgs/srv/arduino_action.hpp>
 #include <recu_msgs/srv/get_valve_state.hpp>
@@ -36,10 +40,10 @@ namespace recu {
         bool stateMV1;
         bool stateMV2;
         bool statePV;
-        bool stateESV;
+        bool stateBV;
         float loadCell;
-        float tempPressureSensor1;
-        float tempPressureSensor2;
+        float pressureTank1;
+        float pressureTank2;
         float pressureChamber1;
         float pressureChamber2;
         float tempThermocouple1;
@@ -61,8 +65,8 @@ namespace recu {
         MV2_Close,
         PV_Open,
         PV_Close,
-        ESV_Open,
-        ESV_Close,
+        BV_Open,
+        BV_Close,
     };
 
     class Node : public rclcpp_lifecycle::LifecycleNode {
@@ -87,15 +91,11 @@ namespace recu {
         ValveState stateMV1 = Unknown;
         ValveState stateMV2 = Unknown;
         ValveState statePV = Unknown;
-        ValveState stateESV = Unknown;
-        float loadCell = 0.0;
-        float tempPressureSensor1 = 0.0;
-        float tempPressureSensor2 = 0.0;
-        float pressureChamber1 = 0.0;
-        float pressureChamber2 = 0.0;
-        float tempThermocouple1 = 0.0;
-        float tempThermocouple2 = 0.0;
-        float tempThermocouple3 = 0.0;
+        ValveState stateBV = Unknown;
+
+        rclcpp::Client<rdata_msgs::srv::CreateLogger>::SharedPtr clCreateLogger;
+        rclcpp::Client<rdata_msgs::srv::RemoveLogger>::SharedPtr clRemoveLogger;
+        rclcpp_lifecycle::LifecyclePublisher<rdata_msgs::msg::LogF64>::SharedPtr logger;
 
         recu_msgs::srv::GetValveState::Response createValveStateResponse(ValveState);
 
@@ -108,9 +108,9 @@ namespace recu {
         rclcpp::Service<recu_msgs::srv::ArduinoAction>::SharedPtr srvPV_Open;
         rclcpp::Service<recu_msgs::srv::ArduinoAction>::SharedPtr srvPV_Close;
         rclcpp::Service<recu_msgs::srv::GetValveState>::SharedPtr srvPV_GetState;
-        rclcpp::Service<recu_msgs::srv::ArduinoAction>::SharedPtr srvESV_Open;
-        rclcpp::Service<recu_msgs::srv::ArduinoAction>::SharedPtr srvESV_Close;
-        rclcpp::Service<recu_msgs::srv::GetValveState>::SharedPtr srvESV_GetState;
+        rclcpp::Service<recu_msgs::srv::ArduinoAction>::SharedPtr srvBV_Open;
+        rclcpp::Service<recu_msgs::srv::ArduinoAction>::SharedPtr srvBV_Close;
+        rclcpp::Service<recu_msgs::srv::GetValveState>::SharedPtr srvBV_GetState;
 
         void MV1_Open(const std::shared_ptr<recu_msgs::srv::ArduinoAction::Request>,
                       std::shared_ptr<recu_msgs::srv::ArduinoAction::Response>);
@@ -130,12 +130,12 @@ namespace recu {
                       std::shared_ptr<recu_msgs::srv::ArduinoAction::Response>);
         void PV_GetState(const std::shared_ptr<recu_msgs::srv::GetValveState::Request>,
                          std::shared_ptr<recu_msgs::srv::GetValveState::Response>);
-        void ESV_Open(const std::shared_ptr<recu_msgs::srv::ArduinoAction::Request>,
+        void BV_Open(const std::shared_ptr<recu_msgs::srv::ArduinoAction::Request>,
+                     std::shared_ptr<recu_msgs::srv::ArduinoAction::Response>);
+        void BV_Close(const std::shared_ptr<recu_msgs::srv::ArduinoAction::Request>,
                       std::shared_ptr<recu_msgs::srv::ArduinoAction::Response>);
-        void ESV_Close(const std::shared_ptr<recu_msgs::srv::ArduinoAction::Request>,
-                       std::shared_ptr<recu_msgs::srv::ArduinoAction::Response>);
-        void ESV_GetState(const std::shared_ptr<recu_msgs::srv::GetValveState::Request>,
-                          std::shared_ptr<recu_msgs::srv::GetValveState::Response>);
+        void BV_GetState(const std::shared_ptr<recu_msgs::srv::GetValveState::Request>,
+                         std::shared_ptr<recu_msgs::srv::GetValveState::Response>);
 
         rclcpp::TimerBase::SharedPtr read_timer;
         int serial_port;

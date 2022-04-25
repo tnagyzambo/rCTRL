@@ -13,7 +13,6 @@ find_package(lifecycle_msgs REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 find_package(rutil REQUIRED)
 find_package(rstate_msgs REQUIRED)
-find_package(rdata REQUIRED)
 
 include_directories(include)
 
@@ -45,8 +44,7 @@ ament_target_dependencies(rstate_node rclcpp
                                       rclcpp_action
                                       lifecycle_msgs
                                       rutil
-                                      rstate_msgs
-                                      rdata)
+                                      rstate_msgs)
 
 install(TARGETS rstate_node
         DESTINATION lib/${PROJECT_NAME})

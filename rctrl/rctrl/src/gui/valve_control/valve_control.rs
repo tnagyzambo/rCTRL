@@ -11,6 +11,7 @@ pub struct ValveControl {
     ws_lock: Rc<WsLock>,
     valve_name: String,
     state_display: Rc<Mutex<ValveStateDisplay>>,
+    display_name: String,
 }
 
 impl ValveControl {
@@ -18,14 +19,17 @@ impl ValveControl {
         Self {
             ws_lock: Rc::clone(&ws_lock),
             valve_name: valve_name.clone(),
-            state_display: ValveStateDisplay::new_shared(&ws_lock, valve_name, display_name),
+            state_display: ValveStateDisplay::new_shared(&ws_lock, valve_name),
+            display_name: display_name,
         }
     }
 
     pub fn draw(&self, ctx: &egui::Context, ui: &mut egui::Ui) {
         ui.group(|ui| {
-            ui.set_width(50.0);
+            ui.set_width(70.0);
             ui.vertical_centered_justified(|ui| {
+                ui.label(self.display_name.clone());
+
                 let mut state_display_lock = self.state_display.lock().unwrap();
                 state_display_lock.draw(ui);
 
@@ -75,11 +79,10 @@ struct ValveStateDisplay {
     topic: String,
     ws_lock: Rc<WsLock>,
     pub state: ValveState,
-    pub display_name: String,
 }
 
 impl ValveStateDisplay {
-    pub fn new_shared(ws_lock: &Rc<WsLock>, valve_name: String, display_name: String) -> Rc<Mutex<Self>> {
+    pub fn new_shared(ws_lock: &Rc<WsLock>, valve_name: String) -> Rc<Mutex<Self>> {
         let service = format!("/recu/{}/get_state", valve_name.to_owned());
 
         let valve_state_display = Self {
@@ -88,7 +91,6 @@ impl ValveStateDisplay {
             topic: (service).to_owned(),
             ws_lock: Rc::clone(&ws_lock),
             state: ValveState::Unknown,
-            display_name: display_name,
         };
 
         let op = valve_state_display.op.clone();
@@ -106,7 +108,13 @@ impl GuiElem for ValveStateDisplay {
     // Most of this is ripped from the reference
     // REFERENCE: https://docs.rs/egui/latest/src/egui/widgets/selected_label.rs.html#25-28
     fn draw(&mut self, ui: &mut egui::Ui) {
-        let widget_text = egui::WidgetText::from(egui::RichText::new(self.display_name.clone()));
+        let mut widget_text = egui::WidgetText::from(egui::RichText::new("Unknown"));
+
+        if self.state == ValveState::Open {
+            widget_text = egui::WidgetText::from(egui::RichText::new("Opened"));
+        } else if self.state == ValveState::Closed {
+            widget_text = egui::WidgetText::from(egui::RichText::new("Closed"));
+        }
 
         let button_padding = ui.spacing().button_padding;
         let total_extra = button_padding + button_padding;
@@ -128,7 +136,7 @@ impl GuiElem for ValveStateDisplay {
             if self.state == ValveState::Open {
                 bg_color = egui::Color32::from_rgb(27, 131, 4);
                 text_color = egui::Color32::BLACK;
-            } else if self.state == ValveState::Unknown {
+            } else if self.state == ValveState::Closed {
                 bg_color = egui::Color32::from_rgb(131, 44, 4);
                 text_color = egui::Color32::BLACK;
             }

@@ -7,6 +7,10 @@ namespace recu {
         this->read_timer = this->create_wall_timer(1ms, std::bind(&Node::serialRead, this));
         this->read_timer->cancel();
 
+        this->clCreateLogger = this->create_client<rdata_msgs::srv::CreateLogger>(rdata::iface::srv_create_logger_f64);
+        this->clRemoveLogger = this->create_client<rdata_msgs::srv::RemoveLogger>(rdata::iface::srv_remove_logger_f64);
+        this->logger = this->create_publisher<rdata_msgs::msg::LogF64>("recu/logger", 10);
+
         RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::state::unconfigured().c_str());
     }
 
@@ -105,17 +109,28 @@ namespace recu {
             "recu/pv/get_state", std::bind(&Node::PV_GetState, this, std::placeholders::_1, std::placeholders::_2));
         RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::srv::created("recu/pv/get_state").c_str());
 
-        this->srvESV_Open = this->create_service<recu_msgs::srv::ArduinoAction>(
-            "recu/esv/open", std::bind(&Node::ESV_Open, this, std::placeholders::_1, std::placeholders::_2));
-        RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::srv::created("recu/esv/open").c_str());
+        this->srvBV_Open = this->create_service<recu_msgs::srv::ArduinoAction>(
+            "recu/bv/open", std::bind(&Node::BV_Open, this, std::placeholders::_1, std::placeholders::_2));
+        RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::srv::created("recu/bv/open").c_str());
 
-        this->srvESV_Close = this->create_service<recu_msgs::srv::ArduinoAction>(
-            "recu/esv/close", std::bind(&Node::ESV_Close, this, std::placeholders::_1, std::placeholders::_2));
-        RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::srv::created("recu/esv/close").c_str());
+        this->srvBV_Close = this->create_service<recu_msgs::srv::ArduinoAction>(
+            "recu/bv/close", std::bind(&Node::BV_Close, this, std::placeholders::_1, std::placeholders::_2));
+        RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::srv::created("recu/bv/close").c_str());
 
-        this->srvESV_GetState = this->create_service<recu_msgs::srv::GetValveState>(
-            "recu/esv/get_state", std::bind(&Node::ESV_GetState, this, std::placeholders::_1, std::placeholders::_2));
-        RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::srv::created("recu/esv/get_state").c_str());
+        this->srvBV_GetState = this->create_service<recu_msgs::srv::GetValveState>(
+            "recu/bv/get_state", std::bind(&Node::BV_GetState, this, std::placeholders::_1, std::placeholders::_2));
+        RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::srv::created("recu/bv/get_state").c_str());
+
+        try {
+            rdata::iface::createLogger(this->clCreateLogger->get_service_name(),
+                                       this->get_node_base_interface(),
+                                       this->clCreateLogger,
+                                       "recu/logger");
+        } catch (const rutil::except::service_error &e) {
+            RCLCPP_ERROR(this->get_logger(), "Failed to configure node\nWhat: %s", e.what());
+
+            return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::FAILURE;
+        }
 
         RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::state::inactive().c_str());
         return LifecycleCallbackReturn::SUCCESS;
@@ -126,6 +141,7 @@ namespace recu {
         // Cannot activate subscribers
         // REFERENCE: https://github.com/ros2/demos/issues/488
 
+        this->logger->on_activate();
         this->read_timer->reset();
 
         RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::state::active().c_str());
@@ -139,11 +155,12 @@ namespace recu {
         // REFERENCE: https://github.com/ros2/demos/issues/488
 
         this->read_timer->cancel();
+        this->logger->on_deactivate();
 
         this->stateMV1 = Unknown;
         this->stateMV2 = Unknown;
         this->statePV = Unknown;
-        this->stateESV = Unknown;
+        this->stateBV = Unknown;
 
         RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::state::inactive().c_str());
 
@@ -156,8 +173,18 @@ namespace recu {
         this->serialClose();
         this->deleteAllPointers();
 
-        RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::state::unconfigured().c_str());
+        try {
+            rdata::iface::removeLogger(this->clRemoveLogger->get_service_name(),
+                                       this->get_node_base_interface(),
+                                       this->clRemoveLogger,
+                                       "recu/logger");
+        } catch (const rutil::except::service_error &e) {
+            RCLCPP_ERROR(this->get_logger(), "Failed to cleanup node\nWhat: %s", e.what());
 
+            return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::FAILURE;
+        }
+
+        RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::state::unconfigured().c_str());
         return LifecycleCallbackReturn::SUCCESS;
     }
 
@@ -170,7 +197,7 @@ namespace recu {
         this->stateMV1 = Unknown;
         this->stateMV2 = Unknown;
         this->statePV = Unknown;
-        this->stateESV = Unknown;
+        this->stateBV = Unknown;
 
         RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::state::finalized().c_str());
 
@@ -187,9 +214,9 @@ namespace recu {
         this->srvPV_Open.reset();
         this->srvPV_Close.reset();
         this->srvPV_GetState.reset();
-        this->srvESV_Open.reset();
-        this->srvESV_Close.reset();
-        this->srvESV_GetState.reset();
+        this->srvBV_Open.reset();
+        this->srvBV_Close.reset();
+        this->srvBV_GetState.reset();
     }
 
     void Node::serialRead() {
@@ -227,7 +254,7 @@ namespace recu {
             j["mv1"].get<bool>(),
             j["mv2"].get<bool>(),
             j["pv"].get<bool>(),
-            j["esv"].get<bool>(),
+            j["bv"].get<bool>(),
             j["LC0"].get<float>(),
             j["tPS0"].get<float>(),
             j["tPS1"].get<float>(),
@@ -256,20 +283,67 @@ namespace recu {
             this->statePV = Closed;
         }
 
-        if (data.stateESV) {
-            this->stateESV = Open;
+        if (data.stateBV) {
+            this->stateBV = Open;
         } else {
-            this->stateESV = Closed;
+            this->stateBV = Closed;
         }
 
-        this->loadCell = data.loadCell;
-        this->tempPressureSensor1 = data.tempPressureSensor1;
-        this->tempPressureSensor2 = data.tempPressureSensor2;
-        this->pressureChamber1 = data.pressureChamber1;
-        this->pressureChamber2 = data.pressureChamber2;
-        this->tempThermocouple1 = data.tempThermocouple1;
-        this->tempThermocouple2 = data.tempThermocouple2;
-        this->tempThermocouple3 = data.tempThermocouple2;
+        // Load cell
+        auto message = rdata_msgs::msg::LogF64();
+        message.measurment = "force";
+        message.sensor = "load_cell";
+        message.value = data.loadCell;
+        this->logger->publish(message);
+
+        // Pressure sensor 1 (tank)
+        message = rdata_msgs::msg::LogF64();
+        message.measurment = "pressure";
+        message.sensor = "ps_tank_1";
+        message.value = data.pressureTank1;
+        this->logger->publish(message);
+
+        // Pressure sensor 2 (tank)
+        message = rdata_msgs::msg::LogF64();
+        message.measurment = "pressure";
+        message.sensor = "ps_tank_2";
+        message.value = data.pressureTank2;
+        this->logger->publish(message);
+
+        // Pressure sensor 1 (chamber)
+        message = rdata_msgs::msg::LogF64();
+        message.measurment = "pressure";
+        message.sensor = "ps_chamber_1";
+        message.value = data.pressureChamber1;
+        this->logger->publish(message);
+
+        // Pressure sensor 2 (chamber)
+        message = rdata_msgs::msg::LogF64();
+        message.measurment = "pressure";
+        message.sensor = "ps_chamber_2";
+        message.value = data.pressureChamber2;
+        this->logger->publish(message);
+
+        // Thermocouple 1
+        message = rdata_msgs::msg::LogF64();
+        message.measurment = "temp";
+        message.sensor = "thermocouple_1";
+        message.value = data.tempThermocouple1;
+        this->logger->publish(message);
+
+        // Thermocouple 2
+        message = rdata_msgs::msg::LogF64();
+        message.measurment = "temp";
+        message.sensor = "thermocouple_2";
+        message.value = data.tempThermocouple2;
+        this->logger->publish(message);
+
+        // Thermocouple 3
+        message = rdata_msgs::msg::LogF64();
+        message.measurment = "temp";
+        message.sensor = "thermocouple_3";
+        message.value = data.tempThermocouple3;
+        this->logger->publish(message);
     }
 
     void Node::serialWrite(EcuActions action) { write(this->serial_port, &action, sizeof(action)); }
@@ -359,23 +433,23 @@ namespace recu {
         *response = createValveStateResponse(this->statePV);
     }
 
-    void Node::ESV_Open(const std::shared_ptr<recu_msgs::srv::ArduinoAction::Request> request,
+    void Node::BV_Open(const std::shared_ptr<recu_msgs::srv::ArduinoAction::Request> request,
+                       std::shared_ptr<recu_msgs::srv::ArduinoAction::Response> response) {
+        (void)request;
+        (void)response;
+        this->serialWrite(EcuActions::BV_Open);
+    }
+
+    void Node::BV_Close(const std::shared_ptr<recu_msgs::srv::ArduinoAction::Request> request,
                         std::shared_ptr<recu_msgs::srv::ArduinoAction::Response> response) {
         (void)request;
         (void)response;
-        this->serialWrite(EcuActions::ESV_Open);
+        this->serialWrite(EcuActions::BV_Close);
     }
 
-    void Node::ESV_Close(const std::shared_ptr<recu_msgs::srv::ArduinoAction::Request> request,
-                         std::shared_ptr<recu_msgs::srv::ArduinoAction::Response> response) {
+    void Node::BV_GetState(const std::shared_ptr<recu_msgs::srv::GetValveState::Request> request,
+                           std::shared_ptr<recu_msgs::srv::GetValveState::Response> response) {
         (void)request;
-        (void)response;
-        this->serialWrite(EcuActions::ESV_Close);
-    }
-
-    void Node::ESV_GetState(const std::shared_ptr<recu_msgs::srv::GetValveState::Request> request,
-                            std::shared_ptr<recu_msgs::srv::GetValveState::Response> response) {
-        (void)request;
-        *response = createValveStateResponse(this->stateESV);
+        *response = createValveStateResponse(this->stateBV);
     }
 } // namespace recu

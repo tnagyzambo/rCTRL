@@ -11,6 +11,7 @@ find_package(rclcpp_lifecycle REQUIRED)
 find_package(lifecycle_msgs REQUIRED)
 find_package(recu_msgs REQUIRED)
 find_package(rutil REQUIRED)
+find_package(rdata_msgs REQUIRED)
 find_package(nlohmann_json REQUIRED)
 
 include_directories(include)
@@ -26,6 +27,7 @@ ament_target_dependencies(recu_node rclcpp
                                     rclcpp_lifecycle
                                     lifecycle_msgs
                                     recu_msgs
+                                    rdata_msgs
                                     rutil)
 
 install(DIRECTORY include/
