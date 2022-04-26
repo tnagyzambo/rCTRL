@@ -19,7 +19,7 @@ types of valves. The template is based on the valve type and the output pin. */
 class valveInterface {
     protected:
         //Default is unpowered
-        bool power, state; //true is open
+        bool power, state; //true is open, true is powered
 
     public:
         const int PIN;
@@ -45,10 +45,11 @@ class valveInterface {
 };
 
 class NormOpen: public valveInterface {
-    //Default state
-    bool power = false;
-    bool state = true;
-    //Powered is high?
+    private:
+        //Default state
+        bool power = false;
+        bool state = true;
+
     public:
         NormOpen(int PIN):valveInterface(PIN){};
         void open() override final;
@@ -58,10 +59,11 @@ class NormOpen: public valveInterface {
 
 
 class NormClosed: public valveInterface {
-    //Default state
-    bool power = false;
-    bool state = true;
-    //Powered is high?
+    private:
+        //Default state
+        bool power = false;
+        bool state = false;
+
     public:
     
         NormClosed(int PIN):valveInterface(PIN){};

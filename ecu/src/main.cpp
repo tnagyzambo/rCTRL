@@ -54,7 +54,7 @@ autoSequence testSequence;
 // Larger packets might allow us to reach higher data rates and lower the Serial usage.
 
 const int sensorJsonCapacity = JSON_OBJECT_SIZE(12); //right now we have, LC, tankps1, tankps2, ccPS0, ccPS1, thermo 1, 2, 3
-StaticJsonDocument<sensorJsonCapacity> sensorJson;
+
 
 unsigned char data = 99;   // for incoming serial data
 
@@ -119,16 +119,6 @@ void setup() {
 	TankPS.setPSMaxAndOffset(5.0); // Set the pressure sensor to the correct pressure
 	TankPS.start(); // Required after setting continuous mode bit in configureADC
 
-	// Print configurations to Serial
-	// Comment out if not needed
-	// LoadCell.enableDebugging(Serial); // Enable debug messages on Serial
-	// LoadCell.printADS122C04config(); // Print the configuration
-	// LoadCell.disableDebugging(); // Enable debug messages on Serial
-
-	// TankPS.enableDebugging(Serial); // Enable debug messages on Serial
-	// TankPS.printADS122C04config(); // Print the configuration
-	// TankPS.disableDebugging(); // Enable debug messages on Serial
-
 	//PGA offset calibration loop
 	// TODO: make a wrapper function to clean up this
 	// TODO: Fix functionality. Currently this step is not working at all
@@ -175,39 +165,39 @@ void loop() {
 		data = (unsigned char)Serial.read();
 
 		switch(data) {
-			case 1:
+			case 49:
 				// MV1 open
 				mv1->open();
 				break;
-			case 2:
+			case 50:
 				// MV1 close
 				mv1->close();
 				break;
-			case 3:
+			case 51:
 				// MV2 open
 				mv2->open();
 				break;
-			case 4:
+			case 52:
 				// MV2 close
 				mv2->close();
 				break;
-			case 5:
+			case 53:
 				// PV open
 				pv->open();
 				break;
-			case 6:
+			case 54:
 				// PV close
 				pv->close();
 				break;
-			case 7:
+			case 55:
 				// BC open
 				bv->open();
 				break;
-			case 8:
+			case 56:
 				// BV close
 				bv->close();
 				break;
-			case 9:
+			case 57:
 				// Run autosequnce
 				data = testSequence.runSequence(CURRENT_TIME, data);
 				break;
@@ -256,6 +246,7 @@ void loop() {
 	// HS loop
 	if (CURRENT_TIME - HS_PREVIOUS >= HS_PERIOD)
 	{
+		StaticJsonDocument<sensorJsonCapacity> sensorJson;
 		// readPS() and readLC have a small delay in it incase DRDY is not ready. It won't go longer then ADS122C04_CONVERSION_TIMEOUT
 		// It should never be delayed as the mode is set to continuous
 
@@ -280,24 +271,26 @@ void loop() {
 		sensorJson["mv1"]   = mv1->isOpen();
 		sensorJson["mv2"]   = mv2->isOpen();
 		sensorJson["pv"]    = pv->isOpen();
-		sensorJson["esv"]   = bv->isOpen();
-		sensorJson["LC0"] 	= lc_value;
-		sensorJson["tPS0"] 	= tankPS0;
-		sensorJson["tPS1"]	= tankPS1;
-		sensorJson["ccPS0"]	= ccPS0;
-		sensorJson["ccPS1"]	= ccPS1;
-		sensorJson["T0"]	= temp_ch0;
-		sensorJson["T1"]	= temp_ch1;
-		sensorJson["T2"] 	= temp_ch2;
+		sensorJson["bv"]   	= bv->isOpen();
+		// sensorJson["LC0"] 	= lc_value;
+		// sensorJson["tPS0"] 	= tankPS0;
+		// sensorJson["tPS1"]	= tankPS1;
+		// sensorJson["ccPS0"]	= ccPS0;
+		// sensorJson["ccPS1"]	= ccPS1;
+		// sensorJson["T0"]	= temp_ch0;
+		// sensorJson["T1"]	= temp_ch1;
+		// sensorJson["T2"] 	= temp_ch2;
 
 		// Write serialized object to Serial com port
 		serializeJson(sensorJson, Serial); //Efficient but not very readable
 		//serializeJsonPretty(sensorJson,Serial);//Easy to read in serial
 		//serializeMsgPack(sensorJson,Serial); //Most efficient method but cannot be displayed in serial
+		//Serial.print(mv1->isPowered());
 		Serial.print("\n");
 
 		// Set HS_PREVIOUS
 		HS_PREVIOUS = millis();
+
 	}
 	
 	// Print statements to debug values
@@ -322,7 +315,7 @@ void loop() {
 		Serial.print(F("°C\n"));
 	}
 
-	delay(1);
+	delay(250);
 }
 
 

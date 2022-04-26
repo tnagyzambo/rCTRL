@@ -11,61 +11,69 @@ types of valves. The template is based on the valve type and the output pin. */
 
 
 bool valveInterface::isPowered() const {
-    return power;
+    return this->power;
 }
+
 bool valveInterface::isOpen() const {
-    return state;
+    return this->state;
 }
 
 void NormOpen::open() {
     digital_outputs.set(PIN,LOW);
+    this->state = true;
     state = true;
+    this->power = false;
 }
 
 void NormOpen::close() {
     digital_outputs.set(PIN,HIGH);
-    state = false;
+    this->state = false;
+    this->power = true;
 }
 
 void NormClosed::open() {
     digital_outputs.set(PIN,HIGH);
+    this->state = true;
     state = true;
+    this->power = true;
 }
 
 void NormClosed::close() {
     digital_outputs.set(PIN,LOW);
-    state = false;
+    this->state = false;
+    this->power = false;
 }
 
 sequenceData::sequenceData(long int actuationTime, std::shared_ptr<valveInterface> valveID, valveAction action){
-        actuationTime = actuationTime;
-        valveID = valveID;
-        action = action;
+        this->actuationTime = actuationTime;
+        this->valveID = valveID;
+        this->action = action;
 }
+
 sequenceData::~sequenceData(){
-    valveID.reset();
+    this->valveID.reset();
 }
 
 void autoSequence::addEvent(long int time, std::shared_ptr<valveInterface> valveID, valveAction action) {
-    SequenceVector.push_back(sequenceData(time, valveID, action));
+    this->SequenceVector.push_back(sequenceData(time, valveID, action));
 }
 
 int autoSequence::runSequence(long int currentTime, int dataCase) {
-    if (SequenceVector.empty()) {
+    if (this->SequenceVector.empty()) {
         //Return to 0 state
         //Stop sequence
         return 0;
     }
     //TODO add start state check.
     if (!sequenceActive) {
-        sequenceActive = true;
-        sequenceStartTime = currentTime;
+        this->sequenceActive = true;
+        this->sequenceStartTime = currentTime;
     }
 
-    for (auto eventPtr = std::begin(SequenceVector); eventPtr != std::end(SequenceVector); ++eventPtr) {
+    for (auto eventPtr = std::begin(this->SequenceVector); eventPtr != std::end(this->SequenceVector); ++eventPtr) {
         
         // Check if the actuation time is good AND that true time is -INFINITY
-        if (eventPtr->actuationTime >= (currentTime-sequenceStartTime) && eventPtr->trueTime < 0) {
+        if (eventPtr->actuationTime >= (currentTime-this->sequenceStartTime) && eventPtr->trueTime < 0) {
             // Open or close valve
             if (eventPtr->action == openValve) {
                 eventPtr->valveID->open();
@@ -74,7 +82,7 @@ int autoSequence::runSequence(long int currentTime, int dataCase) {
             }
             // Set trueTime so we don't keep calling it
             eventPtr->trueTime = currentTime;
-            ++eventCounter;
+            ++this->eventCounter;
         }
     }
 
@@ -89,9 +97,9 @@ int autoSequence::runSequence(long int currentTime, int dataCase) {
 
 void autoSequence::resetSequence(){
     // Set all times back to negative infinity
-    for (auto eventPtr = std::begin(SequenceVector); eventPtr != std::end(SequenceVector); ++eventPtr) {
+    for (auto eventPtr = std::begin(this->SequenceVector); eventPtr != std::end(this->SequenceVector); ++eventPtr) {
         eventPtr->trueTime = -INFINITY;
     }
-    sequenceStartTime = INFINITY;
-    eventCounter = 0;
+    this->sequenceStartTime = INFINITY;
+    this->eventCounter = 0;
 }
