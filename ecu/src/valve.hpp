@@ -45,13 +45,8 @@ class valveInterface {
 };
 
 class NormOpen: public valveInterface {
-    private:
-        //Default state
-        bool power = false;
-        bool state = true;
-
     public:
-        NormOpen(int PIN):valveInterface(PIN){};
+        NormOpen(int PIN):valveInterface(PIN){power = false; state = true;};
         void open() override final;
 
         void close() override final;
@@ -59,14 +54,9 @@ class NormOpen: public valveInterface {
 
 
 class NormClosed: public valveInterface {
-    private:
-        //Default state
-        bool power = false;
-        bool state = false;
-
     public:
     
-        NormClosed(int PIN):valveInterface(PIN){};
+        NormClosed(int PIN):valveInterface(PIN){power = false; state = false;};
         void open() override final;
 
         void close() override final;

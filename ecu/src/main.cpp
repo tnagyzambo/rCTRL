@@ -97,27 +97,27 @@ void setup() {
   	Wire.setClock(1000000); //Set to Fast mode + (1Mbps). Lower this value if errors on the i2c start to occur. 
 	//------------- Set ADC modes ----------------
 	// First we intialize and check the address configuration. See comments on which address is which board
-	if (LoadCell.begin(0x40) == false) //Connect to the Load Cell using the defaults: Address 0x40 is the board without the direct connect connector. Defualt Wire port
-	{
-		Serial.println(F("Error I2C bus to the Loadcell. Check address and I2C lines. Please check wiring. Freezing."));
-		while (1);
-	}
+	// if (LoadCell.begin(0x40) == false) //Connect to the Load Cell using the defaults: Address 0x40 is the board without the direct connect connector. Defualt Wire port
+	// {
+	// 	Serial.println(F("Error I2C bus to the Loadcell. Check address and I2C lines. Please check wiring. Freezing."));
+	// 	while (1);
+	// }
 
-	if (TankPS.begin(0x44) == false) //Connect to the Pressure sensor using the defaults: Address 0x44 is the board with the direct connector. Defaul tWire port
-	{
-		Serial.println(F("Error I2C bus to the Pressure Sensor. Check address and I2C lines. Please check wiring. Freezing."));
-		while (1);
-	}	
+	// if (TankPS.begin(0x44) == false) //Connect to the Pressure sensor using the defaults: Address 0x44 is the board with the direct connector. Defaul tWire port
+	// {
+	// 	Serial.println(F("Error I2C bus to the Pressure Sensor. Check address and I2C lines. Please check wiring. Freezing."));
+	// 	while (1);
+	// }	
 
 	// Configure ADC modes
 	// TODO: set datarates as low as possible based on loop freq for lower noise
-	LoadCell.configureADCmode(ADS122C04_LC_MODE, ADS122C04_DATA_RATE_600SPS); //1200SPS due to turbo enabled
-	LoadCell.setLCSlopeAndOffset(1,0); // 1, 0 is slope of 1 and offset of zero. Basically returning the differential voltage vin.
-	LoadCell.start(); // Required after setting continuous mode bit in configureADC
+	// LoadCell.configureADCmode(ADS122C04_LC_MODE, ADS122C04_DATA_RATE_600SPS); //1200SPS due to turbo enabled
+	// LoadCell.setLCSlopeAndOffset(1,0); // 1, 0 is slope of 1 and offset of zero. Basically returning the differential voltage vin.
+	// LoadCell.start(); // Required after setting continuous mode bit in configureADC
 
-	TankPS.configureADCmode(ADS122C04_PS_MODE, ADS122C04_DATA_RATE_600SPS); // 1200SPS due to turbo enabled
-	TankPS.setPSMaxAndOffset(5.0); // Set the pressure sensor to the correct pressure
-	TankPS.start(); // Required after setting continuous mode bit in configureADC
+	// TankPS.configureADCmode(ADS122C04_PS_MODE, ADS122C04_DATA_RATE_600SPS); // 1200SPS due to turbo enabled
+	// TankPS.setPSMaxAndOffset(5.0); // Set the pressure sensor to the correct pressure
+	// TankPS.start(); // Required after setting continuous mode bit in configureADC
 
 	//PGA offset calibration loop
 	// TODO: make a wrapper function to clean up this
@@ -151,11 +151,11 @@ void setup() {
 	// ---------- Thermocouple initilization -----------
 	// Code taken from thermocouple example
 	// Initialize temperature probes
-  	temp_probes.tc.begin();
-	// Enables Thermocouples chip select
-  	temp_probes.enableTC();
-	// We need to select the first channel before we start so that the loop can get going nicely
-	temp_probes.selectChannel(temp_channel_select); // We use the delay(150) to let ADC settle before main loop
+  	// temp_probes.tc.begin();
+	// // Enables Thermocouples chip select
+  	// temp_probes.enableTC();
+	// // We need to select the first channel before we start so that the loop can get going nicely
+	// temp_probes.selectChannel(temp_channel_select); // We use the delay(150) to let ADC settle before main loop
 }
 
 void loop() {
@@ -210,38 +210,38 @@ void loop() {
 
 	// -----------Read Sensors-------------------
 	//LS loop
-	if (CURRENT_TIME - LS_PREVIOUS >= LS_PERIOD)
-	{
-		// Read thermocouples
-		// The thermocouple mux and ADC is very slow to settle. Default select channel has a delay of 150ms
-		// Instead we use a custom no delay function and update one thermocouple each time
-		// This way we don't introduce a blocking moment in the code
-		// TODO: Find out fastest acceptable rate
+	// if (CURRENT_TIME - LS_PREVIOUS >= LS_PERIOD)
+	// {
+	// 	// Read thermocouples
+	// 	// The thermocouple mux and ADC is very slow to settle. Default select channel has a delay of 150ms
+	// 	// Instead we use a custom no delay function and update one thermocouple each time
+	// 	// This way we don't introduce a blocking moment in the code
+	// 	// TODO: Find out fastest acceptable rate
 
-		// ENSURE LS LOOP PROVIDES SUFFICIENT SETTLING TIME OR ELSE READING WILL BE BAD!!
-		switch (temp_channel_select) {
-			case 0:
-				temp_ch0 = temp_probes.tc.readTemperature();
-				temp_probes.selectChannelNoDelay(1);
-				temp_channel_select = 1;
-				break;
-			case 1:
-				temp_ch1 = temp_probes.tc.readTemperature();
-				temp_probes.selectChannelNoDelay(2);
-				temp_channel_select = 2;
-				break;
-			case 2:
-				temp_ch2 = temp_probes.tc.readTemperature();
-				temp_probes.selectChannelNoDelay(0);
-				temp_channel_select = 0;
-				break;
-			default:
-				break;
-		}
+	// 	// ENSURE LS LOOP PROVIDES SUFFICIENT SETTLING TIME OR ELSE READING WILL BE BAD!!
+	// 	switch (temp_channel_select) {
+	// 		case 0:
+	// 			temp_ch0 = temp_probes.tc.readTemperature();
+	// 			temp_probes.selectChannelNoDelay(1);
+	// 			temp_channel_select = 1;
+	// 			break;
+	// 		case 1:
+	// 			temp_ch1 = temp_probes.tc.readTemperature();
+	// 			temp_probes.selectChannelNoDelay(2);
+	// 			temp_channel_select = 2;
+	// 			break;
+	// 		case 2:
+	// 			temp_ch2 = temp_probes.tc.readTemperature();
+	// 			temp_probes.selectChannelNoDelay(0);
+	// 			temp_channel_select = 0;
+	// 			break;
+	// 		default:
+	// 			break;
+	// 	}
 		
-		// Update LS_PREVIOUS
-		LS_PREVIOUS = millis();
-	}
+	// 	// Update LS_PREVIOUS
+	// 	LS_PREVIOUS = millis();
+	// }
 
 	// HS loop
 	if (CURRENT_TIME - HS_PREVIOUS >= HS_PERIOD)
@@ -251,19 +251,19 @@ void loop() {
 		// It should never be delayed as the mode is set to continuous
 
 		// Read LC value
-		lc_value  = LoadCell.readLC(); //Use the read function. Units depend on calibration. The output voltage true voltage (aka raw/gain)
+		// lc_value  = LoadCell.readLC(); //Use the read function. Units depend on calibration. The output voltage true voltage (aka raw/gain)
 
-	    // Read pressure sensor 1 and 2 (Tank sensors)
-		// Currently both sensors will be same pressure range. If not we also need to change the slope and offset
-	    tankPS0 = TankPS.readPS(); //Read first pressure sensor in Bar. Default sense pin is the out+ pin (aka AIN2)
-	    TankPS.setInputMultiplexer(ADS122C04_MUX_AIN0_AVSS); //Setting it to out- (aka AIN0)
-	    tankPS1 = TankPS.readPS(); //Read second pressure sensor in Bar
-        TankPS.setInputMultiplexer(ADS122C04_MUX_AIN2_AVSS); //Set back to default. 
+	    // // Read pressure sensor 1 and 2 (Tank sensors)
+		// // Currently both sensors will be same pressure range. If not we also need to change the slope and offset
+	    // tankPS0 = TankPS.readPS(); //Read first pressure sensor in Bar. Default sense pin is the out+ pin (aka AIN2)
+	    // TankPS.setInputMultiplexer(ADS122C04_MUX_AIN0_AVSS); //Setting it to out- (aka AIN0)
+	    // tankPS1 = TankPS.readPS(); //Read second pressure sensor in Bar
+        // TankPS.setInputMultiplexer(ADS122C04_MUX_AIN2_AVSS); //Set back to default. 
 
-	    // Read CC pressure sensors
-		// Read raw voltage and then convert it to bar and save
-	    ccPS0 = analog_to_pressure(analog_in.read(0));
-	    ccPS1 = analog_to_pressure(analog_in.read(1));
+	    // // Read CC pressure sensors
+		// // Read raw voltage and then convert it to bar and save
+	    // ccPS0 = analog_to_pressure(analog_in.read(0));
+	    // ccPS1 = analog_to_pressure(analog_in.read(1));
 
 		// Data transfer happens at HS
 		// Writing sensor JSON object for serialization
@@ -277,8 +277,8 @@ void loop() {
 		// sensorJson["tPS1"]	= tankPS1;
 		// sensorJson["ccPS0"]	= ccPS0;
 		// sensorJson["ccPS1"]	= ccPS1;
-		// sensorJson["T0"]	= temp_ch0;
-		// sensorJson["T1"]	= temp_ch1;
+		// sensorJson["T0"]		= temp_ch0;
+		// sensorJson["T1"]		= temp_ch1;
 		// sensorJson["T2"] 	= temp_ch2;
 
 		// Write serialized object to Serial com port

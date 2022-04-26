@@ -21,7 +21,6 @@ bool valveInterface::isOpen() const {
 void NormOpen::open() {
     digital_outputs.set(PIN,LOW);
     this->state = true;
-    state = true;
     this->power = false;
 }
 
@@ -34,7 +33,6 @@ void NormOpen::close() {
 void NormClosed::open() {
     digital_outputs.set(PIN,HIGH);
     this->state = true;
-    state = true;
     this->power = true;
 }
 
