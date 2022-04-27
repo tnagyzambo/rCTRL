@@ -56,11 +56,11 @@ void autoSequence::addEvent(long int time, std::shared_ptr<valveInterface> valve
     this->SequenceVector.push_back(sequenceData(time, valveID, action));
 }
 
-int autoSequence::runSequence(long int currentTime, int dataCase) {
+bool autoSequence::runSequence(long int currentTime) {
     if (this->SequenceVector.empty()) {
         //Return to 0 state
         //Stop sequence
-        return 0;
+        return false;
     }
     //TODO add start state check.
     if (!sequenceActive) {
@@ -71,7 +71,7 @@ int autoSequence::runSequence(long int currentTime, int dataCase) {
     for (auto eventPtr = std::begin(this->SequenceVector); eventPtr != std::end(this->SequenceVector); ++eventPtr) {
         
         // Check if the actuation time is good AND that true time is -INFINITY
-        if (eventPtr->actuationTime >= (currentTime-this->sequenceStartTime) && eventPtr->trueTime < 0) {
+        if (eventPtr->actuationTime <= (currentTime-this->sequenceStartTime) && eventPtr->trueTime < 0) {
             // Open or close valve
             if (eventPtr->action == openValve) {
                 eventPtr->valveID->open();
@@ -84,12 +84,12 @@ int autoSequence::runSequence(long int currentTime, int dataCase) {
         }
     }
 
-    // Return dataCase if we continue with sequence
-    // Return 0 if we are done
+    // Return true if we continue with sequence
+    // Return false if we are done
     if (eventCounter >= SequenceVector.size()){
-        return 0; // Sequence over
+        return false; // Sequence over
     } else {
-        return dataCase; // Continue sequence
+        return true; // Continue sequence
     }
 }
 
@@ -100,4 +100,5 @@ void autoSequence::resetSequence(){
     }
     this->sequenceStartTime = INFINITY;
     this->eventCounter = 0;
+    this->sequenceActive = false;
 }

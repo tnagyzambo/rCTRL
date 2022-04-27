@@ -45,7 +45,7 @@ auto bv = std::make_shared<NormOpen>(NormOpen(3));
 
 // Sequence decleration
 autoSequence testSequence;
-
+bool inSequence = false;
 
 // JSON communication setup
 // TODO: investigate having a lowspeed and a highspeed JSON packet to avoid sending data we know all the time.
@@ -199,11 +199,26 @@ void loop() {
 				break;
 			case 57:
 				// Run autosequnce
-				data = testSequence.runSequence(CURRENT_TIME, data);
+				inSequence = true;
+				Serial.println("Run Sequence");
+				break;
+			case 58:
+				// Stop autosequence
+				inSequence = false;
+				break;
+			case 48:
+				// Reset sequence
+				testSequence.resetSequence();
+				Serial.println("Reset");
 				break;
 			default:
 				break;
 		}
+	}
+
+	// Call auto sequence if in sequence
+	if (inSequence) {
+		inSequence = testSequence.runSequence(CURRENT_TIME);
 	}
 
 	CURRENT_TIME = millis(); // latest loop time

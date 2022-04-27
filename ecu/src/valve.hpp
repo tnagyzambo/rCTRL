@@ -96,7 +96,7 @@ class autoSequence {
     public:
         void addEvent(long int time, std::shared_ptr<valveInterface> valveID, valveAction action);
 
-        int runSequence(long int currentTime, int dataCase);
+        bool runSequence(long int currentTime);
         
         void resetSequence();
 };
