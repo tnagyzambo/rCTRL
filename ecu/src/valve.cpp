@@ -87,6 +87,7 @@ bool autoSequence::runSequence(long int currentTime) {
     // Return true if we continue with sequence
     // Return false if we are done
     if (eventCounter >= SequenceVector.size()){
+        this->resetSequence();
         return false; // Sequence over
     } else {
         return true; // Continue sequence

@@ -37,6 +37,7 @@ auto mv1 = std::make_shared<NormClosed>(NormClosed(0));
 auto mv2 = std::make_shared<NormClosed>(NormClosed(1));
 auto pv = std::make_shared<NormClosed>(NormClosed(2));
 auto bv = std::make_shared<NormOpen>(NormOpen(3));
+auto pyro = std::make_shared<NormClosed>(NormClosed(4));
 
 // Sequence decleration
 autoSequence testSequence;
@@ -62,6 +63,8 @@ void setup() {
 	testSequence.addEvent(2000,pv,closeValve);
 	testSequence.addEvent(1500,bv,closeValve);
 	testSequence.addEvent(2500,bv,openValve);
+	testSequence.addEvent(3000,pyro,openValve);// Power relay
+	testSequence.addEvent(4000,pyro,closeValve);// Unpower pyro
 
 	//Set over current behavior of all channels to latch mode:
   	digital_outputs.setLatch();
