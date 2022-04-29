@@ -121,6 +121,10 @@ namespace recu {
             "recu/bv/get_state", std::bind(&Node::BV_GetState, this, std::placeholders::_1, std::placeholders::_2));
         RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::srv::created("recu/bv/get_state").c_str());
 
+        this->srvFire = this->create_service<recu_msgs::srv::ArduinoAction>(
+            "recu/fire", std::bind(&Node::Fire, this, std::placeholders::_1, std::placeholders::_2));
+        RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::srv::created("recu/fire").c_str());
+
         try {
             rdata::iface::createLogger(this->clCreateLogger->get_service_name(),
                                        this->get_node_base_interface(),
@@ -451,5 +455,13 @@ namespace recu {
                            std::shared_ptr<recu_msgs::srv::GetValveState::Response> response) {
         (void)request;
         *response = createValveStateResponse(this->stateBV);
+    }
+
+    void Node::Fire(const std::shared_ptr<recu_msgs::srv::ArduinoAction::Request> request,
+                    std::shared_ptr<recu_msgs::srv::ArduinoAction::Response> response) {
+        (void)request;
+        (void)response;
+        RCLCPP_INFO(this->get_logger(), "FIRING!");
+        this->serialWrite(EcuActions::Fire);
     }
 } // namespace recu

@@ -14,6 +14,15 @@
             ],
         },
         {
+            "label": "rctrl-apache-clean",
+            "type": "shell",
+            "command": "docker",
+            "args": [
+                "rm", "-f",
+                "rctrl_apache",
+            ],
+        },
+        {
             "label": "xcompile-x86-arm64-build",
             "type": "shell",
             "command": "docker",

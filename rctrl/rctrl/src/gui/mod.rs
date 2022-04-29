@@ -1,3 +1,4 @@
+mod fire_button;
 mod gui;
 mod gui_elem;
 mod lifecycle_manager;
@@ -6,6 +7,7 @@ mod pind;
 mod rstate;
 mod valve_control;
 
+use fire_button::FireButton;
 pub use gui::App;
 pub use gui::Gui;
 pub use gui_elem::{GuiElem, GuiElems};

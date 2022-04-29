@@ -67,6 +67,7 @@ namespace recu {
         PV_Close,
         BV_Open,
         BV_Close,
+        Fire,
     };
 
     class Node : public rclcpp_lifecycle::LifecycleNode {
@@ -111,6 +112,7 @@ namespace recu {
         rclcpp::Service<recu_msgs::srv::ArduinoAction>::SharedPtr srvBV_Open;
         rclcpp::Service<recu_msgs::srv::ArduinoAction>::SharedPtr srvBV_Close;
         rclcpp::Service<recu_msgs::srv::GetValveState>::SharedPtr srvBV_GetState;
+        rclcpp::Service<recu_msgs::srv::ArduinoAction>::SharedPtr srvFire;
 
         void MV1_Open(const std::shared_ptr<recu_msgs::srv::ArduinoAction::Request>,
                       std::shared_ptr<recu_msgs::srv::ArduinoAction::Response>);
@@ -136,6 +138,8 @@ namespace recu {
                       std::shared_ptr<recu_msgs::srv::ArduinoAction::Response>);
         void BV_GetState(const std::shared_ptr<recu_msgs::srv::GetValveState::Request>,
                          std::shared_ptr<recu_msgs::srv::GetValveState::Response>);
+        void Fire(const std::shared_ptr<recu_msgs::srv::ArduinoAction::Request>,
+                  std::shared_ptr<recu_msgs::srv::ArduinoAction::Response>);
 
         rclcpp::TimerBase::SharedPtr read_timer;
         int serial_port;
