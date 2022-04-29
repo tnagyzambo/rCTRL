@@ -55,13 +55,13 @@ void setup() {
 
 	//Sequence decleration
 	testSequence.addEvent(150,mv1,openValve);
-	testSequence.addEvent(300,mv1,closeValve);
+	testSequence.addEvent(1050,mv1,closeValve);
 	testSequence.addEvent(500,mv2,openValve);
-	testSequence.addEvent(600,mv2,closeValve);
+	testSequence.addEvent(1500,mv2,closeValve);
 	testSequence.addEvent(1000,pv,openValve);
-	testSequence.addEvent(1100,pv,closeValve);
+	testSequence.addEvent(2000,pv,closeValve);
 	testSequence.addEvent(1500,bv,closeValve);
-	testSequence.addEvent(1600,bv,openValve);
+	testSequence.addEvent(2500,bv,openValve);
 
 	//Set over current behavior of all channels to latch mode:
   	digital_outputs.setLatch();
@@ -109,7 +109,7 @@ void setup() {
     LoadCell.start(); // Required after setting continuous mode bit in configureADC
 
     TankPS.configureADCmode(ADS122C04_PS_MODE, ADS122C04_DATA_RATE_600SPS); // 1200SPS due to turbo enabled
-    TankPS.setPSMaxAndOffset(5.0); // Set the pressure sensor to the correct pressure
+    TankPS.setPSMaxAndOffset(30.0); // Set the pressure sensor to the correct pressure
     TankPS.start();                // Required after setting continuous mode bit in configureADC
 
 	//PGA offset calibration loop
