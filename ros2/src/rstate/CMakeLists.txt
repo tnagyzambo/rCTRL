@@ -12,33 +12,18 @@ find_package(rclcpp_action REQUIRED)
 find_package(lifecycle_msgs REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 find_package(rutil REQUIRED)
-find_package(rdata REQUIRED)
+find_package(rstate_msgs REQUIRED)
 
 include_directories(include)
-
-rosidl_generate_interfaces(${PROJECT_NAME}
-                           "msg/NetworkState.msg"
-                           "msg/NetworkTransition.msg"
-                           "msg/NetworkTransitionDescription.msg"
-                           "msg/NetworkTransitionEvent.msg"
-                           "msg/NetworkTransitionFeedback.msg"
-                           "srv/GetAvailableNetworkStates.srv"
-                           "srv/GetAvailableNetworkTransitions.srv"
-                           "srv/GetNetworkState.srv"
-                           "srv/NetworkTransitionCancelGoal.srv"
-                           "srv/NetworkTransitionSendGoal.srv")
 
 # rstate executable
 add_executable(rstate_node src/main.cpp
                            lib/cmd/service.cpp
                            lib/state/activating.cpp
                            lib/state/active.cpp
-                           lib/state/armed.cpp
-                           lib/state/arming.cpp
                            lib/state/cleaning_up.cpp
                            lib/state/configuring.cpp
                            lib/state/deactivating.cpp
-                           lib/state/disarming.cpp
                            lib/state/error_processing.cpp
                            lib/state/finalized.cpp
                            lib/state/inactive.cpp
@@ -59,9 +44,7 @@ ament_target_dependencies(rstate_node rclcpp
                                       rclcpp_action
                                       lifecycle_msgs
                                       rutil
-                                      rdata)
-
-rosidl_target_interfaces(rstate_node ${PROJECT_NAME} "rosidl_typesupport_cpp")
+                                      rstate_msgs)
 
 install(TARGETS rstate_node
         DESTINATION lib/${PROJECT_NAME})

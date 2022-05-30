@@ -2,39 +2,96 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "ros2 build",
+            "label": "rctrl-apache-run",
             "type": "shell",
-            "command": "clear && cd ros2 && colcon build --cmake-args '-DCMAKE_BUILD_TYPE=RelWithDebInfo'",
+            "command": "docker",
+            "args": [
+                "run", "-dit",
+                "--name", "rctrl_apache",
+                "-p", "8080:80",
+                "-v", "$PWD/rctrl/dist/:/usr/local/apache2/htdocs/",
+                "httpd:latest",
+            ],
         },
         {
-            "label": "rctrl build",
+            "label": "rctrl-apache-clean",
             "type": "shell",
-            "command": "clear && cd rctrl && bash web_build.sh",
+            "command": "docker",
+            "args": [
+                "rm", "-f",
+                "rctrl_apache",
+            ],
         },
         {
-            "label": "rctrl run",
+            "label": "xcompile-x86-arm64-build",
             "type": "shell",
-            "command": "clear && cd rctrl && bash web_start.sh",
+            "command": "docker",
+            "args": [
+                "build", ".devcontainer",
+                "-f", ".devcontainer/Dockerfile",
+                "-t", "rctrl_xcompile_x86_arm46",
+                "--build-arg", "BASE=base_xcompile_x86_arm64",
+            ],
         },
         {
-            "label": "rctrl test",
+            "label": "xcompile-x86-arm64-run",
             "type": "shell",
-            "command": "clear && cargo test --manifest-path=rctrl/rctrl_rosbridge/Cargo.toml",
+            "command": "docker",
+            "args": [
+                "run",
+                "--rm",
+                "-v", "${PWD}/ros2:/ros2_ws",
+                "--workdir", "/ros2_ws",
+                "-i", "rctrl_xcompile_x86_arm46:latest",
+                "/bin/bash", "-c", "source /opt/ros/galactic/setup.bash && colcon build",
+            ],
         },
         {
-            "label": "rctrl docs",
+            "label": "xcompile-x86-arm64-run-recu",
             "type": "shell",
-            "command": "clear && cargo doc --manifest-path=rctrl/Cargo.toml --target wasm32-unknown-unknown --workspace --document-private-items",
+            "command": "docker",
+            "args": [
+                "run",
+                "--rm",
+                "-v", "${PWD}/ros2:/ros2_ws",
+                "--workdir", "/ros2_ws",
+                "-i", "rctrl_xcompile_x86_arm46:latest",
+                "/bin/bash", "-c", "source /opt/ros/galactic/setup.bash && colcon build --packages-select recu",
+            ],
         },
         {
-            "label": "rdata_example run",
+            "label": "remote-sync-ros2",
             "type": "shell",
-            "command": "source ros2/install/setup.bash; ros2 launch ros2/launch/rdata_example.xml",
+            "command": "rsync",
+            "args": [
+                "-a",
+                "ros2/launch", "ros2/install",
+                "${input:user}@${input:ip}:~/",
+            ],
         },
-        // {
-        //     "label": "debug",
-        //     "type": "shell",
-        //     "command": "source install/setup.bash; ros2 run --prefix 'lldb-server platform --listen \"*:3000\"'",
-        // },
+        {
+            "label": "remote-sync-rctrl",
+            "type": "shell",
+            "command": "rsync",
+            "args": [
+                "-a",
+                "rctrl/dist/*",
+                "${input:user}@${input:ip}:/var/www/rctrl/",
+            ],
+        }
+    ],
+    "inputs": [
+        {
+            "id": "ip",
+            "description": "Remote IP",
+            "type": "promptString",
+            "default": "192.168.2.2",
+        },
+        {
+            "id": "user",
+            "description": "Remote User",
+            "type": "promptString",
+            "default": "ros",
+        },
     ]
 }

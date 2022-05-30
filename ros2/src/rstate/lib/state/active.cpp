@@ -9,19 +9,17 @@ namespace rstate {
 
     void Active::enter(Node *node) { RCLCPP_INFO(node->get_logger(), "Network is active"); }
 
-    rstate::msg::NetworkState Active::getNetworkState() {
-        rstate::msg::NetworkState network_state;
+    rstate_msgs::msg::NetworkState Active::getNetworkState() {
+        rstate_msgs::msg::NetworkState network_state;
         network_state.id = (uint)NetworkStateEnum::Active;
         network_state.label = "active";
 
         return network_state;
     }
 
-    rstate::srv::GetAvailableNetworkTransitions::Response Active::getAvailableNetworkTransitions() {
-        rstate::srv::GetAvailableNetworkTransitions::Response response;
+    rstate_msgs::srv::GetAvailableNetworkTransitions::Response Active::getAvailableNetworkTransitions() {
+        rstate_msgs::srv::GetAvailableNetworkTransitions::Response response;
         response.available_transitions = {
-            generateNetworkTransitionDescription(
-                NetworkTransitionEnum::Arm, NetworkStateEnum::Active, NetworkStateEnum::Armed),
             generateNetworkTransitionDescription(
                 NetworkTransitionEnum::Deactivate, NetworkStateEnum::Active, NetworkStateEnum::Inactive),
             generateNetworkTransitionDescription(
@@ -30,13 +28,8 @@ namespace rstate {
     }
 
     GoalResponse Active::handleGoal(Node *node,
-                                    std::shared_ptr<const rstate::srv::NetworkTransitionSendGoal::Request> goal) {
+                                    std::shared_ptr<const rstate_msgs::srv::NetworkTransitionSendGoal::Request> goal) {
         switch (goal->transition.id) {
-        case (int)NetworkTransitionEnum::Arm:
-            this->onTransition = &Active::onArm;
-            node->publishNetworkTransitionEvent(
-                NetworkTransitionEnum::Arm, NetworkStateEnum::Active, NetworkStateEnum::Armed);
-            return GoalResponse::ACCEPT_AND_EXECUTE;
         case (int)NetworkTransitionEnum::Deactivate:
             this->onTransition = &Active::onDeactivate;
             node->publishNetworkTransitionEvent(
@@ -54,36 +47,20 @@ namespace rstate {
     }
 
     CancelResponse Active::handleCancel(
-        Node *node, const std::shared_ptr<GoalHandle<rstate::msg::NetworkTransitionFeedback>> goalHandle) {
+        Node *node, const std::shared_ptr<GoalHandle<rstate_msgs::msg::NetworkTransitionFeedback>> goalHandle) {
         RCLCPP_INFO(node->get_logger(), "Received request to cancel transition");
         (void)goalHandle;
         return CancelResponse::ACCEPT;
     }
 
     void Active::handleAccepted(Node *node,
-                                const std::shared_ptr<GoalHandle<rstate::msg::NetworkTransitionFeedback>> goalHandle) {
+                                const std::shared_ptr<GoalHandle<rstate_msgs::msg::NetworkTransitionFeedback>> goalHandle) {
         std::thread{std::bind(Active::onTransition, this, std::placeholders::_1, std::placeholders::_2), node, goalHandle}
             .detach();
     }
 
-    void Active::onArm(Node *node, const std::shared_ptr<GoalHandle<rstate::msg::NetworkTransitionFeedback>> goalHandle) {
-        node->setState(Arming::getInstance());
-
-        switch (executeCommands(node, node->cmdsOnArm, goalHandle)) {
-        case NetworkTransitionResultEnum::Success:
-            node->setState(Armed::getInstance());
-            break;
-        case NetworkTransitionResultEnum::Cancelled:
-            node->setState(Active::getInstance());
-            break;
-        case NetworkTransitionResultEnum::Failure:
-            // SHUTDOWN
-            break;
-        }
-    }
-
     void Active::onDeactivate(Node *node,
-                              const std::shared_ptr<GoalHandle<rstate::msg::NetworkTransitionFeedback>> goalHandle) {
+                              const std::shared_ptr<GoalHandle<rstate_msgs::msg::NetworkTransitionFeedback>> goalHandle) {
         node->setState(Deactivating::getInstance());
 
         switch (executeCommands(node, node->cmdsOnDeactivate, goalHandle)) {
@@ -100,7 +77,7 @@ namespace rstate {
     }
 
     void Active::onShutdown(Node *node,
-                            const std::shared_ptr<GoalHandle<rstate::msg::NetworkTransitionFeedback>> goalHandle) {
+                            const std::shared_ptr<GoalHandle<rstate_msgs::msg::NetworkTransitionFeedback>> goalHandle) {
         node->setState(ShuttingDown::getInstance());
 
         switch (executeCommandsShutdown(node, node->cmdsOnShutdownActive, goalHandle)) {

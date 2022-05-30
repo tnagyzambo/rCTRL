@@ -64,7 +64,9 @@
     <param name="params_glob" value="$(var params_glob)"/>
   </node>
 
-  <node pkg="rstate" exec="rstate_node"/>
+  <node pkg="rstate" exec="rstate_node">
+    <param name="config_path" value="launch/rstate_configs/rdata_example.toml"/>
+  </node>
   <node pkg="rdata" exec="rdata_node"/>
   <node pkg="rdata" exec="rdata_vsensor"/>
 </launch>

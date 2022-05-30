@@ -1,4 +1,10 @@
-FROM ubuntu:20.04 AS base
+ARG BASE
+
+FROM multiarch/ubuntu-core:arm64-focal as base_xcompile_x86_arm64
+
+FROM ubuntu:20.04 AS base_dev
+
+FROM ${BASE} as base
 
 # Create non-root user
 ENV USER_ID=1000
@@ -11,12 +17,16 @@ RUN apt-get update
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy locales
 RUN locale-gen en_US.UTF-8
 
+FROM base as dev_depends
+
 # Install dev dependencies
 RUN apt-get update
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy software-properties-common pkg-config wget curl jq libssl-dev 
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy wget git curl
+RUN apt-get update
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy software-properties-common pkg-config jq libssl-dev 
 RUN apt-get update
 
-# Install compile toolsc
+# Install compile tools
 RUN wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -
 RUN apt-add-repository "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-14 main"
 RUN apt update 
@@ -49,8 +59,8 @@ USER ros
 RUN rustup component add rls rust-analysis rust-src
 RUN rustup target add wasm32-unknown-unknown
 RUN cargo install wasm-bindgen-cli
-RUN cargo install basic-http-server
 
+# Install WASM opt
 USER root
 ENV WASM_OPT_RELEASE=105
 RUN wget https://github.com/WebAssembly/binaryen/archive/refs/tags/version_${WASM_OPT_RELEASE}.tar.gz
@@ -59,6 +69,7 @@ RUN rm version_${WASM_OPT_RELEASE}.tar.gz
 RUN mkdir /lib/binaryen-version_${WASM_OPT_RELEASE}/build
 RUN cd /lib/binaryen-version_${WASM_OPT_RELEASE} && cmake . && make
 ENV PATH="/lib/binaryen-version_${WASM_OPT_RELEASE}/bin:${PATH}"
+ENV LD_LIBRARY_PATH="/lib/binaryen-version_${WASM_OPT_RELEASE}/lib:${LD_LIBRARY_PATH}"
 
 # Install ROS2
 RUN apt-get update 
@@ -95,6 +106,26 @@ RUN cd /lib/fmt-${FMTLIB_RELEASE} && cmake -S . -B build
 RUN cd /lib/fmt-${FMTLIB_RELEASE} && cmake --build build
 RUN cd /lib/fmt-${FMTLIB_RELEASE} && cmake --install build
 
+# Install JSON dev dependencies
+ENV JSON_RELEASE=3.10.5
+RUN wget https://github.com/nlohmann/json/archive/refs/tags/v${JSON_RELEASE}.tar.gz
+RUN tar -xf v${JSON_RELEASE}.tar.gz -C /lib
+RUN rm v${JSON_RELEASE}.tar.gz
+RUN mkdir /lib/json-${JSON_RELEASE}/build
+RUN cd /lib/json-${JSON_RELEASE} && cmake -S . -B build
+RUN cd /lib/json-${JSON_RELEASE} && cmake --build build
+RUN cd /lib/json-${JSON_RELEASE} && cmake --install build
+
+# Install gpiod dev dependencies
+RUN apt-get update 
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy gpiod libgpiod-dev
+
+# Install i2c dev dependencies
+RUN apt-get update 
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy libi2c-dev
+
+FROM dev_depends as run_depends
+
 # Install rosbridge
 RUN apt-get update
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy ros-galactic-rosbridge-suite
@@ -104,13 +135,12 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy ros-galactic-rosbridge-su
 ENV INFLUX_RELEASE=2.0.7
 RUN arch="$(uname -m)"; \
         case "$arch" in \
-            armhf) export INFLUX_ARCH='arm64' ;; \
+            aarch64) export INFLUX_ARCH='arm64' ;; \
             x86_64) export INFLUX_ARCH='amd64' ;; \
         esac \
         && wget https://dl.influxdata.com/influxdb/releases/influxdb2-${INFLUX_RELEASE}-${INFLUX_ARCH}.deb \
         && dpkg -i influxdb2-${INFLUX_RELEASE}-${INFLUX_ARCH}.deb \
         && rm influxdb2-${INFLUX_RELEASE}-${INFLUX_ARCH}.deb
-# RUN service influxdb start
 
 # Add influx credentials file
 USER ros
@@ -121,14 +151,6 @@ COPY resources/influx/credentials.toml /home/ros/rdata/influx/credentials.toml
 # Add influx configuration file
 COPY resources/influx/config.toml /home/ros/rdata/influx/config.toml
 ENV INFLUXD_CONFIG_PATH = "/home/ros/rdata/influx"
-
-# TLS
-# REFERENCE: https://docs.influxdata.com/influxdb/v2.0/security/enable-tls/
-# RUN openssl req -x509 -nodes -newkey rsa:2048 \
-#     -keyout /etc/ssl/influxdb-selfsigned.key \
-#     -out /etc/ssl/influxdb-selfsigned.crt
-# RUN chmod 644 /etc/ssl/influxdb-selfsigned.crt
-# RUN chmod 600 /etc/ssl/influxdb-selfsigned.key
 
 # Bring in entrypoint script from local machine
 # Make sure script is executable with chmod -x

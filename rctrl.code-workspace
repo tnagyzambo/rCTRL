@@ -1,0 +1,24 @@
+{
+	"folders": [
+		{
+			"name": "rctrl",
+			"path": "rctrl"
+		},
+		{
+			"name": "ecu",
+			"path": "ecu"
+		},
+		{
+			"name": "ros2",
+			"path": "ros2"
+		}
+	],
+	"settings": {
+		"files.insertFinalNewline": true,
+		"files.associations": {
+			"iosfwd": "cpp",
+			"memory": "cpp",
+			"filesystem": "cpp"
+		}
+	}
+}

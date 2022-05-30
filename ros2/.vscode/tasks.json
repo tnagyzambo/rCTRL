@@ -1,0 +1,110 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "ros2-build",
+            "type": "shell",
+            "command": "clear && colcon build --cmake-args '-DCMAKE_BUILD_TYPE=RelWithDebInfo'",
+        },
+        {
+            "label": "ros2-clean",
+            "type": "shell",
+            "command": "clear && rm -R build install log",
+        },
+        {
+            "label": "rdata-build",
+            "type": "shell",
+            "command": "clear && colcon build --packages-select rdata --cmake-args '-DCMAKE_BUILD_TYPE=RelWithDebInfo'",
+        },
+        {
+            "label": "rdata-build msgs",
+            "type": "shell",
+            "command": "clear && colcon build --packages-select rdata_msgs --cmake-args '-DCMAKE_BUILD_TYPE=RelWithDebInfo'",
+        },
+        {
+            "label": "rdata-run",
+            "type": "shell",
+            "command": "clear && source install/setup.bash && ros2 run rdata rdata_node",
+        },
+        {
+            "label": "rdata-launch example",
+            "type": "shell",
+            "command": "clear && source install/setup.bash && ros2 launch launch/rdata_example.xml",
+        },
+        {
+            "label": "recu-build",
+            "type": "shell",
+            "command": "clear && colcon build --packages-select recu --cmake-args '-DCMAKE_BUILD_TYPE=RelWithDebInfo'",
+        },
+        {
+            "label": "recu-build msgs",
+            "type": "shell",
+            "command": "clear && colcon build --packages-select recu_msgs --cmake-args '-DCMAKE_BUILD_TYPE=RelWithDebInfo'",
+        },
+        {
+            "label": "recu-run",
+            "type": "shell",
+            "command": "clear && source install/setup.bash && ros2 run recu recu_node",
+        },
+        {
+            "label": "recu-launch example",
+            "type": "shell",
+            "command": "clear && source install/setup.bash && ros2 launch launch/recu_example.xml",
+        },
+        {
+            "label": "rgpio-build",
+            "type": "shell",
+            "command": "clear && colcon build --packages-select rgpio --cmake-args '-DCMAKE_BUILD_TYPE=RelWithDebInfo'",
+        },
+        {
+            "label": "rgpio-build msgs",
+            "type": "shell",
+            "command": "clear && colcon build --packages-select rgpio_msgs --cmake-args '-DCMAKE_BUILD_TYPE=RelWithDebInfo'",
+        },
+        {
+            "label": "rgpio-example build",
+            "type": "shell",
+            "command": "clear && colcon build --packages-select rgpio_example --cmake-args '-DCMAKE_BUILD_TYPE=RelWithDebInfo'",
+        },
+        {
+            "label": "rgpio-example run",
+            "type": "shell",
+            "command": "clear && source install/setup.bash && ros2 run rgpio_example rgpio_example_node",
+        },
+        {
+            "label": "rgpio-run",
+            "type": "shell",
+            "command": "clear && source install/setup.bash && ros2 run rgpio rgpio_node",
+        },
+        {
+            "label": "ri2c-build",
+            "type": "shell",
+            "command": "clear && colcon build --packages-select ri2c --cmake-args '-DCMAKE_BUILD_TYPE=RelWithDebInfo'",
+        },
+        {
+            "label": "ri2c-build msgs",
+            "type": "shell",
+            "command": "clear && colcon build --packages-select ri2c_msgs --cmake-args '-DCMAKE_BUILD_TYPE=RelWithDebInfo'",
+        },
+        {
+            "label": "rstate-build",
+            "type": "shell",
+            "command": "clear && colcon build --packages-select rstate --cmake-args '-DCMAKE_BUILD_TYPE=RelWithDebInfo'",
+        },
+        {
+            "label": "rstate-build msgs",
+            "type": "shell",
+            "command": "clear && colcon build --packages-select rstate_msgs --cmake-args '-DCMAKE_BUILD_TYPE=RelWithDebInfo'",
+        },
+        {
+            "label": "rstate-run",
+            "type": "shell",
+            "command": "clear && source install/setup.bash && ros2 run rstate rstate_node",
+        },
+        {
+            "label": "rutil-build",
+            "type": "shell",
+            "command": "clear && colcon build --packages-select rutil --cmake-args '-DCMAKE_BUILD_TYPE=RelWithDebInfo'",
+        },
+    ],
+}

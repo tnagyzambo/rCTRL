@@ -8,16 +8,16 @@ namespace rstate {
 
     void Unconfigured::enter(Node *node) { RCLCPP_INFO(node->get_logger(), "Network is unconfigured"); }
 
-    rstate::msg::NetworkState Unconfigured::getNetworkState() {
-        rstate::msg::NetworkState network_state;
+    rstate_msgs::msg::NetworkState Unconfigured::getNetworkState() {
+        rstate_msgs::msg::NetworkState network_state;
         network_state.id = (uint)NetworkStateEnum::Unconfigured;
         network_state.label = "unconfigured";
 
         return network_state;
     }
 
-    rstate::srv::GetAvailableNetworkTransitions::Response Unconfigured::getAvailableNetworkTransitions() {
-        rstate::srv::GetAvailableNetworkTransitions::Response response;
+    rstate_msgs::srv::GetAvailableNetworkTransitions::Response Unconfigured::getAvailableNetworkTransitions() {
+        rstate_msgs::srv::GetAvailableNetworkTransitions::Response response;
         response.available_transitions = {
             generateNetworkTransitionDescription(
                 NetworkTransitionEnum::Configure, NetworkStateEnum::Unconfigured, NetworkStateEnum::Inactive),
@@ -26,8 +26,8 @@ namespace rstate {
         return response;
     }
 
-    GoalResponse Unconfigured::handleGoal(Node *node,
-                                          std::shared_ptr<const rstate::srv::NetworkTransitionSendGoal::Request> goal) {
+    GoalResponse Unconfigured::handleGoal(
+        Node *node, std::shared_ptr<const rstate_msgs::srv::NetworkTransitionSendGoal::Request> goal) {
         switch (goal->transition.id) {
         case (int)NetworkTransitionEnum::Configure:
             this->onTransition = &Unconfigured::onConfigure;
@@ -46,21 +46,21 @@ namespace rstate {
     }
 
     CancelResponse Unconfigured::handleCancel(
-        Node *node, const std::shared_ptr<GoalHandle<rstate::msg::NetworkTransitionFeedback>> goalHandle) {
+        Node *node, const std::shared_ptr<GoalHandle<rstate_msgs::msg::NetworkTransitionFeedback>> goalHandle) {
         RCLCPP_INFO(node->get_logger(), "Received request to cancel transition");
         (void)goalHandle;
         return CancelResponse::ACCEPT;
     }
 
     void Unconfigured::handleAccepted(
-        Node *node, const std::shared_ptr<GoalHandle<rstate::msg::NetworkTransitionFeedback>> goalHandle) {
+        Node *node, const std::shared_ptr<GoalHandle<rstate_msgs::msg::NetworkTransitionFeedback>> goalHandle) {
         std::thread{
             std::bind(Unconfigured::onTransition, this, std::placeholders::_1, std::placeholders::_2), node, goalHandle}
             .detach();
     }
 
-    void Unconfigured::onConfigure(Node *node,
-                                   const std::shared_ptr<GoalHandle<rstate::msg::NetworkTransitionFeedback>> goalHandle) {
+    void Unconfigured::onConfigure(
+        Node *node, const std::shared_ptr<GoalHandle<rstate_msgs::msg::NetworkTransitionFeedback>> goalHandle) {
         node->setState(Configuring::getInstance());
 
         switch (executeCommands(node, node->cmdsOnConfigure, goalHandle)) {
@@ -76,8 +76,8 @@ namespace rstate {
         }
     }
 
-    void Unconfigured::onShutdown(Node *node,
-                                  const std::shared_ptr<GoalHandle<rstate::msg::NetworkTransitionFeedback>> goalHandle) {
+    void Unconfigured::onShutdown(
+        Node *node, const std::shared_ptr<GoalHandle<rstate_msgs::msg::NetworkTransitionFeedback>> goalHandle) {
         node->setState(ShuttingDown::getInstance());
 
         switch (executeCommandsShutdown(node, node->cmdsOnShutdownUnconfigured, goalHandle)) {

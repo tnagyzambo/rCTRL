@@ -1,0 +1,19 @@
+// {
+//     "configurations": [
+//         {
+//             "name": "Remote launch",
+//             "type": "lldb",
+//             "request": "launch",
+//             "program": "${workspaceFolder}/ros2/build/rstate/rstate_node", // Local path.
+//             "initCommands": [
+//                 "platform select remote-linux",
+//                 "platform connect connect://localhost:3000",
+//                 "settings set target.inherit-env true", // See the note below.
+//             ],
+//             // "env": {
+//             //     "PATH": "...", // See the note below.
+//             // }
+//             // TO START LLDB SERVER: lldb-server platform --listen "*:3000" --server
+//         }
+//     ]
+// }

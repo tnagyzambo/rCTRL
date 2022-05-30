@@ -3,6 +3,7 @@
     "build": {
         "args": {
             "WORKSPACE": "${containerWorkspaceFolder}",
+            "BASE": "base_dev",
         }
     },
     "remoteUser": "ros",
@@ -34,5 +35,5 @@
         "bierner.markdown-mermaid",
         "spmeesseman.vscode-taskexplorer",
         "rust-lang.rust",
-    ]
+    ],
 }

@@ -159,4 +159,15 @@ namespace rstate {
 
         throw except::cmd_service_eror(error.str());
     }
+
+    template <>
+    void CmdService<lifecycle_msgs::srv::ChangeState>::createRequest(toml::node_view<toml::node>);
+
+    template <>
+    void CmdService<lifecycle_msgs::srv::ChangeState>::createRequestCancel(toml::node_view<toml::node>);
+
+    template <>
+    void CmdService<lifecycle_msgs::srv::ChangeState>::compareResponse(
+        std::shared_ptr<lifecycle_msgs::srv::ChangeState::Response>,
+        std::shared_ptr<lifecycle_msgs::srv::ChangeState::Response>);
 } // namespace rstate

@@ -13,18 +13,9 @@ find_package(rosidl_default_generators REQUIRED)
 find_package(CURL REQUIRED)
 find_package(tomlplusplus REQUIRED)
 find_package(rutil REQUIRED)
+find_package(rdata_msgs REQUIRED)
 
 include_directories(include)
-
-# Create ros2 interfaces
-rosidl_generate_interfaces(${PROJECT_NAME}
-                           "msg/LogBool.msg"
-                           "msg/LogF64.msg"
-                           "msg/LogI64.msg"
-                           "msg/LogStr.msg"
-                           "msg/LogU64.msg"
-                           "srv/CreateLogger.srv"
-                           "srv/RemoveLogger.srv")
 
 # rdata executable
 add_executable(rdata_node src/main.cpp 
@@ -40,9 +31,8 @@ target_link_libraries(rdata_node CURL::libcurl
 ament_target_dependencies(rdata_node rclcpp
                                      rclcpp_lifecycle
                                      lifecycle_msgs
-                                     rutil)
-
-rosidl_target_interfaces(rdata_node ${PROJECT_NAME} "rosidl_typesupport_cpp")
+                                     rutil
+                                     rdata_msgs)
 
 # rdata virtual sensor executable
 add_executable(rdata_vsensor vsensor/src/main.cpp
@@ -53,9 +43,8 @@ target_include_directories(rdata_vsensor PRIVATE vsensor/lib)
 ament_target_dependencies(rdata_vsensor rclcpp
                                         rclcpp_lifecycle
                                         lifecycle_msgs
-                                        rutil)
-
-rosidl_target_interfaces(rdata_vsensor ${PROJECT_NAME} "rosidl_typesupport_cpp")
+                                        rutil
+                                        rdata_msgs)
 
 install(DIRECTORY include/
         DESTINATION include)
