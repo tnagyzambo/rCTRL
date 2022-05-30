@@ -42,6 +42,19 @@ void NormClosed::close() {
     this->power = false;
 }
 
+void DataBoi::open() {
+    digital_outputs.set(PIN,HIGH);
+    this->state = true;
+    this->power = true;
+}
+
+void DataBoi::close() {
+    digital_outputs.set(PIN,LOW);
+    this->state = false;
+    this->power = false;
+}
+
+
 sequenceData::sequenceData(long int actuationTime, std::shared_ptr<valveInterface> valveID, valveAction action){
         this->actuationTime = actuationTime;
         this->valveID = valveID;

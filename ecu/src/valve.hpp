@@ -62,6 +62,14 @@ class NormClosed: public valveInterface {
         void close() override final;
 };
 
+class DataBoi: public valveInterface {
+    public:
+    
+        DataBoi(int PIN):valveInterface(PIN){power = false; state = false;};
+        void open() override final;
+
+        void close() override final;
+};
 
 struct sequenceData {
     long int actuationTime;
