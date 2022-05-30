@@ -23,23 +23,41 @@ FROM base as dev_depends
 RUN apt-get update
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy wget git curl
 RUN apt-get update
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy software-properties-common pkg-config jq libssl-dev 
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy software-properties-common build-essential pkg-config jq libssl-dev python3-pip
 RUN apt-get update
+RUN pip3 install -U colcon-common-extensions \
+                    flake8 \
+                    flake8-blind-except \
+                    flake8-builtins \
+                    flake8-class-newline \
+                    flake8-comprehensions \
+                    flake8-deprecated \
+                    flake8-docstrings \
+                    flake8-import-order \
+                    flake8-quotes \
+                    pip \
+                    pytest \
+                    pytest-cov \
+                    pytest-repeat \
+                    pytest-rerunfailures \
+                    rosdep \
+                    setuptools \
+                    vcstool
 
 # Install compile tools
 RUN wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -
 RUN apt-add-repository "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-14 main"
 RUN apt update 
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy clang-14 lldb-14 python3-pip
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy clang-14 lldb-14 
 RUN update-alternatives --install /bin/lldb lldb /bin/lldb-14 100
 RUN update-alternatives --install /bin/lldb-server lldb-server /bin/lldb-server-14 100
 ENV CC=/bin/clang-14
 ENV CXX=/bin/clang++-14
 
 # Install clang tools
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy clangd-12 clang-format-12
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy clangd-12 clang-format-14
 RUN update-alternatives --install /bin/clangd clangd /bin/clangd-12 100
-RUN update-alternatives --install /bin/clang-format clang-format /bin/clang-format-12 100
+RUN update-alternatives --install /bin/clang-format clang-format /bin/clang-format-14 100
 
 # Install cmake (building from source takes > 8Gb memory)
 RUN wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null
@@ -62,32 +80,37 @@ RUN cargo install wasm-bindgen-cli
 
 # Install WASM opt
 USER root
-ENV WASM_OPT_RELEASE=105
+ENV WASM_OPT_RELEASE=108
 RUN wget https://github.com/WebAssembly/binaryen/archive/refs/tags/version_${WASM_OPT_RELEASE}.tar.gz
 RUN tar -xf version_${WASM_OPT_RELEASE}.tar.gz -C /lib
 RUN rm version_${WASM_OPT_RELEASE}.tar.gz
 RUN mkdir /lib/binaryen-version_${WASM_OPT_RELEASE}/build
-RUN cd /lib/binaryen-version_${WASM_OPT_RELEASE} && cmake . && make
+RUN cd /lib/binaryen-version_${WASM_OPT_RELEASE} && cmake . -DBUILD_TESTS=OFF && make -j $(nproc)
 ENV PATH="/lib/binaryen-version_${WASM_OPT_RELEASE}/bin:${PATH}"
 ENV LD_LIBRARY_PATH="/lib/binaryen-version_${WASM_OPT_RELEASE}/lib:${LD_LIBRARY_PATH}"
 
 # Install ROS2
 RUN apt-get update 
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy gnupg lsb-release
-RUN curl -SSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key  -o /usr/share/keyrings/ros-archive-keyring.gpg
-RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/ros2.list > /dev/null
+RUN curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg
+RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu focal main" | tee /etc/apt/sources.list.d/ros2.list > /dev/null
+RUN mkdir -p /ros2_humble/src
+RUN pip3 install rosinstall-generator
+RUN cd /ros2_humble && rosinstall_generator --deps --rosdistro humble ros_base
 
-# Setup ROS2 enviroment
-RUN apt-get update 
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy ros-galactic-ros-base python3-colcon-common-extensions
-RUN echo "source /opt/ros/galactic/setup.bash" >> /home/ros/.bashrc
+RUN apt-get update
+RUN rosdep init
+RUN cd /ros2_humble && rosdep update
+RUN cd /ros2_humble && rosdep install --from-paths src --ignore-src -y --skip-keys "fastcdr rti-connext-dds-6.0.1 urdfdom_headers"
+RUN cd /ros2_humble && colcon build --cmake-force-configure --symlink-install
+RUN echo "source /ros2_humble/install/local_setup.bash" >> /home/ros/.bashrc
 
 # Install libcurl dev dependencies
 RUN apt-get update
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy libcurl4-openssl-dev
 
 # Install toml++ dev dependencies
-ENV TOML11_RELEASE=2.5.0
+ENV TOML11_RELEASE=3.1.0
 RUN wget https://github.com/marzer/tomlplusplus/archive/refs/tags/v${TOML11_RELEASE}.tar.gz
 RUN tar -xf v${TOML11_RELEASE}.tar.gz -C /lib
 RUN rm v${TOML11_RELEASE}.tar.gz
@@ -132,7 +155,8 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy ros-galactic-rosbridge-su
 
 # influxdb
 # REFERENCE: https://docs.influxdata.com/influxdb/v2.0/install/?t=Linux
-ENV INFLUX_RELEASE=2.0.7
+ENV INFLUX_RELEASE=2.2.0
+ENV INFLUX_CL_RELEASE=2.3.0
 RUN arch="$(uname -m)"; \
         case "$arch" in \
             aarch64) export INFLUX_ARCH='arm64' ;; \
@@ -140,7 +164,12 @@ RUN arch="$(uname -m)"; \
         esac \
         && wget https://dl.influxdata.com/influxdb/releases/influxdb2-${INFLUX_RELEASE}-${INFLUX_ARCH}.deb \
         && dpkg -i influxdb2-${INFLUX_RELEASE}-${INFLUX_ARCH}.deb \
-        && rm influxdb2-${INFLUX_RELEASE}-${INFLUX_ARCH}.deb
+        && rm influxdb2-${INFLUX_RELEASE}-${INFLUX_ARCH}.deb \
+        && wget https://dl.influxdata.com/influxdb/releases/influxdb2-client-${INFLUX_CL_RELEASE}-linux-${INFLUX_ARCH}.tar.gz \
+        && tar xvzf influxdb2-client-${INFLUX_CL_RELEASE}-linux-${INFLUX_ARCH}.tar.gz \
+        && cp influxdb2-client-${INFLUX_CL_RELEASE}-linux-${INFLUX_ARCH}/influx /usr/local/bin/ \
+        && rm influxdb2-client-${INFLUX_CL_RELEASE}-linux-${INFLUX_ARCH}.tar.gz \
+        && rm -r influxdb2-client-${INFLUX_CL_RELEASE}-linux-${INFLUX_ARCH}
 
 # Add influx credentials file
 USER ros
