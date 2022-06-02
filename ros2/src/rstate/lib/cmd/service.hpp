@@ -97,7 +97,7 @@ namespace rstate {
                                     std::shared_ptr<typename T::Response> expectedResponse) {
         this->waitForService();
 
-        auto future = this->client->async_send_request(request);
+        auto future = this->client->async_send_request(request).share();
         this->waitForFuture(future);
 
         auto response = future.get();
