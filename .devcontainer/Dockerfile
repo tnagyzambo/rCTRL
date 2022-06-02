@@ -1,8 +1,8 @@
 ARG BASE
 
-FROM multiarch/ubuntu-core:arm64-focal as base_xcompile_x86_arm64
+FROM multiarch/ubuntu-core:arm64-jammy as base_xcompile_x86_arm64
 
-FROM ubuntu:20.04 AS base_dev
+FROM ubuntu:22.04 AS base_dev
 
 FROM ${BASE} as base
 
@@ -23,30 +23,16 @@ FROM base as dev_depends
 RUN apt-get update
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy wget git curl
 RUN apt-get update
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy software-properties-common build-essential pkg-config jq libssl-dev python3-pip
-RUN apt-get update
-RUN pip3 install -U colcon-common-extensions \
-                    flake8 \
-                    flake8-blind-except \
-                    flake8-builtins \
-                    flake8-class-newline \
-                    flake8-comprehensions \
-                    flake8-deprecated \
-                    flake8-docstrings \
-                    flake8-import-order \
-                    flake8-quotes \
-                    pip \
-                    pytest \
-                    pytest-cov \
-                    pytest-repeat \
-                    pytest-rerunfailures \
-                    rosdep \
-                    setuptools \
-                    vcstool
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy software-properties-common \
+                                                       build-essential \
+                                                       pkg-config \
+                                                       jq \
+                                                       libssl-dev \
+                                                       python3-pip
 
 # Install compile tools
 RUN wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -
-RUN apt-add-repository "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-14 main"
+RUN apt-add-repository "deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-14 main"
 RUN apt update 
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy clang-14 lldb-14 
 RUN update-alternatives --install /bin/lldb lldb /bin/lldb-14 100
@@ -90,20 +76,15 @@ ENV PATH="/lib/binaryen-version_${WASM_OPT_RELEASE}/bin:${PATH}"
 ENV LD_LIBRARY_PATH="/lib/binaryen-version_${WASM_OPT_RELEASE}/lib:${LD_LIBRARY_PATH}"
 
 # Install ROS2
+ENV ROS2_RELEASE=humble
 RUN apt-get update 
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy gnupg lsb-release
 RUN curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg
-RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu focal main" | tee /etc/apt/sources.list.d/ros2.list > /dev/null
-RUN mkdir -p /ros2_humble/src
-RUN pip3 install rosinstall-generator
-RUN cd /ros2_humble && rosinstall_generator --deps --rosdistro humble ros_base
+RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu jammy main" | tee /etc/apt/sources.list.d/ros2.list > /dev/null
 
 RUN apt-get update
-RUN rosdep init
-RUN cd /ros2_humble && rosdep update
-RUN cd /ros2_humble && rosdep install --from-paths src --ignore-src -y --skip-keys "fastcdr rti-connext-dds-6.0.1 urdfdom_headers"
-RUN cd /ros2_humble && colcon build --cmake-force-configure --symlink-install
-RUN echo "source /ros2_humble/install/local_setup.bash" >> /home/ros/.bashrc
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy ros-${ROS2_RELEASE}-ros-base python3-colcon-common-extensions
+RUN echo "source /opt/ros/${ROS2_RELEASE}/setup.bash" >> /home/ros/.bashrc
 
 # Install libcurl dev dependencies
 RUN apt-get update
@@ -151,7 +132,7 @@ FROM dev_depends as run_depends
 
 # Install rosbridge
 RUN apt-get update
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy ros-galactic-rosbridge-suite
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy ros-${ROS2_RELEASE}-rosbridge-suite
 
 # influxdb
 # REFERENCE: https://docs.influxdata.com/influxdb/v2.0/install/?t=Linux
