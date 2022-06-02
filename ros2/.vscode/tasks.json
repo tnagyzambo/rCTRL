@@ -17,39 +17,19 @@
             "command": "clear && colcon build --packages-select rdata --cmake-args '-DCMAKE_BUILD_TYPE=RelWithDebInfo'",
         },
         {
-            "label": "rdata-build msgs",
+            "label": "rdata_vsensor-build",
             "type": "shell",
-            "command": "clear && colcon build --packages-select rdata_msgs --cmake-args '-DCMAKE_BUILD_TYPE=RelWithDebInfo'",
+            "command": "clear && colcon build --packages-select rdata_vsensor --cmake-args '-DCMAKE_BUILD_TYPE=RelWithDebInfo'",
         },
         {
-            "label": "rdata-run",
+            "label": "rdata_vsensor-run",
             "type": "shell",
-            "command": "clear && source install/setup.bash && ros2 run rdata rdata_node",
+            "command": "clear && source install/setup.bash && ros2 run rdata_vsensor rdata_vsensor",
         },
         {
-            "label": "rdata-launch example",
+            "label": "rdata_vsensor-launch example",
             "type": "shell",
-            "command": "clear && source install/setup.bash && ros2 launch launch/rdata_example.xml",
-        },
-        {
-            "label": "recu-build",
-            "type": "shell",
-            "command": "clear && colcon build --packages-select recu --cmake-args '-DCMAKE_BUILD_TYPE=RelWithDebInfo'",
-        },
-        {
-            "label": "recu-build msgs",
-            "type": "shell",
-            "command": "clear && colcon build --packages-select recu_msgs --cmake-args '-DCMAKE_BUILD_TYPE=RelWithDebInfo'",
-        },
-        {
-            "label": "recu-run",
-            "type": "shell",
-            "command": "clear && source install/setup.bash && ros2 run recu recu_node",
-        },
-        {
-            "label": "recu-launch example",
-            "type": "shell",
-            "command": "clear && source install/setup.bash && ros2 launch launch/recu_example.xml",
+            "command": "clear && source install/setup.bash && ros2 launch launch/rdata_vsensor_example.xml",
         },
         {
             "label": "rgpio-build",

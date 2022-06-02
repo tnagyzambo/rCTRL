@@ -1,10 +1,10 @@
 #pragma once
 
-#include <sstream>
+#include <fmt/format.h>
 #include <stdexcept>
 #include <string>
 
-namespace influx::except {
+namespace rdata::except {
     class PostReq : public std::runtime_error {
     public:
         PostReq(std::string);
@@ -20,4 +20,4 @@ namespace influx::except {
     private:
         std::string buildMessage(std::string);
     };
-} // namespace influx::except
+} // namespace rdata::except
