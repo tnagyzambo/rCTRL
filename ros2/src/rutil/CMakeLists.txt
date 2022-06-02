@@ -6,10 +6,6 @@ include(../cmake/compile_commands.cmake)
 
 # Find dependencies
 find_package(ament_cmake REQUIRED)
-find_package(rclcpp REQUIRED)
-find_package(rclcpp_lifecycle REQUIRED)
-find_package(lifecycle_msgs REQUIRED)
-find_package(rosidl_default_generators REQUIRED)
 find_package(tomlplusplus REQUIRED)
 find_package(fmt REQUIRED)
 
@@ -19,8 +15,9 @@ find_package(fmt REQUIRED)
 include_directories(include)
 
 # rutil library
-add_library(${PROJECT_NAME} SHARED src/fmt.cpp
-                                   src/except.cpp)
+add_library(${PROJECT_NAME} SHARED src/except.cpp
+                                   src/fmt.cpp
+                                   src/toml.cpp)
 
 target_link_libraries(${PROJECT_NAME} PUBLIC tomlplusplus::tomlplusplus
                                              fmt::fmt)

@@ -1,6 +1,5 @@
 #pragma once
 
-#include <array>
 #include <fmt/core.h>
 #include <string_view>
 
