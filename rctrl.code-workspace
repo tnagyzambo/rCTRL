@@ -5,10 +5,6 @@
 			"path": "rctrl"
 		},
 		{
-			"name": "ecu",
-			"path": "ecu"
-		},
-		{
 			"name": "ros2",
 			"path": "ros2"
 		}
