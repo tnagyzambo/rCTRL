@@ -13,8 +13,6 @@ find_package(rutil REQUIRED)
 find_package(rdata REQUIRED)
 find_package(fmt REQUIRED)
 
-include_directories(include)
-
 # rdata virtual sensor executable
 add_executable(${PROJECT_NAME} src/main.cpp
                                src/vsensor_node.cpp)
@@ -29,13 +27,10 @@ ament_target_dependencies(${PROJECT_NAME} rclcpp
                                           rutil
                                           rdata)
 
-install(DIRECTORY include/
-        DESTINATION include)
-
 install(TARGETS ${PROJECT_NAME}
         LIBRARY DESTINATION lib
         ARCHIVE DESTINATION lib
         RUNTIME DESTINATION lib/${PROJECT_NAME}
-        INCLUDES DESTINATION include)
+        INCLUDES DESTINATION)
 
 ament_package()
