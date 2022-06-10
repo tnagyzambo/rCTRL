@@ -4,6 +4,7 @@ rgpio::gpio::Virtual::Virtual(
     rclcpp::Node *node, std::string name, chip_number chipNumber, line_number lineNumber, line_level::level defaultLevel)
     : node(node), name(name), chipNumber(chipNumber), lineNumber(lineNumber), level(defaultLevel),
       defaultLevel(defaultLevel) {
+
     this->simInTopic = this->createSimInTopic();
     this->simOutTopic = this->createSimOutTopic();
 

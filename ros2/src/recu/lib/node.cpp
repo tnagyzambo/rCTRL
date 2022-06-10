@@ -24,6 +24,14 @@ namespace recu {
             return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::FAILURE;
         }
 
+        RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::state::inactive().c_str());
+        return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
+    }
+
+    rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn Node::on_activate(
+        const rclcpp_lifecycle::State &) {
+        RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::transition::activating().c_str());
+
         this->srvBV_Open = this->create_service<recu_msgs::srv::ValveAction>(
             "recu/bv/open", std::bind(&Node::BV_Open, this, std::placeholders::_1, std::placeholders::_2));
         RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::srv::created("recu/bv/open").c_str());
@@ -36,13 +44,41 @@ namespace recu {
             "recu/bv/get_state", std::bind(&Node::BV_GetState, this, std::placeholders::_1, std::placeholders::_2));
         RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::srv::created("recu/bv/get_state").c_str());
 
-        RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::state::inactive().c_str());
-        return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
-    }
+        this->srvPV_Open = this->create_service<recu_msgs::srv::ValveAction>(
+            "recu/pv/open", std::bind(&Node::PV_Open, this, std::placeholders::_1, std::placeholders::_2));
+        RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::srv::created("recu/pv/open").c_str());
 
-    rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn Node::on_activate(
-        const rclcpp_lifecycle::State &) {
-        RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::transition::activating().c_str());
+        this->srvPV_Close = this->create_service<recu_msgs::srv::ValveAction>(
+            "recu/pv/close", std::bind(&Node::PV_Close, this, std::placeholders::_1, std::placeholders::_2));
+        RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::srv::created("recu/pv/close").c_str());
+
+        this->srvPV_GetState = this->create_service<recu_msgs::srv::GetValveState>(
+            "recu/pv/get_state", std::bind(&Node::PV_GetState, this, std::placeholders::_1, std::placeholders::_2));
+        RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::srv::created("recu/pv/get_state").c_str());
+
+        this->srvMV1_Open = this->create_service<recu_msgs::srv::ValveAction>(
+            "recu/mv1/open", std::bind(&Node::MV1_Open, this, std::placeholders::_1, std::placeholders::_2));
+        RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::srv::created("recu/mv1/open").c_str());
+
+        this->srvMV1_Close = this->create_service<recu_msgs::srv::ValveAction>(
+            "recu/mv1/close", std::bind(&Node::MV1_Close, this, std::placeholders::_1, std::placeholders::_2));
+        RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::srv::created("recu/mv1/close").c_str());
+
+        this->srvMV1_GetState = this->create_service<recu_msgs::srv::GetValveState>(
+            "recu/mv1/get_state", std::bind(&Node::MV1_GetState, this, std::placeholders::_1, std::placeholders::_2));
+        RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::srv::created("recu/mv1/get_state").c_str());
+
+        this->srvMV2_Open = this->create_service<recu_msgs::srv::ValveAction>(
+            "recu/mv2/open", std::bind(&Node::MV2_Open, this, std::placeholders::_1, std::placeholders::_2));
+        RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::srv::created("recu/mv2/open").c_str());
+
+        this->srvMV2_Close = this->create_service<recu_msgs::srv::ValveAction>(
+            "recu/mv2/close", std::bind(&Node::MV2_Close, this, std::placeholders::_1, std::placeholders::_2));
+        RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::srv::created("recu/mv2/close").c_str());
+
+        this->srvMV2_GetState = this->create_service<recu_msgs::srv::GetValveState>(
+            "recu/mv2/get_state", std::bind(&Node::MV2_GetState, this, std::placeholders::_1, std::placeholders::_2));
+        RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::srv::created("recu/mv2/get_state").c_str());
 
         RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::state::active().c_str());
 
@@ -52,6 +88,19 @@ namespace recu {
     rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn Node::on_deactivate(
         const rclcpp_lifecycle::State &) {
         RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::transition::deactivating().c_str());
+
+        this->srvBV_Open.reset();
+        this->srvBV_Close.reset();
+        this->srvBV_GetState.reset();
+        this->srvPV_Open.reset();
+        this->srvPV_Close.reset();
+        this->srvPV_GetState.reset();
+        this->srvMV1_Open.reset();
+        this->srvMV1_Close.reset();
+        this->srvMV1_GetState.reset();
+        this->srvMV2_Open.reset();
+        this->srvMV2_Close.reset();
+        this->srvMV2_GetState.reset();
 
         RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::state::inactive().c_str());
 
@@ -89,6 +138,10 @@ namespace recu {
         auto gpioView = rutil::toml::viewOfTable(tomlView, "gpio");
 
         this->valveBV = std::make_unique<rgpio::Output>(rgpio::Output((rclcpp::Node *)this, gpioView, "valveBV"));
+        this->valvePV = std::make_unique<rgpio::Output>(rgpio::Output((rclcpp::Node *)this, gpioView, "valvePV"));
+        this->valveMV1 = std::make_unique<rgpio::Output>(rgpio::Output((rclcpp::Node *)this, gpioView, "valveMV1"));
+        this->valveMV2 = std::make_unique<rgpio::Output>(rgpio::Output((rclcpp::Node *)this, gpioView, "valveMV2"));
+        this->pyro = std::make_unique<rgpio::Output>(rgpio::Output((rclcpp::Node *)this, gpioView, "pyro"));
     }
 
     recu_msgs::srv::GetValveState::Response Node::createValveStateResponse(ValveState valveState) {
@@ -129,5 +182,65 @@ namespace recu {
                            std::shared_ptr<recu_msgs::srv::GetValveState::Response> response) {
         (void)request;
         *response = createValveStateResponse((ValveState)rgpio::gpio::line_level::toInt(this->valveBV->getState()));
+    }
+
+    void Node::PV_Open(const std::shared_ptr<recu_msgs::srv::ValveAction::Request> request,
+                       std::shared_ptr<recu_msgs::srv::ValveAction::Response> response) {
+        (void)request;
+        (void)response;
+        this->valvePV->write(rgpio::gpio::line_level::HIGH);
+    }
+
+    void Node::PV_Close(const std::shared_ptr<recu_msgs::srv::ValveAction::Request> request,
+                        std::shared_ptr<recu_msgs::srv::ValveAction::Response> response) {
+        (void)request;
+        (void)response;
+        this->valvePV->write(rgpio::gpio::line_level::LOW);
+    }
+
+    void Node::PV_GetState(const std::shared_ptr<recu_msgs::srv::GetValveState::Request> request,
+                           std::shared_ptr<recu_msgs::srv::GetValveState::Response> response) {
+        (void)request;
+        *response = createValveStateResponse((ValveState)rgpio::gpio::line_level::toInt(this->valvePV->getState()));
+    }
+
+    void Node::MV1_Open(const std::shared_ptr<recu_msgs::srv::ValveAction::Request> request,
+                        std::shared_ptr<recu_msgs::srv::ValveAction::Response> response) {
+        (void)request;
+        (void)response;
+        this->valveMV1->write(rgpio::gpio::line_level::HIGH);
+    }
+
+    void Node::MV1_Close(const std::shared_ptr<recu_msgs::srv::ValveAction::Request> request,
+                         std::shared_ptr<recu_msgs::srv::ValveAction::Response> response) {
+        (void)request;
+        (void)response;
+        this->valveMV1->write(rgpio::gpio::line_level::LOW);
+    }
+
+    void Node::MV1_GetState(const std::shared_ptr<recu_msgs::srv::GetValveState::Request> request,
+                            std::shared_ptr<recu_msgs::srv::GetValveState::Response> response) {
+        (void)request;
+        *response = createValveStateResponse((ValveState)rgpio::gpio::line_level::toInt(this->valveMV1->getState()));
+    }
+
+    void Node::MV2_Open(const std::shared_ptr<recu_msgs::srv::ValveAction::Request> request,
+                        std::shared_ptr<recu_msgs::srv::ValveAction::Response> response) {
+        (void)request;
+        (void)response;
+        this->valveMV2->write(rgpio::gpio::line_level::HIGH);
+    }
+
+    void Node::MV2_Close(const std::shared_ptr<recu_msgs::srv::ValveAction::Request> request,
+                         std::shared_ptr<recu_msgs::srv::ValveAction::Response> response) {
+        (void)request;
+        (void)response;
+        this->valveMV2->write(rgpio::gpio::line_level::LOW);
+    }
+
+    void Node::MV2_GetState(const std::shared_ptr<recu_msgs::srv::GetValveState::Request> request,
+                            std::shared_ptr<recu_msgs::srv::GetValveState::Response> response) {
+        (void)request;
+        *response = createValveStateResponse((ValveState)rgpio::gpio::line_level::toInt(this->valveMV2->getState()));
     }
 } // namespace recu

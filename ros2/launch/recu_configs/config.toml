@@ -12,27 +12,27 @@
     [gpio.valvePV]
     chipNumber = 0
     lineNumber = 26
-    sim = true
+    sim = false
     mode = "output"
     defaultLevel = 0
 
     [gpio.valveMV1]
     chipNumber = 0
     lineNumber = 20
-    sim = true
+    sim = false
     mode = "output"
     defaultLevel = 0
 
     [gpio.valveMV2]
     chipNumber = 0
     lineNumber = 19
-    sim = true
+    sim = false
     mode = "output"
     defaultLevel = 0
 
     [gpio.pyro]
     chipNumber = 0
     lineNumber = 16
-    sim = true
+    sim = false
     mode = "output"
     defaultLevel = 0
