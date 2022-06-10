@@ -1,8 +1,10 @@
-#include <vsensor_node.hpp>
+#include <node.hpp>
 
 namespace rdata::vsensor {
     Node::Node(const char *nodeName, std::chrono::milliseconds samplePeriod, std::chrono::milliseconds loggingPeriod)
         : rclcpp_lifecycle::LifecycleNode(nodeName) {
+        RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::transition::constructing().c_str());
+
         this->nodeName = nodeName;
         this->samplePeriod = samplePeriod;
 

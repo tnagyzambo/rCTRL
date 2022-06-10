@@ -10,7 +10,7 @@ namespace rgpio {
     namespace gpio {
         class Real : public Gpio {
         public:
-            Real(rclcpp::Node *, std::string, chip_number, line_number);
+            Real(rclcpp::Node *, std::string, chip_number, line_number, line_level::level);
             ~Real();
 
             void setLineAsInput();
@@ -28,6 +28,8 @@ namespace rgpio {
 
             struct gpiod_chip *chip;
             struct gpiod_line *line;
+
+            line_level::level defaultLevel;
 
             struct gpiod_chip *getChip(chip_number);
             struct gpiod_line *getLine(line_number);

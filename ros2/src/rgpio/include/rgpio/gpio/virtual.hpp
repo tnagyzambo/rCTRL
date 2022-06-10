@@ -11,7 +11,7 @@ namespace rgpio {
     namespace gpio {
         class Virtual : public Gpio {
         public:
-            Virtual(rclcpp::Node *, std::string, chip_number, line_number);
+            Virtual(rclcpp::Node *, std::string, chip_number, line_number, line_level::level);
             ~Virtual();
 
             void setLineAsInput();
@@ -26,7 +26,9 @@ namespace rgpio {
 
             chip_number chipNumber;
             line_number lineNumber;
+
             line_level::level level;
+            line_level::level defaultLevel;
 
             std::string simOutTopic;
             std::string simInTopic;

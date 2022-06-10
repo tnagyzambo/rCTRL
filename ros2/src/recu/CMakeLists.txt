@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(rdata_vsensor)
+project(recu)
 
 # Include .cmake modules
 include(../cmake/compile_commands.cmake)
@@ -9,23 +9,31 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_lifecycle REQUIRED)
 find_package(lifecycle_msgs REQUIRED)
+find_package(rosidl_default_generators REQUIRED)
+find_package(CURL REQUIRED)
+find_package(tomlplusplus REQUIRED)
 find_package(rutil REQUIRED)
 find_package(rdata REQUIRED)
-find_package(fmt REQUIRED)
+find_package(rgpio REQUIRED)
+find_package(rgpio_msgs REQUIRED)
+find_package(recu_msgs REQUIRED)
 
-# rdata virtual sensor executable
-add_executable(${PROJECT_NAME} src/main.cpp
-                               src/node.cpp)
+# rdata executable
+add_executable(${PROJECT_NAME} src/main.cpp 
+                               lib/node.cpp)
 
 target_include_directories(${PROJECT_NAME} PRIVATE lib)
 
-target_link_libraries(${PROJECT_NAME} fmt::fmt)
+target_link_libraries(${PROJECT_NAME} tomlplusplus::tomlplusplus)
 
 ament_target_dependencies(${PROJECT_NAME} rclcpp
                                           rclcpp_lifecycle
                                           lifecycle_msgs
                                           rutil
-                                          rdata)
+                                          rdata
+                                          rgpio
+                                          rgpio_msgs
+                                          recu_msgs)
 
 install(TARGETS ${PROJECT_NAME}
         LIBRARY DESTINATION lib

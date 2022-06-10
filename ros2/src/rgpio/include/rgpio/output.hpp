@@ -17,6 +17,7 @@ namespace rgpio {
         std::unique_ptr<gpio::Gpio> gpio;
 
         void write(gpio::line_level::level);
+        rgpio::gpio::line_level::level getState();
 
     private:
         rclcpp::Node *node;

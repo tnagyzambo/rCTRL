@@ -1,7 +1,8 @@
 #include <rgpio/gpio/real.hpp>
 
-rgpio::gpio::Real::Real(rclcpp::Node *node, std::string name, chip_number chipNumber, line_number lineNumber)
-    : node(node), name(name), chipNumber(chipNumber), lineNumber(lineNumber) {
+rgpio::gpio::Real::Real(
+    rclcpp::Node *node, std::string name, chip_number chipNumber, line_number lineNumber, line_level::level defaultLevel)
+    : node(node), name(name), chipNumber(chipNumber), lineNumber(lineNumber), defaultLevel(defaultLevel) {
     this->chip = this->getChip(this->chipNumber);
     this->line = this->getLine(this->lineNumber);
 }
@@ -37,6 +38,8 @@ struct gpiod_line *rgpio::gpio::Real::getLine(line_number lineNumber) {
 }
 
 void rgpio::gpio::Real::setLineAsInput() {
+    gpiod_line_request_input(this->line, this->name.c_str());
+
     RCLCPP_INFO(this->node->get_logger(),
                 "Chip '%d' line '%d' has been set as an input",
                 this->chipNumber.value,
@@ -44,6 +47,8 @@ void rgpio::gpio::Real::setLineAsInput() {
 }
 
 void rgpio::gpio::Real::setLineAsOutput() {
+    gpiod_line_request_output(this->line, this->name.c_str(), (int)this->defaultLevel);
+
     RCLCPP_INFO(this->node->get_logger(),
                 "Chip '%d' line '%d' has been set as an output",
                 this->chipNumber.value,

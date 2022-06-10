@@ -1,10 +1,9 @@
 #include <rgpio/gpio/virtual.hpp>
 
-rgpio::gpio::Virtual::Virtual(rclcpp::Node *node, std::string name, chip_number chipNumber, line_number lineNumber)
-    : node(node), name(name), chipNumber(chipNumber), lineNumber(lineNumber) {
-    // The internal vitrual level must be initialize
-    this->level = line_level::level(0);
-
+rgpio::gpio::Virtual::Virtual(
+    rclcpp::Node *node, std::string name, chip_number chipNumber, line_number lineNumber, line_level::level defaultLevel)
+    : node(node), name(name), chipNumber(chipNumber), lineNumber(lineNumber), level(defaultLevel),
+      defaultLevel(defaultLevel) {
     this->simInTopic = this->createSimInTopic();
     this->simOutTopic = this->createSimOutTopic();
 
@@ -40,6 +39,8 @@ void rgpio::gpio::Virtual::setLineAsInput() {
 }
 
 void rgpio::gpio::Virtual::setLineAsOutput() {
+    setLine(this->defaultLevel);
+
     RCLCPP_INFO(this->node->get_logger(),
                 "Chip '%d' line '%d' has been set as an output (VIRTUAL)",
                 this->chipNumber.value,
@@ -57,13 +58,13 @@ void rgpio::gpio::Virtual::setLine(line_level::level level) {
 }
 
 std::string rgpio::gpio::Virtual::createSimInTopic() {
-    std::string simInTopic = fmt::format("rgpio_{}_sim_input", this->name);
+    std::string simInTopic = fmt::format("{}_sim_input", this->name);
 
     return simInTopic;
 }
 
 std::string rgpio::gpio::Virtual::createSimOutTopic() {
-    std::string simInTopic = fmt::format("rgpio_{}_sim_output", this->name);
+    std::string simOutTopic = fmt::format("{}_sim_output", this->name);
 
     return simOutTopic;
 }

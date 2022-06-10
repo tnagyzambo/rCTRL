@@ -64,9 +64,10 @@
     <param name="params_glob" value="$(var params_glob)"/>
   </node>
 
-  <node pkg="rstate" exec="rstate_node">
-    <param name="config_path" value="launch/rstate_configs/launch.toml"/>
+  <node pkg="rstate" exec="rstate">
+    <param name="config_path" value="launch/rstate_configs/config.toml"/>
   </node>
-  <node pkg="rdata" exec="rdata_node"/>
-  <node pkg="recu" exec="recu_node"/>
+  <node pkg="recu" exec="recu">
+    <param name="config_path" value="launch/recu_configs/config.toml"/>
+  </node>
 </launch>

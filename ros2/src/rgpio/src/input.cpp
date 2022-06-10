@@ -25,13 +25,15 @@ rgpio::gpio::line_level::level rgpio::Input::read() {
 std::unique_ptr<rgpio::gpio::Gpio> rgpio::Input::constructInput(rclcpp::Node *node,
                                                                 ::toml::node_view<::toml::node> toml,
                                                                 std::string name) {
-    std::string mode = rutil::toml::getTomlEntryByKey<std::string>(toml, "mode");
+    auto gpioView = rutil::toml::viewOfTable(toml, name.c_str());
+
+    std::string mode = rutil::toml::getTomlEntryByKey<std::string>(gpioView, "mode");
 
     if (mode != "input") {
-        std::string error = fmt::format("Config entry does not define an input!\nTOML: {}", toml);
+        std::string error = fmt::format("Config entry does not define an input!\nTOML: {}", gpioView);
 
         throw rgpio::except::config_parse_error(error);
     };
 
-    return gpio::constructGpio(node, toml, name);
+    return gpio::constructGpio(node, gpioView, name);
 }

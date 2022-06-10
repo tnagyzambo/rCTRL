@@ -14,39 +14,40 @@ find_package(rosidl_default_generators REQUIRED)
 find_package(rutil REQUIRED)
 find_package(rstate_msgs REQUIRED)
 
-include_directories(include)
-
 # rstate executable
-add_executable(rstate_node src/main.cpp
-                           lib/cmd/service.cpp
-                           lib/state/activating.cpp
-                           lib/state/active.cpp
-                           lib/state/cleaning_up.cpp
-                           lib/state/configuring.cpp
-                           lib/state/deactivating.cpp
-                           lib/state/error_processing.cpp
-                           lib/state/finalized.cpp
-                           lib/state/inactive.cpp
-                           lib/state/shutting_down.cpp
-                           lib/state/state.cpp
-                           lib/state/unconfigured.cpp
-                           lib/state/unknown.cpp
-                           lib/util/util.cpp
-                           lib/node.cpp)
+add_executable(${PROJECT_NAME} src/main.cpp
+                               lib/cmd/service.cpp
+                               lib/state/activating.cpp
+                               lib/state/active.cpp
+                               lib/state/cleaning_up.cpp
+                               lib/state/configuring.cpp
+                               lib/state/deactivating.cpp
+                               lib/state/error_processing.cpp
+                               lib/state/finalized.cpp
+                               lib/state/inactive.cpp
+                               lib/state/shutting_down.cpp
+                               lib/state/state.cpp
+                               lib/state/unconfigured.cpp
+                               lib/state/unknown.cpp
+                               lib/util/util.cpp
+                               lib/node.cpp)
 
-target_include_directories(rstate_node PRIVATE lib
-                                               lib/cmd
-                                               lib/state
-                                               lib/util)
+target_include_directories(${PROJECT_NAME} PRIVATE lib
+                                                   lib/cmd
+                                                   lib/state
+                                                   lib/util)
 
-ament_target_dependencies(rstate_node rclcpp
-                                      rclcpp_lifecycle
-                                      rclcpp_action
-                                      lifecycle_msgs
-                                      rutil
-                                      rstate_msgs)
+ament_target_dependencies(${PROJECT_NAME} rclcpp
+                                          rclcpp_lifecycle
+                                          rclcpp_action
+                                          lifecycle_msgs
+                                          rutil
+                                          rstate_msgs)
 
-install(TARGETS rstate_node
-        DESTINATION lib/${PROJECT_NAME})
-
+install(TARGETS ${PROJECT_NAME}
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib
+        RUNTIME DESTINATION lib/${PROJECT_NAME}
+        INCLUDES DESTINATION)
+                                  
 ament_package()
