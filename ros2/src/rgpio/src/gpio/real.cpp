@@ -12,13 +12,11 @@ struct gpiod_chip *rgpio::gpio::Real::getChip(chip_number chipNumber) {
     struct gpiod_chip *chip = gpiod_chip_open_by_number(chipNumber.value);
 
     if (chip == NULL) {
-        std::stringstream error;
+        std::string error = fmt::format("Chip number '{}' failed to open", chipNumber.value);
 
-        error << "Error: chip number '" << chipNumber.value << "' failed to open";
+        RCLCPP_ERROR(this->node->get_logger(), "%s", error.c_str());
 
-        RCLCPP_ERROR(this->node->get_logger(), "%s", error.str().c_str());
-
-        throw except::gpio_error(error.str());
+        throw except::gpio_error(error);
     }
 
     return chip;
@@ -28,13 +26,11 @@ struct gpiod_line *rgpio::gpio::Real::getLine(line_number lineNumber) {
     struct gpiod_line *line = gpiod_chip_get_line(this->chip, lineNumber.value);
 
     if (chip == NULL) {
-        std::stringstream error;
+        std::string error = fmt::format("Line number '{}' failed to open", lineNumber.value);
 
-        error << "Error: line number '" << lineNumber.value << "' failed to open\n";
+        RCLCPP_ERROR(this->node->get_logger(), "%s", error.c_str());
 
-        RCLCPP_ERROR(this->node->get_logger(), "%s", error.str().c_str());
-
-        throw except::gpio_error(error.str());
+        throw except::gpio_error(error);
     }
 
     return line;
@@ -58,15 +54,13 @@ rgpio::gpio::line_level::level rgpio::gpio::Real::readLine() {
     int level = gpiod_line_get_value(this->line);
 
     if (level == -1) {
-        std::stringstream error;
+        std::string error = fmt::format("Error: rgpio readLine() failed!\nChip number: {}\nLine number: {}",
+                                        this->chipNumber.value,
+                                        this->lineNumber.value);
 
-        error << "Error: rgpio readLine() failed!\n";
-        error << "Chip number: " << this->chipNumber.value << "\n";
-        error << "Line number: " << this->lineNumber.value << "\n";
+        RCLCPP_ERROR(this->node->get_logger(), "%s", error.c_str());
 
-        RCLCPP_ERROR(this->node->get_logger(), "%s", error.str().c_str());
-
-        throw except::gpio_error(error.str());
+        throw except::gpio_error(error);
     }
 
     return line_level::level(level);
@@ -76,15 +70,13 @@ void rgpio::gpio::Real::setLine(line_level::level level) {
     int success = gpiod_line_set_value(this->line, line_level::toInt(level));
 
     if (success == -1) {
-        std::stringstream error;
+        std::string error = fmt::format("Error: rgpio setLine() failed!\nChip number: {}\nLine number: {}",
+                                        this->chipNumber.value,
+                                        this->lineNumber.value);
 
-        error << "Error: rgpio setLine() failed!\n";
-        error << "Chip number: " << this->chipNumber.value << "/n";
-        error << "Line number: " << this->lineNumber.value << "/n";
+        RCLCPP_ERROR(this->node->get_logger(), "%s", error.c_str());
 
-        RCLCPP_ERROR(this->node->get_logger(), "%s", error.str().c_str());
-
-        throw except::gpio_error(error.str());
+        throw except::gpio_error(error);
     }
 }
 

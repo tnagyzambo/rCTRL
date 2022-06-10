@@ -27,7 +27,8 @@ target_link_libraries(${PROJECT_NAME} PUBLIC tomlplusplus::tomlplusplus
 ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
 
 ament_export_dependencies(tomlplusplus
-                          CURL)
+                          CURL
+                          fmt)
 
 install(DIRECTORY include/
         DESTINATION include)

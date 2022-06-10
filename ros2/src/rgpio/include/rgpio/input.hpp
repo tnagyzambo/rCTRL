@@ -2,10 +2,11 @@
 
 #include <memory>
 #include <rclcpp/rclcpp.hpp>
+#include <rgpio/except.hpp>
 #include <rgpio/gpio/gpio.hpp>
-#include <rgpio/util/except.hpp>
-#include <rgpio/util/util.hpp>
+#include <rutil/toml.hpp>
 #include <string>
+#include <toml++/toml.h>
 
 // Input class templated to be either a real or virtual input
 namespace rgpio {
@@ -21,5 +22,10 @@ namespace rgpio {
         rclcpp::Node *node;
 
         // rclcpp::Publisher<rgpio_msgs::msg::LogString>::SharedPtr rDataPublisher;
+
+        static std::unique_ptr<rgpio::gpio::Gpio> constructInput(rclcpp::Node *,
+                                                                 ::toml::node_view<::toml::node>,
+                                                                 std::string);
     };
+
 } // namespace rgpio

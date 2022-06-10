@@ -4,9 +4,6 @@ rgpio::Input::Input(rclcpp::Node *node, ::toml::node_view<::toml::node> toml, st
     this->node = node;
     this->gpio = constructInput(node, toml, name);
     this->gpio->setLineAsInput();
-
-    // this->rDataPublisher =
-    //     this->node.template create_publisher<rgpio_msgs::msg::LogString>(ROS_ROCKEDATA_TOPIC_LOGSTRING, 10);
 }
 
 rgpio::gpio::line_level::level rgpio::Input::read() {
@@ -20,12 +17,21 @@ rgpio::gpio::line_level::level rgpio::Input::read() {
         throw e;
     }
 
-    // // Log to rocketDATA
-    // auto rDataMsg = rgpio_msgs::msg::LogString();
-    // rDataMsg.measurment = "GPIO Input";
-    // rDataMsg.sensor = this->name;
-    // rDataMsg.value = rgpio::gpio::line_level::toStr(level);
-    // this->rDataPublisher->publish(rDataMsg);
-
     return level;
+}
+
+// Given the input parameters, construct an appropriate input
+// Return pointer to base 'Iface' of the input
+std::unique_ptr<rgpio::gpio::Gpio> rgpio::Input::constructInput(rclcpp::Node *node,
+                                                                ::toml::node_view<::toml::node> toml,
+                                                                std::string name) {
+    std::string mode = rutil::toml::getTomlEntryByKey<std::string>(toml, "mode");
+
+    if (mode != "input") {
+        std::string error = fmt::format("Config entry does not define an input!\nTOML: {}", toml);
+
+        throw rgpio::except::config_parse_error(error);
+    };
+
+    return gpio::constructGpio(node, toml, name);
 }

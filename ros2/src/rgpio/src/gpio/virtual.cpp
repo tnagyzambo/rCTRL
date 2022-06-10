@@ -57,17 +57,13 @@ void rgpio::gpio::Virtual::setLine(line_level::level level) {
 }
 
 std::string rgpio::gpio::Virtual::createSimInTopic() {
-    std::string simInTopic = "rgpio_";
-    simInTopic.append(this->name);
-    simInTopic.append("_sim_input");
+    std::string simInTopic = fmt::format("rgpio_{}_sim_input", this->name);
 
     return simInTopic;
 }
 
 std::string rgpio::gpio::Virtual::createSimOutTopic() {
-    std::string simOutTopic = "rgpio_";
-    simOutTopic.append(this->name);
-    simOutTopic.append("_sim_output");
+    std::string simInTopic = fmt::format("rgpio_{}_sim_output", this->name);
 
     return simOutTopic;
 }

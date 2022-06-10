@@ -13,8 +13,6 @@
   <test_depend>ament_lint_common</test_depend>
 
   <build_depend>rutil</build_depend>
-  <build_depend>rdata</build_depend>
-  <build_depend>rdata_msgs</build_depend>
   <build_depend>rgpio_msgs</build_depend>
   <exec_depend>rosidl_default_runtime</exec_depend>
 

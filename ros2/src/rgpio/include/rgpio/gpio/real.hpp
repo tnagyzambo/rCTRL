@@ -2,9 +2,8 @@
 
 #include <gpiod.hpp>
 #include <rclcpp/rclcpp.hpp>
-#include <rgpio/gpio/gpio.hpp>
-#include <sstream>
-#include <rgpio/util/except.hpp>
+#include <rgpio/except.hpp>
+#include <rgpio/gpio/util.hpp>
 
 // This class implements all functions needed for accessing physical IOs, all real IOs will inherit this class
 namespace rgpio {

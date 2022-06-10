@@ -4,9 +4,6 @@ rgpio::Output::Output(rclcpp::Node *node, ::toml::node_view<::toml::node> toml, 
     this->node = node;
     this->gpio = constructOutput(node, toml, name);
     this->gpio->setLineAsOutput();
-
-    // this->rDataPublisher =
-    //     this->node.template create_publisher<rgpio_msgs::msg::LogString>(ROS_ROCKEDATA_TOPIC_LOGSTRING, 10);
 }
 
 void rgpio::Output::write(rgpio::gpio::line_level::level level) {
@@ -17,11 +14,20 @@ void rgpio::Output::write(rgpio::gpio::line_level::level level) {
 
         throw e;
     }
+}
 
-    // // Log to rocketDATA
-    // auto rDataMsg = rocketgpio::msg::LogString();
-    // rDataMsg.measurment = "GPIO Output";
-    // rDataMsg.sensor = this->name;
-    // rDataMsg.value = rgpio::gpio::line_level::toStr(level);
-    // this->rDataPublisher->publish(rDataMsg);
+// Given the input parameters, construct an appropriate output
+// Return pointer to base 'Iface' of the output
+std::unique_ptr<rgpio::gpio::Gpio> rgpio::Output::constructOutput(rclcpp::Node *node,
+                                                                  ::toml::node_view<::toml::node> toml,
+                                                                  std::string name) {
+    std::string mode = rutil::toml::getTomlEntryByKey<std::string>(toml, "mode");
+
+    if (mode != "output") {
+        std::string error = fmt::format("Config entry does not define an output!\nTOML: {}", toml);
+
+        throw rgpio::except::config_parse_error(error);
+    };
+
+    return gpio::constructGpio(node, toml, name);
 }

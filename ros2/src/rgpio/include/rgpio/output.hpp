@@ -2,11 +2,13 @@
 
 #include <memory>
 #include <rclcpp/rclcpp.hpp>
+#include <rgpio/except.hpp>
 #include <rgpio/gpio/gpio.hpp>
-#include <rgpio/util/except.hpp>
-#include <rgpio/util/util.hpp>
+#include <rutil/toml.hpp>
 #include <string>
+#include <toml++/toml.h>
 
+// Output class templated to be either a real or virtual output
 namespace rgpio {
     class Output {
     public:
@@ -20,5 +22,9 @@ namespace rgpio {
         rclcpp::Node *node;
 
         // rclcpp::Publisher<rocketgpio::msg::LogString>::SharedPtr rDataPublisher;
+
+        static std::unique_ptr<rgpio::gpio::Gpio> constructOutput(rclcpp::Node *,
+                                                                  ::toml::node_view<::toml::node>,
+                                                                  std::string);
     };
 } // namespace rgpio

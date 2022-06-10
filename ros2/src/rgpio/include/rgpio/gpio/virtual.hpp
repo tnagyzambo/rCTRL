@@ -1,7 +1,7 @@
 #pragma once
 
 #include <rclcpp/rclcpp.hpp>
-#include <rgpio/gpio/gpio.hpp>
+#include <rgpio/gpio/util.hpp>
 #include <rgpio_msgs/msg/sim_input.hpp>
 #include <rgpio_msgs/msg/sim_output.hpp>
 
