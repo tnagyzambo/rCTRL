@@ -15,7 +15,7 @@ find_package(fmt REQUIRED)
 
 # rdata virtual sensor executable
 add_executable(${PROJECT_NAME} src/main.cpp
-                               src/node.cpp)
+                               lib/node.cpp)
 
 target_include_directories(${PROJECT_NAME} PRIVATE lib)
 

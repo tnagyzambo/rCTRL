@@ -1,4 +1,4 @@
-#include <vsensor_node.hpp>
+#include <node.hpp>
 
 int main(int argc, char *argv[]) {
     // Multi threaded executor to allow for potentially different sampling periods

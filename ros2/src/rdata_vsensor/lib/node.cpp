@@ -118,7 +118,13 @@ namespace rdata::vsensor {
 
     // Periodically write logs to influxdb
     // Optimal data rate is ~5000 lines of line protocol per write
-    void Node::loggerCallback() { this->logger->writeToInflux(); }
+    void Node::loggerCallback() {
+        try {
+            this->logger->writeToInflux();
+        } catch (rdata::except::PostReq e) {
+            RCLCPP_ERROR(this->get_logger(), "Failed Data Log");
+        }
+    }
 
     // Virtual boolean sensor
     Bool::Bool(const char *nodeName, std::chrono::milliseconds samplePeriod, std::chrono::milliseconds loggingPeriod)
