@@ -10,45 +10,29 @@ find_package(rclcpp REQUIRED)
 find_package(rclcpp_lifecycle REQUIRED)
 find_package(lifecycle_msgs REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
+find_package(rutil REQUIRED)
+find_package(rdata REQUIRED)
 
-include_directories(include)
+# ri2c executable
+add_executable(${PROJECT_NAME} src/main.cpp
+                               lib/node.cpp
+                               lib/ads1014.cpp)
 
-# rgpio library
-# add_library(${PROJECT_NAME} SHARED src/test.cpp)
+target_include_directories(${PROJECT_NAME} PRIVATE lib)
 
-# target_link_libraries(${PROJECT_NAME} tomlplusplus::tomlplusplus
-#                                       gpiod)
+target_link_libraries(${PROJECT_NAME} i2c
+                                      fmt::fmt)
 
-# ament_target_dependencies(${PROJECT_NAME} rclcpp
-#                                           rutil)
+ament_target_dependencies(${PROJECT_NAME} rclcpp
+                                          rclcpp_lifecycle
+                                          lifecycle_msgs
+                                          rutil
+                                          rdata)
 
-# ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
-# ament_export_dependencies(tomlplusplus)
-
-# install(DIRECTORY include/
-#         DESTINATION include)
-
-# install(TARGETS ${PROJECT_NAME} EXPORT export_${PROJECT_NAME}
-#         LIBRARY DESTINATION lib
-#         ARCHIVE DESTINATION lib
-#         RUNTIME DESTINATION lib/${PROJECT_NAME}
-#         INCLUDES DESTINATION include)
-
-# ament_package()
-
-add_executable(ri2c_node src/main.cpp)
-
-target_include_directories(ri2c_node PRIVATE lib)
-
-target_link_libraries(ri2c_node i2c)
-
-install(DIRECTORY include/
-        DESTINATION include)
-
-install(TARGETS ri2c_node
+install(TARGETS ${PROJECT_NAME}
         LIBRARY DESTINATION lib
         ARCHIVE DESTINATION lib
         RUNTIME DESTINATION lib/${PROJECT_NAME}
-        INCLUDES DESTINATION include)
+        INCLUDES DESTINATION)
 
 ament_package()
