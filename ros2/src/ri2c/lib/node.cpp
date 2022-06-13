@@ -13,13 +13,47 @@ namespace ri2c {
         const rclcpp_lifecycle::State &) {
         RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::transition::configuring().c_str());
 
-        // try {
-        //     toml::table toml = toml::parse_file(this->get_parameter("config_path").as_string());
-        //     readConfig(toml);
-        // } catch (rgpio::except::config_parse_error &e) {
-        //     RCLCPP_ERROR(this->get_logger(), "Failed to configure!\nError: %s", e.what());
-        //     return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::FAILURE;
-        // }
+        try {
+            toml::table toml = toml::parse_file(this->get_parameter("config_path").as_string());
+            readConfig(toml);
+        } catch (ri2c::except::config_parse_error &e) {
+            RCLCPP_ERROR(this->get_logger(), "Failed to configure!\nError: %s", e.what());
+            return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::FAILURE;
+        }
+
+        // Get handle for i2c bus
+        this->i2cBus = open(this->i2cBusName.c_str(), O_RDWR);
+        if (this->i2cBus < 0) {
+            RCLCPP_ERROR(this->get_logger(), "Failed to open i2c bus '%s'", this->i2cBusName.c_str());
+            return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::FAILURE;
+        }
+
+        this->sensor1->init(this->i2cBus);
+        // this->sensor2->init(this->i2cBus);
+        // this->sensor3->init(this->i2cBus);
+        // this->sensor4->init(this->i2cBus);
+
+        try {
+            this->loggerLowSpeed = std::make_unique<rdata::Logger>("/home/ros/rdata/influx/credentials.toml");
+            this->loggerHighSpeed = std::make_unique<rdata::Logger>("/home/ros/rdata/influx/credentials.toml");
+        } catch (const std::runtime_error &e) {
+            RCLCPP_ERROR(this->get_logger(), "Failed to configure node!\nWhat: %s", e.what());
+
+            return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::FAILURE;
+        }
+
+        // Construct timers and immediately stop them
+        this->timerDataLoggingLowSpeed =
+            this->create_wall_timer(samplePeriodLowSpeed, std::bind(&Node::callbackDataLoggingLowSpeed, this));
+        this->timerDataLoggingLowSpeed->cancel();
+
+        this->timerDataLoggingLowSpeedWrite =
+            this->create_wall_timer(loggingPeriodLowSpeed, std::bind(&Node::callbackDataLoggingLowSpeedWrite, this));
+        this->timerDataLoggingLowSpeedWrite->cancel();
+
+        this->timerDataLoggingHighSpeed =
+            this->create_wall_timer(samplePeriodHighSpeed, std::bind(&Node::callbackDataLoggingHighSpeed, this));
+        this->timerDataLoggingHighSpeed->cancel();
 
         RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::state::inactive().c_str());
         return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
@@ -29,41 +63,10 @@ namespace ri2c {
         const rclcpp_lifecycle::State &) {
         RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::transition::activating().c_str());
 
-        int file = open("/dev/i2c-1", O_RDWR);
-
-        if (file < 0) {
-            RCLCPP_INFO(this->get_logger(), "failed to open file");
-            // return 1;
-        }
-
-        int addr = 0x48;
-
-        if (ioctl(file, I2C_SLAVE, addr) < 0) {
-            RCLCPP_INFO(this->get_logger(), "failed to set i2c slave");
-            // return 1;
-        }
-
-        i2c_smbus_write_byte(file, 1);
-        sleep(1);
-
-        __u8 reg = 0x00; /* Device register to access */
-        __u8 res;
-
-        /* Using SMBus commands */
-
-        res = i2c_smbus_read_byte_data(file, reg);
-        if (res < 0) {
-            RCLCPP_INFO(this->get_logger(), "failed to read");
-            // return 1;
-        }
-
-        uint f;
-        std::memcpy(&f, &res, sizeof(f));
-
-        RCLCPP_INFO(this->get_logger(), "read: %d", f);
-
-        close(file);
-        // return 0;
+        // Start timers
+        this->timerDataLoggingLowSpeed->reset();
+        this->timerDataLoggingLowSpeedWrite->reset();
+        // High speed is triggered by service request (NOT IMPLEMENTED)
 
         RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::state::active().c_str());
 
@@ -74,6 +77,10 @@ namespace ri2c {
         const rclcpp_lifecycle::State &) {
         RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::transition::deactivating().c_str());
 
+        // Stop timers
+        this->timerDataLoggingLowSpeed->cancel();
+        this->timerDataLoggingHighSpeed->cancel();
+
         RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::state::inactive().c_str());
 
         return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
@@ -82,6 +89,8 @@ namespace ri2c {
     rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn Node::on_cleanup(
         const rclcpp_lifecycle::State &) {
         RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::transition::cleaningUp().c_str());
+
+        close(this->i2cBus);
 
         this->deleteAllPointers();
 
@@ -101,5 +110,63 @@ namespace ri2c {
         return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
     }
 
-    void Node::deleteAllPointers() {}
+    void Node::deleteAllPointers() {
+        this->sensor1.reset();
+        // this->sensor2.reset();
+        // this->sensor3.reset();
+        // this->sensor4.reset();
+
+        this->timerDataLoggingLowSpeed.reset();
+        this->timerDataLoggingLowSpeedWrite.reset();
+        this->timerDataLoggingHighSpeed.reset();
+
+        this->loggerLowSpeed.reset();
+        this->loggerHighSpeed.reset();
+    }
+
+    void Node::readConfig(toml::table toml) {
+        try {
+            auto tomlView = toml::node_view(toml);
+
+            auto i2cView = rutil::toml::viewOfTable(tomlView, "i2c");
+
+            this->i2cBusName = rutil::toml::getTomlEntryByKey<std::string>(i2cView, "bus");
+
+            auto ads1014View = rutil::toml::viewOfTable(i2cView, "ads1014");
+
+            this->sensor1 = std::make_unique<ADS1014>(ADS1014(rutil::toml::viewOfTable(ads1014View, "sensor1")));
+            // this->sensor2 = std::make_unique<ADS1014>(ADS1014(rutil::toml::viewOfTable(ads1014View, "sensor2")));
+            // this->sensor3 = std::make_unique<ADS1014>(ADS1014(rutil::toml::viewOfTable(ads1014View, "sensor3")));
+            // this->sensor4 = std::make_unique<ADS1014>(ADS1014(rutil::toml::viewOfTable(ads1014View, "sensor4")));
+
+            auto loggingView = rutil::toml::viewOfTable(tomlView, "data_logging");
+
+            auto lowSpeedView = rutil::toml::viewOfTable(loggingView, "low_speed");
+
+            this->samplePeriodLowSpeed =
+                std::chrono::milliseconds(rutil::toml::getTomlEntryByKey<int>(lowSpeedView, "sample_period"));
+
+            this->loggingPeriodLowSpeed =
+                std::chrono::milliseconds(rutil::toml::getTomlEntryByKey<int>(lowSpeedView, "logging_period"));
+        } catch (rutil::except::toml_parse_error &e) {
+            throw ri2c::except::config_parse_error(e.what());
+        }
+    }
+
+    // Write to buffer
+    void Node::callbackDataLoggingLowSpeed() {
+        float value1 = this->sensor1->read(this->i2cBus);
+        // float value2 = this->sensor2->read(this->i2cBus);
+        // float value3 = this->sensor3->read(this->i2cBus);
+        // float value4 = this->sensor4->read(this->i2cBus);
+
+        this->loggerLowSpeed->log(fmt::format("sensor=sensor1 value={}", value1));
+        // this->loggerLowSpeed->log(fmt::format("sensor=sensor1 value={}, sensor=sensor2 value={}, sensor=sensor3
+        // value={}, sensor=sensor3 value={}", value1, value2, value3, value4));
+    }
+
+    // Write buffer to influx
+    void Node::callbackDataLoggingLowSpeedWrite() { this->loggerLowSpeed->writeToInflux(); }
+
+    void Node::callbackDataLoggingHighSpeed() {}
 } // namespace ri2c

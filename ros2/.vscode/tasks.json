@@ -72,6 +72,11 @@
             "command": "clear && colcon build --packages-select ri2c_msgs --cmake-args '-DCMAKE_BUILD_TYPE=RelWithDebInfo'",
         },
         {
+            "label": "ri2c_vsensor-launch example",
+            "type": "shell",
+            "command": "clear && source install/setup.bash && ros2 launch launch/ri2c_example.xml",
+        },
+        {
             "label": "rstate-build",
             "type": "shell",
             "command": "clear && colcon build --packages-select rstate --cmake-args '-DCMAKE_BUILD_TYPE=RelWithDebInfo'",
