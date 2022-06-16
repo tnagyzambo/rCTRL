@@ -11,12 +11,13 @@
 #include <rutil/toml.hpp>
 #include <string>
 
-#define GPIO_CONFIG_FILE "/home/ros/rocketGPIO/config.toml"
+using namespace std::chrono_literals;
 
 namespace recu {
     enum ValveState {
         Closed,
         Open,
+        Unknown,
     };
 
     class Node : public rclcpp_lifecycle::LifecycleNode {
@@ -31,6 +32,10 @@ namespace recu {
         std::unique_ptr<rgpio::Output> valveMV2;
         std::unique_ptr<rgpio::Output> pyro;
 
+        rclcpp::TimerBase::SharedPtr ignitionSequenceTimer;
+        std::chrono::high_resolution_clock::time_point ignitionSequenceStartTime;
+
+        rclcpp::Service<recu_msgs::srv::ValveAction>::SharedPtr srvIgnitionSequence;
         rclcpp::Service<recu_msgs::srv::ValveAction>::SharedPtr srvBV_Open;
         rclcpp::Service<recu_msgs::srv::ValveAction>::SharedPtr srvBV_Close;
         rclcpp::Service<recu_msgs::srv::GetValveState>::SharedPtr srvBV_GetState;
@@ -43,6 +48,20 @@ namespace recu {
         rclcpp::Service<recu_msgs::srv::ValveAction>::SharedPtr srvMV2_Open;
         rclcpp::Service<recu_msgs::srv::ValveAction>::SharedPtr srvMV2_Close;
         rclcpp::Service<recu_msgs::srv::GetValveState>::SharedPtr srvMV2_GetState;
+
+        std::chrono::milliseconds ignitionSequenceEnd = -1ms;
+        std::chrono::milliseconds ignitionSequenceOpenBV = -1ms;
+        std::chrono::milliseconds ignitionSequenceCloseBV = -1ms;
+        std::chrono::milliseconds ignitionSequenceOpenPV = -1ms;
+        std::chrono::milliseconds ignitionSequenceClosePV = -1ms;
+        std::chrono::milliseconds ignitionSequenceOpenMV1 = -1ms;
+        std::chrono::milliseconds ignitionSequenceCloseMV1 = -1ms;
+        std::chrono::milliseconds ignitionSequenceOpenMV2 = -1ms;
+        std::chrono::milliseconds ignitionSequenceCloseMV2 = -1ms;
+        std::chrono::milliseconds ignitionSequenceOnIgnitor = -1ms;
+        std::chrono::milliseconds ignitionSequenceOffIgnitor = -1ms;
+        std::chrono::milliseconds ignitionSequenceOnHSDatalogging = -1ms;
+        std::chrono::milliseconds ignitionSequenceOffHSDatalogging = -1ms;
 
         rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_configure(
             const rclcpp_lifecycle::State &);
@@ -57,8 +76,12 @@ namespace recu {
 
         void readConfig(toml::table toml);
 
+        void ignitionSequenceCallback();
+
         recu_msgs::srv::GetValveState::Response createValveStateResponse(ValveState);
 
+        void IgnitionSequence(const std::shared_ptr<recu_msgs::srv::ValveAction::Request>,
+                              std::shared_ptr<recu_msgs::srv::ValveAction::Response>);
         void BV_Open(const std::shared_ptr<recu_msgs::srv::ValveAction::Request>,
                      std::shared_ptr<recu_msgs::srv::ValveAction::Response>);
         void BV_Close(const std::shared_ptr<recu_msgs::srv::ValveAction::Request>,

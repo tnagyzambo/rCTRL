@@ -1,6 +1,34 @@
 # https://www.beyondlogic.org/an-introduction-to-chardev-gpio-and-libgpiod-on-the-raspberry-pi/
 # https://embeddedbits.org/new-linux-kernel-gpio-user-space-interface/
 
+[ignition_sequence]
+    [ignition_sequence.BV]
+    open = -1 # Not actuated
+    close = -1 # Not actuated
+
+    [ignition_sequence.PV]
+    open = 0 # ms
+    close = 20000 # ms
+
+    [ignition_sequence.MV1]
+    open = 2000 # ms
+    close = 4000 # ms
+
+    [ignition_sequence.MV2]
+    open = 2000 # ms
+    close = 4000 # ms
+
+    [ignition_sequence.ignitor]
+    on = 10000 # ms
+    off = 10500 # ms
+
+    [ignition_sequence.high_speed_data_logging]
+    on = 0 # ms
+    off = 30000 # ms
+
+    [ignition_sequence.end]
+    end = 30000 # ms
+
 [gpio]
     [gpio.valveBV]
     chipNumber = 0
