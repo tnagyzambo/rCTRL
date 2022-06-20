@@ -43,7 +43,7 @@
                 "-v", "${PWD}/ros2:/ros2_ws",
                 "--workdir", "/ros2_ws",
                 "-i", "rctrl_xcompile_x86_arm46:latest",
-                "/bin/bash", "-c", "source /opt/ros/galactic/setup.bash && colcon build",
+                "/bin/bash", "-c", "source /opt/ros/humble/setup.bash && colcon build",
             ],
         },
         {
@@ -56,7 +56,7 @@
                 "-v", "${PWD}/ros2:/ros2_ws",
                 "--workdir", "/ros2_ws",
                 "-i", "rctrl_xcompile_x86_arm46:latest",
-                "/bin/bash", "-c", "source /opt/ros/galactic/setup.bash && colcon build --packages-select recu",
+                "/bin/bash", "-c", "source /opt/ros/humble/setup.bash && colcon build --packages-select recu",
             ],
         },
         {
