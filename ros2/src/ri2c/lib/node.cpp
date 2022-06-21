@@ -28,10 +28,10 @@ namespace ri2c {
             return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::FAILURE;
         }
 
-        this->sensor1->init(this->i2cBus);
-        // this->sensor2->init(this->i2cBus);
-        // this->sensor3->init(this->i2cBus);
-        // this->sensor4->init(this->i2cBus);
+        this->p_h2o2->init(this->i2cBus);
+        this->loadcell->init(this->i2cBus);
+        this->p_chamber->init(this->i2cBus);
+        this->t_chamber->init(this->i2cBus);
 
         try {
             this->loggerLowSpeed = std::make_unique<rdata::Logger>("/home/ros/rdata/influx/credentials.toml");
@@ -111,10 +111,10 @@ namespace ri2c {
     }
 
     void Node::deleteAllPointers() {
-        this->sensor1.reset();
-        // this->sensor2.reset();
-        // this->sensor3.reset();
-        // this->sensor4.reset();
+        this->p_h2o2.reset();
+        this->loadcell.reset();
+        this->p_chamber.reset();
+        this->t_chamber.reset();
 
         this->timerDataLoggingLowSpeed.reset();
         this->timerDataLoggingLowSpeedWrite.reset();
@@ -134,10 +134,10 @@ namespace ri2c {
 
             auto ads1014View = rutil::toml::viewOfTable(i2cView, "ads1014");
 
-            this->sensor1 = std::make_unique<ADS1014>(ADS1014(rutil::toml::viewOfTable(ads1014View, "sensor1")));
-            // this->sensor2 = std::make_unique<ADS1014>(ADS1014(rutil::toml::viewOfTable(ads1014View, "sensor2")));
-            // this->sensor3 = std::make_unique<ADS1014>(ADS1014(rutil::toml::viewOfTable(ads1014View, "sensor3")));
-            // this->sensor4 = std::make_unique<ADS1014>(ADS1014(rutil::toml::viewOfTable(ads1014View, "sensor4")));
+            this->p_h2o2 = std::make_unique<PAA_7LC_30BAR>(PAA_7LC_30BAR(rutil::toml::viewOfTable(ads1014View, "p_h2o2")));
+            this->loadcell = std::make_unique<LoadcellBridge>(LoadcellBridge(rutil::toml::viewOfTable(ads1014View, "loadcell")));
+            this->p_chamber = std::make_unique<M5HB_30BAR>(M5HB_30BAR(rutil::toml::viewOfTable(ads1014View, "p_chamber")));
+            this->t_chamber = std::make_unique<K_TYPE>(K_TYPE(rutil::toml::viewOfTable(ads1014View, "t_chamber")));
 
             auto loggingView = rutil::toml::viewOfTable(tomlView, "data_logging");
 
@@ -155,14 +155,13 @@ namespace ri2c {
 
     // Write to buffer
     void Node::callbackDataLoggingLowSpeed() {
-        float value1 = this->sensor1->read(this->i2cBus);
-        // float value2 = this->sensor2->read(this->i2cBus);
-        // float value3 = this->sensor3->read(this->i2cBus);
-        // float value4 = this->sensor4->read(this->i2cBus);
+        float value1 = this->p_h2o2->read(this->i2cBus);
+        float value2 = this->loadcell->read(this->i2cBus);
+        float value3 = this->p_chamber->read(this->i2cBus);
+        float value4 = this->t_chamber->read(this->i2cBus);
 
-        this->loggerLowSpeed->log(fmt::format("sensor=sensor1 value={}", value1));
-        // this->loggerLowSpeed->log(fmt::format("sensor=sensor1 value={}, sensor=sensor2 value={}, sensor=sensor3
-        // value={}, sensor=sensor3 value={}", value1, value2, value3, value4));
+        // this->loggerLowSpeed->log(fmt::format("sensor=p_h2o2 value={}", value1));
+        this->loggerLowSpeed->log(fmt::format("sensor=p_h2o2 value={}, sensor=loadcell value={}, sensor=p_chamber value={}, sensor=t_chamber value={}", value1, value2, value3, value4));
     }
 
     // Write buffer to influx

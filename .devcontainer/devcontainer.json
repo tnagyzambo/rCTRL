@@ -11,7 +11,7 @@
         "--network=host",
         "--cap-add=SYS_PTRACE",
         "--security-opt",
-        "seccomp=unconfined",
+        "seccomp=unconfined"
     ],
     "postStartCommand": "bash -i -c /home/ros/setup.sh",
     "containerEnv": {

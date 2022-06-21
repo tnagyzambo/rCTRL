@@ -9,14 +9,14 @@
 
 [i2c]
     bus = "/dev/i2c-1"
-    [i2c.ads1014.sensor1]
+    [i2c.ads1014.p_h2o2]
         address = "0x48"
 
-    [i2c.ads1014.sensor2]
-        address = "0x00"
+    [i2c.ads1014.loadcell]
+        address = "0x49"
 
-    [i2c.ads1014.sensor3]
-        address = "0x00"
+    [i2c.ads1014.p_chamber]
+        address = "0x4A"
 
-    [i2c.ads1014.sensor4]
-        address = "0x00"
+    [i2c.ads1014.t_chamber]
+        address = "0x4B"

@@ -16,7 +16,8 @@ find_package(rdata REQUIRED)
 # ri2c executable
 add_executable(${PROJECT_NAME} src/main.cpp
                                lib/node.cpp
-                               lib/ads1014.cpp)
+                               lib/ads1014.cpp
+                               lib/thermocouple.c)
 
 target_include_directories(${PROJECT_NAME} PRIVATE lib)
 
