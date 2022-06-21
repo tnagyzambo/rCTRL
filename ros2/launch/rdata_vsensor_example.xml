@@ -68,7 +68,4 @@
     <param name="config_path" value="launch/rstate_configs/rdata_vsensor_example.toml"/>
   </node>
   <node pkg="rdata_vsensor" exec="rdata_vsensor"/>
-  <node pkg="recu" exec="recu">
-    <param name="config_path" value="launch/recu_configs/config.toml"/>
-  </node>
 </launch>

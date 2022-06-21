@@ -5,7 +5,6 @@
 
     [data_logging.high_speed]
         sample_period = 1 # ms
-        duration = 10000 # ms
 
 [i2c]
     bus = "/dev/i2c-1"

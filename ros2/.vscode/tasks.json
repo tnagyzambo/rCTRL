@@ -2,6 +2,16 @@
     "version": "2.0.0",
     "tasks": [
         {
+            "label": "launch-launch",
+            "type": "shell",
+            "command": "clear && source install/setup.bash && ros2 launch launch/launch.xml",
+        },
+        {
+            "label": "launch-ri2c_example",
+            "type": "shell",
+            "command": "clear && source install/setup.bash && ros2 launch launch/ri2c_example.xml",
+        },
+        {
             "label": "ros2-build",
             "type": "shell",
             "command": "clear && colcon build --cmake-args '-DCMAKE_BUILD_TYPE=RelWithDebInfo'",
@@ -10,11 +20,6 @@
             "label": "ros2-clean",
             "type": "shell",
             "command": "clear && rm -R build install log",
-        },
-        {
-            "label": "ros2-launch",
-            "type": "shell",
-            "command": "clear && source install/setup.bash && ros2 launch launch/launch.xml",
         },
         {
             "label": "rdata-build",
@@ -52,14 +57,14 @@
             "command": "clear && colcon build --packages-select recu --cmake-args '-DCMAKE_BUILD_TYPE=RelWithDebInfo'",
         },
         {
-            "label": "recu-run",
-            "type": "shell",
-            "command": "clear && source install/setup.bash && ros2 run recu recu",
-        },
-        {
             "label": "recu-build msgs",
             "type": "shell",
             "command": "clear && colcon build --packages-select recu_msgs --cmake-args '-DCMAKE_BUILD_TYPE=RelWithDebInfo'",
+        },
+        {
+            "label": "recu-run",
+            "type": "shell",
+            "command": "clear && source install/setup.bash && ros2 run recu recu",
         },
         {
             "label": "ri2c-build",
@@ -72,9 +77,9 @@
             "command": "clear && colcon build --packages-select ri2c_msgs --cmake-args '-DCMAKE_BUILD_TYPE=RelWithDebInfo'",
         },
         {
-            "label": "ri2c_vsensor-launch example",
+            "label": "ri2c-run",
             "type": "shell",
-            "command": "clear && source install/setup.bash && ros2 launch launch/ri2c_example.xml",
+            "command": "clear && source install/setup.bash && ros2 run ri2c ri2c",
         },
         {
             "label": "rstate-build",
