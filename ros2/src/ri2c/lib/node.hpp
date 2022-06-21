@@ -10,6 +10,8 @@
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_lifecycle/lifecycle_node.hpp>
 #include <rdata/logger.hpp>
+#include <ri2c_msgs/srv/detail/high_speed_data_logging_action__struct.hpp>
+#include <ri2c_msgs/srv/high_speed_data_logging_action.hpp>
 #include <rutil/except.hpp>
 #include <rutil/fmt.hpp>
 #include <rutil/toml.hpp>
@@ -48,6 +50,14 @@ namespace ri2c {
         rclcpp::TimerBase::SharedPtr timerDataLoggingLowSpeed;
         rclcpp::TimerBase::SharedPtr timerDataLoggingLowSpeedWrite;
         rclcpp::TimerBase::SharedPtr timerDataLoggingHighSpeed;
+
+        rclcpp::Service<ri2c_msgs::srv::HighSpeedDataLoggingAction>::SharedPtr srvDataLoggingHighSpeedOn;
+        rclcpp::Service<ri2c_msgs::srv::HighSpeedDataLoggingAction>::SharedPtr srvDataLoggingHighSpeedOff;
+
+        void callbackDataLoggingHighSpeedOn(const std::shared_ptr<ri2c_msgs::srv::HighSpeedDataLoggingAction::Request>,
+                                            std::shared_ptr<ri2c_msgs::srv::HighSpeedDataLoggingAction::Response>);
+        void callbackDataLoggingHighSpeedOff(const std::shared_ptr<ri2c_msgs::srv::HighSpeedDataLoggingAction::Request>,
+                                             std::shared_ptr<ri2c_msgs::srv::HighSpeedDataLoggingAction::Response>);
 
         rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_configure(
             const rclcpp_lifecycle::State &);

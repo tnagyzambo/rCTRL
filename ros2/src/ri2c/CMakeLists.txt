@@ -12,6 +12,7 @@ find_package(lifecycle_msgs REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 find_package(rutil REQUIRED)
 find_package(rdata REQUIRED)
+find_package(ri2c_msgs REQUIRED)
 
 # ri2c executable
 add_executable(${PROJECT_NAME} src/main.cpp
@@ -27,7 +28,8 @@ ament_target_dependencies(${PROJECT_NAME} rclcpp
                                           rclcpp_lifecycle
                                           lifecycle_msgs
                                           rutil
-                                          rdata)
+                                          rdata
+                                          ri2c_msgs)
 
 install(TARGETS ${PROJECT_NAME}
         LIBRARY DESTINATION lib

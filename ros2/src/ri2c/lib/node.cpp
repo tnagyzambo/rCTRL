@@ -66,7 +66,13 @@ namespace ri2c {
         // Start timers
         this->timerDataLoggingLowSpeed->reset();
         this->timerDataLoggingLowSpeedWrite->reset();
-        // High speed is triggered by service request (NOT IMPLEMENTED)
+
+        this->srvDataLoggingHighSpeedOn = this->create_service<ri2c_msgs::srv::HighSpeedDataLoggingAction>(
+            "ri2c/hs_datalog/on",
+            std::bind(&Node::callbackDataLoggingHighSpeedOn, this, std::placeholders::_1, std::placeholders::_2));
+        this->srvDataLoggingHighSpeedOff = this->create_service<ri2c_msgs::srv::HighSpeedDataLoggingAction>(
+            "ri2c/hs_datalog/off",
+            std::bind(&Node::callbackDataLoggingHighSpeedOff, this, std::placeholders::_1, std::placeholders::_2));
 
         RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::state::active().c_str());
 
@@ -122,6 +128,9 @@ namespace ri2c {
 
         this->loggerLowSpeed.reset();
         this->loggerHighSpeed.reset();
+
+        this->srvDataLoggingHighSpeedOn.reset();
+        this->srvDataLoggingHighSpeedOff.reset();
     }
 
     void Node::readConfig(toml::table toml) {
@@ -148,6 +157,11 @@ namespace ri2c {
 
             this->loggingPeriodLowSpeed =
                 std::chrono::milliseconds(rutil::toml::getTomlEntryByKey<int>(lowSpeedView, "logging_period"));
+
+            auto highSpeedView = rutil::toml::viewOfTable(loggingView, "high_speed");
+
+            this->samplePeriodHighSpeed =
+                std::chrono::milliseconds(rutil::toml::getTomlEntryByKey<int>(highSpeedView, "sample_period"));
         } catch (rutil::except::toml_parse_error &e) {
             throw ri2c::except::config_parse_error(e.what());
         }
@@ -168,5 +182,30 @@ namespace ri2c {
     // Write buffer to influx
     void Node::callbackDataLoggingLowSpeedWrite() { this->loggerLowSpeed->writeToInflux(); }
 
-    void Node::callbackDataLoggingHighSpeed() {}
+    void Node::callbackDataLoggingHighSpeed() {
+        float value1 = this->sensor1->read(this->i2cBus);
+        // float value2 = this->sensor2->read(this->i2cBus);
+        // float value3 = this->sensor3->read(this->i2cBus);
+        // float value4 = this->sensor4->read(this->i2cBus);
+
+        this->loggerHighSpeed->log(fmt::format("sensor=sensor1 value={}", value1));
+        // this->loggerHighSpeed->log(fmt::format("sensor=sensor1 value={}, sensor=sensor2 value={}, sensor=sensor3
+        // value={}, sensor=sensor3 value={}", value1, value2, value3, value4));
+    }
+
+    void Node::callbackDataLoggingHighSpeedOn(
+        const std::shared_ptr<ri2c_msgs::srv::HighSpeedDataLoggingAction::Request> request,
+        std::shared_ptr<ri2c_msgs::srv::HighSpeedDataLoggingAction::Response> response) {
+        (void)request;
+        (void)response;
+        this->timerDataLoggingHighSpeed->reset();
+    }
+
+    void Node::callbackDataLoggingHighSpeedOff(
+        const std::shared_ptr<ri2c_msgs::srv::HighSpeedDataLoggingAction::Request> request,
+        std::shared_ptr<ri2c_msgs::srv::HighSpeedDataLoggingAction::Response> response) {
+        (void)request;
+        (void)response;
+        this->timerDataLoggingHighSpeed->cancel();
+    }
 } // namespace ri2c
