@@ -26,11 +26,17 @@ namespace ri2c {
 
             throw except::i2c_error(error);
         }
-
-        uint f;
+        
+        //Shift 
+        uint16_t f;
         std::memcpy(&f, &res, sizeof(f));
+        // backwards from what you would expect due to how the adc outputs
+        uint16_t MSB = f<<8;
+        uint16_t LSB = f>>8;
 
-        return (float)f;
+        uint16_t out = MSB | LSB;
+
+        return (float)out;
     }
 
     // PAA_7LC_30BAR definitions -----------------------------------
@@ -81,7 +87,7 @@ namespace ri2c {
         }
 
         //Set FSR to 0.256 V, continuous mode, default of 1.6ksps, rest defaults
-        unsigned char configuration[2] = {0b10001010, 0b10000011};
+        unsigned char configuration[2] = {0b10000000, 0b10000011};
         sendConfig(i2cBus, ADS1014_CONF_REG, 2, configuration);
     }
 
@@ -95,7 +101,7 @@ namespace ri2c {
         // The LSB is 0.256V/2^12.
         // The LSB is 0.125mV
         // For now just outputting volts directly
-        double lc_slope = 0.125e-3;
+        double lc_slope = 3e-3;
         double lc_offset = 0;
         return lc_slope*rawData + lc_offset;
     }
