@@ -31,10 +31,10 @@ namespace ri2c {
         uint16_t f;
         std::memcpy(&f, &res, sizeof(f));
         // backwards from what you would expect due to how the adc outputs
-        uint16_t MSB = f<<8;
-        uint16_t LSB = f>>8;
-
-        uint16_t out = MSB | LSB;
+        uint16_t MSB = (f & 0xff);
+        uint16_t LSB = (f & 0xff00)>>8;
+        // shift bits to the right as we have a 12 bit value in a 16 bit int right justified
+        uint16_t out = (MSB <<8 | LSB)>>4;
 
         return (float)out;
     }
@@ -54,14 +54,14 @@ namespace ri2c {
 
         //Set FSR to 6.144 V, continuous mode, default of 1.6ksps, rest defaults
         unsigned char configuration[2] = {0b10000000, 0b10000011};
-        sendConfig(i2cBus, ADS1014_CONF_REG, 2, configuration);
+        this->sendConfig(i2cBus, ADS1014_CONF_REG, 2, configuration);
     }
 
     float PAA_7LC_30BAR::read(int i2cBus) {
         // Do all read functions here includeing conversions to float
         float PS_MAX = 30;
         // go to conversion register and get bytes back
-        float rawData = getRaw(i2cBus);
+        float rawData = this->getRaw(i2cBus);
 
         // Convert data to useful information
         // Our reference voltage is 6.144V.
@@ -86,21 +86,22 @@ namespace ri2c {
             throw except::i2c_error(error);
         }
 
-        //Set FSR to 0.256 V, continuous mode, default of 1.6ksps, rest defaults
+        //Set FSR to 6.144 V, continuous mode, default of 1.6ksps, rest defaults
         unsigned char configuration[2] = {0b10000000, 0b10000011};
-        sendConfig(i2cBus, ADS1014_CONF_REG, 2, configuration);
+        this->sendConfig(i2cBus, ADS1014_CONF_REG, 2, configuration);
     }
 
     float LoadcellBridge::read(int i2cBus) {
         // Do all read functions here includeing conversions to float
         // go to conversion register and get bytes back
-        float rawData = getRaw(i2cBus);
+        float rawData = this->getRaw(i2cBus);
 
         // Convert data to useful information
         // Our reference voltage is 0.256 V.
-        // The LSB is 0.256V/2^12.
-        // The LSB is 0.125mV
+        // The LSB is 6.144V/2^12.
+        // The LSB is 3mV
         // For now just outputting volts directly
+        // TODO: increase gain and calibrate
         double lc_slope = 3e-3;
         double lc_offset = 0;
         return lc_slope*rawData + lc_offset;
@@ -121,15 +122,15 @@ namespace ri2c {
         }
 
         //Set FSR to 6.144 V, continuous mode, default of 1.6ksps, rest defaults
-        unsigned char configuration[2] = {0b10000000, 0b10000011};
-        sendConfig(i2cBus, ADS1014_CONF_REG, 2, configuration);
+        unsigned char configuration[2] = {0b10000010, 0b10000011};
+        this->sendConfig(i2cBus, ADS1014_CONF_REG, 2, configuration);
     }
 
     float M5HB_30BAR::read(int i2cBus) {
         // Do all read functions here includeing conversions to float
-        float PS_MAX = 30;
+        // float PS_MAX = 30;
         // go to conversion register and get bytes back
-        float rawData = getRaw(i2cBus);
+        float rawData = this->getRaw(i2cBus);
 
         // Convert data to useful information
         // Our reference voltage is 6.144V.
@@ -137,8 +138,9 @@ namespace ri2c {
         // The LSB is 3mV
         // The sensor outputs a value between 0 and 10 volts. 
         // We use a voltage divider to bring the voltage within 0-5V
-        long double ps_slope = (3e-3)*PS_MAX/5;
-        return ps_slope*rawData;
+        // long double ps_slope = (3e-3)*PS_MAX/5;
+        // return ps_slope*rawData;
+        return (3e-3)*rawData;
     }
 
     // K_TYPE definitions -------------
@@ -157,23 +159,24 @@ namespace ri2c {
         // Set FSR to 0.256 V, continuous mode, default of 1.6ksps, rest defaults
         // Outputs between -6.4 to 55 mV
         unsigned char configuration[2] = {0b10001010, 0b10000011};
-        sendConfig(i2cBus, ADS1014_CONF_REG, 2, configuration);
+        this->sendConfig(i2cBus, ADS1014_CONF_REG, 2, configuration);
     }
 
     float K_TYPE::read(int i2cBus) {
         // Do all read functions here includeing conversions to float
         // go to conversion register and get bytes back
-        float rawData = getRaw(i2cBus);
+        float rawData = this->getRaw(i2cBus);
         // Convert data to useful information
         // Our reference voltage is 0.256 V.
         // The LSB is 0.256V/2^12.
         // The LSB is 0.125mV
-        float micro_volts = 125*rawData;
-        float temperature = (float)thermocoupleConvertWithCJCompensation(micro_volts, 15); 
+
+        // I think the library is borked
+        float micro_volts = 0.125*rawData;
+        float temperature = (float)thermocoupleMvToC((unsigned long)micro_volts); 
         // Assumed ambient of 15 degrees c
 
         return temperature;
     }
-
 } // namespace ri2c
 
