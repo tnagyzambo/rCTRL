@@ -19,6 +19,8 @@
 #include <string>
 #include <sys/ioctl.h>
 #include <unistd.h>
+#include <chrono>
+#include <thread>
 
 extern "C" {
 #include <i2c/smbus.h>
@@ -35,9 +37,9 @@ namespace ri2c {
         int i2cBus;
         std::string i2cBusName;
 
-        // std::unique_ptr<PAA_7LC_30BAR> p_h2o2;
-        // std::unique_ptr<LoadcellBridge> loadcell;
-        // std::unique_ptr<M5HB_30BAR> p_chamber;
+        std::unique_ptr<PAA_7LC_30BAR> p_h2o2;
+        std::unique_ptr<LoadcellBridge> loadcell;
+        std::unique_ptr<M5HB_30BAR> p_chamber;
         std::unique_ptr<K_TYPE> t_chamber;
 
         std::unique_ptr<rdata::Logger> loggerLowSpeed;
