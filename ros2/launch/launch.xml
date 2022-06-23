@@ -67,6 +67,9 @@
   <node pkg="rstate" exec="rstate">
     <param name="config_path" value="launch/rstate_configs/config.toml"/>
   </node>
+  <node pkg="ri2c" exec="ri2c">
+    <param name="config_path" value="launch/ri2c_configs/config.toml"/>
+  </node>
   <node pkg="recu" exec="recu">
     <param name="config_path" value="launch/recu_configs/config.toml"/>
   </node>

@@ -1,0 +1,21 @@
+[data_logging]
+    [data_logging.low_speed]
+        sample_period = 20 # ms
+        logging_period = 1000 # ms
+
+    [data_logging.high_speed]
+        sample_period = 1 # ms
+
+[i2c]
+    bus = "/dev/i2c-1"
+    [i2c.ads1014.p_h2o2]
+        address = "0x48"
+
+    [i2c.ads1014.loadcell]
+        address = "0x49"
+
+    [i2c.ads1014.p_chamber]
+        address = "0x4A"
+
+    [i2c.ads1014.t_chamber]
+        address = "0x4B"
