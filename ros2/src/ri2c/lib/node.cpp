@@ -73,9 +73,12 @@ namespace ri2c {
         this->srvDataLoggingHighSpeedOn = this->create_service<ri2c_msgs::srv::HighSpeedDataLoggingAction>(
             "ri2c/hs_datalog/on",
             std::bind(&Node::callbackDataLoggingHighSpeedOn, this, std::placeholders::_1, std::placeholders::_2));
+        RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::srv::created("ri2c/hs_datalog/on").c_str());
+
         this->srvDataLoggingHighSpeedOff = this->create_service<ri2c_msgs::srv::HighSpeedDataLoggingAction>(
             "ri2c/hs_datalog/off",
             std::bind(&Node::callbackDataLoggingHighSpeedOff, this, std::placeholders::_1, std::placeholders::_2));
+        RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::srv::created("ri2c/hs_datalog/off").c_str());
 
         RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::state::active().c_str());
 
@@ -210,6 +213,7 @@ namespace ri2c {
         (void)request;
         (void)response;
         this->timerDataLoggingHighSpeed->reset();
+        RCLCPP_INFO(this->get_logger(), "High Speed Data Logging On");
     }
 
     void Node::callbackDataLoggingHighSpeedOff(
@@ -218,5 +222,6 @@ namespace ri2c {
         (void)request;
         (void)response;
         this->timerDataLoggingHighSpeed->cancel();
+        RCLCPP_INFO(this->get_logger(), "High Speed Data Logging Off");
     }
 } // namespace ri2c

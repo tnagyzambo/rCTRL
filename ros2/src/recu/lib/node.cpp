@@ -1,7 +1,5 @@
 #include <node.hpp>
-#include <recu_msgs/srv/detail/get_valve_state__struct.hpp>
-#include <rgpio/output.hpp>
-#include <sstream>
+#include <ri2c_msgs/srv/detail/high_speed_data_logging_action__struct.hpp>
 
 namespace recu {
     Node::Node() : rclcpp_lifecycle::LifecycleNode("recu") {
@@ -87,6 +85,12 @@ namespace recu {
         this->srvMV2_GetState = this->create_service<recu_msgs::srv::GetValveState>(
             "recu/mv2/get_state", std::bind(&Node::MV2_GetState, this, std::placeholders::_1, std::placeholders::_2));
         RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::srv::created("recu/mv2/get_state").c_str());
+
+        this->clHighSpeedDataLoggingOn =
+            this->create_client<ri2c_msgs::srv::HighSpeedDataLoggingAction>("ri2c/hs_datalog/on");
+
+        this->clHighSpeedDataLoggingOff =
+            this->create_client<ri2c_msgs::srv::HighSpeedDataLoggingAction>("ri2c/hs_datalog/off");
 
         RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::state::active().c_str());
 
@@ -330,8 +334,31 @@ namespace recu {
 
         if (ignitionSequenceTime >= this->ignitionSequenceOnHSDatalogging &&
             this->ignitionSequenceOnHSDatalogging >= 0ms) {
-            // SRV CALL SPECIFYING DURATION
+            try {
+                auto request = std::make_shared<ri2c_msgs::srv::HighSpeedDataLoggingAction::Request>();
+                auto result = this->clHighSpeedDataLoggingOn->async_send_request(request);
+
+                // transfer the future's shared state to a longer-lived future
+                this->pending_futures.push_back(std::move(result));
+            } catch (std::runtime_error &e) {
+                RCLCPP_ERROR(this->get_logger(), "%s", e.what());
+            }
+
             this->ignitionSequenceOnHSDatalogging = -1ms;
+        }
+
+        if (ignitionSequenceTime >= this->ignitionSequenceOffHSDatalogging &&
+            this->ignitionSequenceOffHSDatalogging >= 0ms) {
+            try {
+                auto request = std::make_shared<ri2c_msgs::srv::HighSpeedDataLoggingAction::Request>();
+                auto result = this->clHighSpeedDataLoggingOff->async_send_request(request);
+
+                // transfer the future's shared state to a longer-lived future
+                this->pending_futures.push_back(std::move(result));
+            } catch (std::runtime_error &e) {
+                RCLCPP_ERROR(this->get_logger(), "%s", e.what());
+            }
+
             this->ignitionSequenceOffHSDatalogging = -1ms;
         }
 

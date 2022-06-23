@@ -1,5 +1,6 @@
 #pragma once
 
+#include <rclcpp/client.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_lifecycle/lifecycle_node.hpp>
 #include <recu_msgs/msg/valve_state.hpp>
@@ -7,6 +8,7 @@
 #include <recu_msgs/srv/valve_action.hpp>
 #include <rgpio/input.hpp>
 #include <rgpio/output.hpp>
+#include <ri2c_msgs/srv/high_speed_data_logging_action.hpp>
 #include <rutil/fmt.hpp>
 #include <rutil/toml.hpp>
 #include <string>
@@ -26,6 +28,10 @@ namespace recu {
         ~Node();
 
     private:
+        // This is a horrible, very scary line but it should work for what we need to do
+        // https://stackoverflow.com/questions/21531096/can-i-use-stdasync-without-waiting-for-the-future-limitation
+        std::vector<rclcpp::Client<ri2c_msgs::srv::HighSpeedDataLoggingAction>::FutureAndRequestId> pending_futures;
+
         std::unique_ptr<rgpio::Output> valveBV;
         std::unique_ptr<rgpio::Output> valvePV;
         std::unique_ptr<rgpio::Output> valveMV1;
@@ -48,6 +54,9 @@ namespace recu {
         rclcpp::Service<recu_msgs::srv::ValveAction>::SharedPtr srvMV2_Open;
         rclcpp::Service<recu_msgs::srv::ValveAction>::SharedPtr srvMV2_Close;
         rclcpp::Service<recu_msgs::srv::GetValveState>::SharedPtr srvMV2_GetState;
+
+        rclcpp::Client<ri2c_msgs::srv::HighSpeedDataLoggingAction>::SharedPtr clHighSpeedDataLoggingOn;
+        rclcpp::Client<ri2c_msgs::srv::HighSpeedDataLoggingAction>::SharedPtr clHighSpeedDataLoggingOff;
 
         std::chrono::milliseconds ignitionSequenceEnd = -1ms;
         std::chrono::milliseconds ignitionSequenceOpenBV = -1ms;

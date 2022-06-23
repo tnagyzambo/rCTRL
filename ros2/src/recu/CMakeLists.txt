@@ -17,6 +17,7 @@ find_package(rdata REQUIRED)
 find_package(rgpio REQUIRED)
 find_package(rgpio_msgs REQUIRED)
 find_package(recu_msgs REQUIRED)
+find_package(ri2c_msgs REQUIRED)
 
 # rdata executable
 add_executable(${PROJECT_NAME} src/main.cpp 
@@ -33,7 +34,8 @@ ament_target_dependencies(${PROJECT_NAME} rclcpp
                                           rdata
                                           rgpio
                                           rgpio_msgs
-                                          recu_msgs)
+                                          recu_msgs
+                                          ri2c_msgs)
 
 install(TARGETS ${PROJECT_NAME}
         LIBRARY DESTINATION lib

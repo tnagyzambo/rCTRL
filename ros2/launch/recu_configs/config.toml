@@ -24,7 +24,7 @@
 
     [ignition_sequence.high_speed_data_logging]
     on = 0 # ms
-    off = 30000 # ms
+    off = 20000 # ms
 
     [ignition_sequence.end]
     end = 30000 # ms
