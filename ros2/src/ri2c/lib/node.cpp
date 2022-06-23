@@ -176,11 +176,8 @@ namespace ri2c {
     // Write to buffer
     void Node::callbackDataLoggingLowSpeed() {
         float value1 = this->p_h2o2->read(this->i2cBus);
-        std::this_thread::sleep_for(std::chrono::nanoseconds(1000000));
         float value2 = this->loadcell->read(this->i2cBus);
-        std::this_thread::sleep_for(std::chrono::nanoseconds(1000000));
         float value3 = this->p_chamber->read(this->i2cBus);
-        std::this_thread::sleep_for(std::chrono::nanoseconds(1000000));
         float value4 = this->t_chamber->read(this->i2cBus);
 
         this->loggerLowSpeed->log(fmt::format("sensor=p_h2o2 Bar={}", value1));
@@ -194,11 +191,8 @@ namespace ri2c {
 
     void Node::callbackDataLoggingHighSpeed() {
         float value1 = this->p_h2o2->read(this->i2cBus);
-        std::this_thread::sleep_for(std::chrono::nanoseconds(1000000));
         float value2 = this->loadcell->read(this->i2cBus);
-        std::this_thread::sleep_for(std::chrono::nanoseconds(1000000));
         float value3 = this->p_chamber->read(this->i2cBus);
-        std::this_thread::sleep_for(std::chrono::nanoseconds(1000000));
         float value4 = this->t_chamber->read(this->i2cBus);
 
         this->loggerHighSpeed->log(fmt::format("sensor=p_h2o2 Bar={}", value1));

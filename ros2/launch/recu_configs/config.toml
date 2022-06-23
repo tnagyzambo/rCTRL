@@ -32,35 +32,35 @@
 [gpio]
     [gpio.valveBV]
     chipNumber = 0
-    lineNumber = 21
+    lineNumber = 27
     sim = false
     mode = "output"
     defaultLevel = 0
 
     [gpio.valvePV]
     chipNumber = 0
-    lineNumber = 26
+    lineNumber = 22
     sim = false
     mode = "output"
     defaultLevel = 0
 
     [gpio.valveMV1]
     chipNumber = 0
-    lineNumber = 20
+    lineNumber = 23
     sim = false
     mode = "output"
     defaultLevel = 0
 
     [gpio.valveMV2]
     chipNumber = 0
-    lineNumber = 19
+    lineNumber = 24
     sim = false
     mode = "output"
     defaultLevel = 0
 
     [gpio.pyro]
     chipNumber = 0
-    lineNumber = 16
+    lineNumber = 17
     sim = false
     mode = "output"
     defaultLevel = 0

@@ -57,7 +57,7 @@ namespace ri2c {
             throw except::i2c_error(error);
         }
 
-        //Set FSR to 6.144 V, continuous mode, default of 1.6ksps, rest defaults
+        //Set FSR to 6.144 V, continuous mode, 3.3ksps, rest defaults
         unsigned char configuration[2] = {0b10000000, 0b10000011};
         this->sendConfig(i2cBus, ADS1014_CONF_REG, 2, configuration);
     }
@@ -91,7 +91,7 @@ namespace ri2c {
             throw except::i2c_error(error);
         }
 
-        //Set FSR to 6.144 V, continuous mode, default of 1.6ksps, rest defaults
+        //Set FSR to 6.144 V, continuous mode, 1.6ksps, rest defaults
         unsigned char configuration[2] = {0b10000000, 0b10000011};
         this->sendConfig(i2cBus, ADS1014_CONF_REG, 2, configuration);
     }
@@ -126,14 +126,14 @@ namespace ri2c {
             throw except::i2c_error(error);
         }
 
-        //Set FSR to 6.144 V, continuous mode, default of 1.6ksps, rest defaults
+        //Set FSR to 6.144 V, continuous mode, 1.6ksps, rest defaults
         unsigned char configuration[2] = {0b10000000, 0b10000011};
         this->sendConfig(i2cBus, ADS1014_CONF_REG, 2, configuration);
     }
 
     float M5HB_30BAR::read(int i2cBus) {
         // Do all read functions here includeing conversions to float
-        // float PS_MAX = 30;
+        float PS_MAX = 30;
         // go to conversion register and get bytes back
         float rawData = this->getRaw(i2cBus);
 
@@ -143,9 +143,9 @@ namespace ri2c {
         // The LSB is 3mV
         // The sensor outputs a value between 0 and 10 volts. 
         // We use a voltage divider to bring the voltage within 0-5V
-        // long double ps_slope = (3e-3)*PS_MAX/5;
-        // return ps_slope*rawData;
-        return (3.0e-3)*rawData;
+        long double ps_slope = (3.0e-3)*PS_MAX/5.0; //at 10V 
+        return ps_slope*rawData;
+
     }
 
     // K_TYPE definitions -------------
@@ -161,7 +161,7 @@ namespace ri2c {
             throw except::i2c_error(error);
         }
 
-        // Set FSR to 0.256 V, continuous mode, default of 1.6ksps, rest defaults
+        // Set FSR to 0.256 V, continuous mode, 1.6ksps, rest defaults
         // Outputs between -6.4 to 55 mV
         unsigned char configuration[2] = {0b10001010, 0b10000011};
         this->sendConfig(i2cBus, ADS1014_CONF_REG, 2, configuration);
@@ -182,8 +182,8 @@ namespace ri2c {
         // Assumed ambient of 15 degrees c
 
 
-        //Just output mV for now
-        return 0.125*rawData;
+        //Just output V for now
+        return (0.125e-3)*rawData;
     }
 } // namespace ri2c
 
