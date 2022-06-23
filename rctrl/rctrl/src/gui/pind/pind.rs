@@ -1,4 +1,4 @@
-use crate::gui::{App, FireButton, RStatePanel, ValveControl};
+use crate::gui::{AbortButton, App, FireButton, RStatePanel, ValveControl};
 use crate::ws_lock::WsLock;
 use eframe::{egui, epi};
 use rctrl_rosbridge::rstate_msgs::msg::NetworkState;
@@ -24,6 +24,7 @@ pub struct PInD {
     valve_control_mv2: ValveControl,
     valve_control_esv: ValveControl,
     valve_control_pv: ValveControl,
+    abort_button: AbortButton,
     fire_button: FireButton,
 }
 
@@ -38,6 +39,7 @@ impl PInD {
             valve_control_esv: ValveControl::new(ws_lock, "bv".to_string(), "BV".to_string()),
             valve_control_pv: ValveControl::new(ws_lock, "pv".to_string(), "PV".to_string()),
             fire_button: FireButton::new(ws_lock),
+            abort_button: AbortButton::new(ws_lock),
         }
     }
 }
@@ -76,6 +78,7 @@ impl epi::App for PInD {
             valve_control_esv,
             valve_control_pv,
             fire_button,
+            abort_button,
         } = self;
 
         egui::CentralPanel::default().show(ctx, |ui| {
@@ -96,8 +99,10 @@ impl epi::App for PInD {
             egui::Area::new("pnid_overlay").fixed_pos(egui::pos2(32.0, 32.0)).show(ctx, |ui| {
                 ui.horizontal(|ui| {
                     let rstate_panel = self.rstate_panel.draw(ctx, ui);
-                    ui.add_space(580.0);
+                    ui.add_space(460.0);
                     self.fire_button.draw(ctx, ui);
+                    ui.add_space(20.0);
+                    self.abort_button.draw(ctx, ui);
                 });
 
                 ui.add_space(50.0);
@@ -107,6 +112,7 @@ impl epi::App for PInD {
                     ui.add_space(200.0);
                     self.valve_control_pv.draw(ctx, ui);
                 });
+
                 ui.add_space(220.0);
                 ui.horizontal(|ui| {
                     ui.add_space(240.0);

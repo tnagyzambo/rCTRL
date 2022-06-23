@@ -1,3 +1,4 @@
+mod abort_button;
 mod fire_button;
 mod gui;
 mod gui_elem;
@@ -7,6 +8,7 @@ mod pind;
 mod rstate;
 mod valve_control;
 
+use abort_button::AbortButton;
 use fire_button::FireButton;
 pub use gui::App;
 pub use gui::Gui;

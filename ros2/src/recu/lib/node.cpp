@@ -38,6 +38,10 @@ namespace recu {
             "recu/fire", std::bind(&Node::IgnitionSequence, this, std::placeholders::_1, std::placeholders::_2));
         RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::srv::created("recu/fire").c_str());
 
+        this->srvAbort = this->create_service<recu_msgs::srv::ValveAction>(
+            "recu/abort", std::bind(&Node::Abort, this, std::placeholders::_1, std::placeholders::_2));
+        RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::srv::created("recu/abort").c_str());
+
         this->srvBV_Open = this->create_service<recu_msgs::srv::ValveAction>(
             "recu/bv/open", std::bind(&Node::BV_Open, this, std::placeholders::_1, std::placeholders::_2));
         RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::srv::created("recu/bv/open").c_str());
@@ -400,6 +404,31 @@ namespace recu {
         RCLCPP_WARN(this->get_logger(), "FIRING!!!");
         this->ignitionSequenceStartTime = std::chrono::high_resolution_clock::now();
         this->ignitionSequenceTimer->reset();
+    }
+
+    void Node::Abort(const std::shared_ptr<recu_msgs::srv::ValveAction::Request> request,
+                     std::shared_ptr<recu_msgs::srv::ValveAction::Response> response) {
+        (void)request;
+        (void)response;
+
+        RCLCPP_WARN(this->get_logger(), "ABORTING!!!");
+        this->valveBV->write(rgpio::gpio::line_level::LOW);
+        this->valvePV->write(rgpio::gpio::line_level::LOW);
+        this->valveMV1->write(rgpio::gpio::line_level::LOW);
+        this->valveMV2->write(rgpio::gpio::line_level::LOW);
+        this->pyro->write(rgpio::gpio::line_level::LOW);
+
+        this->ignitionSequenceTimer->cancel();
+
+        try {
+            auto request = std::make_shared<ri2c_msgs::srv::HighSpeedDataLoggingAction::Request>();
+            auto result = this->clHighSpeedDataLoggingOff->async_send_request(request);
+
+            // transfer the future's shared state to a longer-lived future
+            this->pending_futures.push_back(std::move(result));
+        } catch (std::runtime_error &e) {
+            RCLCPP_ERROR(this->get_logger(), "%s", e.what());
+        }
     }
 
     void Node::BV_Open(const std::shared_ptr<recu_msgs::srv::ValveAction::Request> request,

@@ -43,7 +43,7 @@ impl FireButton {
             let visuals = ui.style().interact_selectable(&response, false);
 
             let rect = rect.expand(visuals.expansion);
-            let bg_color = egui::Color32::from_rgb(131, 44, 4);
+            let bg_color = egui::Color32::from_rgb(27, 131, 4);
             let text_color = egui::Color32::BLACK;
             let outline_stroke = egui::Stroke::new(0.0, egui::Color32::BLACK);
 

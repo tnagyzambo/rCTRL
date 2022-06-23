@@ -42,6 +42,7 @@ namespace recu {
         std::chrono::high_resolution_clock::time_point ignitionSequenceStartTime;
 
         rclcpp::Service<recu_msgs::srv::ValveAction>::SharedPtr srvIgnitionSequence;
+        rclcpp::Service<recu_msgs::srv::ValveAction>::SharedPtr srvAbort;
         rclcpp::Service<recu_msgs::srv::ValveAction>::SharedPtr srvBV_Open;
         rclcpp::Service<recu_msgs::srv::ValveAction>::SharedPtr srvBV_Close;
         rclcpp::Service<recu_msgs::srv::GetValveState>::SharedPtr srvBV_GetState;
@@ -91,6 +92,8 @@ namespace recu {
 
         void IgnitionSequence(const std::shared_ptr<recu_msgs::srv::ValveAction::Request>,
                               std::shared_ptr<recu_msgs::srv::ValveAction::Response>);
+        void Abort(const std::shared_ptr<recu_msgs::srv::ValveAction::Request>,
+                   std::shared_ptr<recu_msgs::srv::ValveAction::Response>);
         void BV_Open(const std::shared_ptr<recu_msgs::srv::ValveAction::Request>,
                      std::shared_ptr<recu_msgs::srv::ValveAction::Response>);
         void BV_Close(const std::shared_ptr<recu_msgs::srv::ValveAction::Request>,
