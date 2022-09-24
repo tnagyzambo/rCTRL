@@ -44,11 +44,7 @@ namespace ri2c {
         return (float)out;
     }
 
-    // PAA_7LC_30BAR definitions -----------------------------------
-    PAA_7LC_30BAR::PAA_7LC_30BAR(::toml::node_view<::toml::node> toml) : ADS1014(toml){}
-    PAA_7LC_30BAR::~PAA_7LC_30BAR(){}
-
-    void PAA_7LC_30BAR::init(int i2cBus) {
+    void ADS1014::init(int i2cBus) {
         // Do all init functions here
         // If they are not the same for each sensor, make this function virtual and implement in unique superclasses that inherit ADS1014
         if (ioctl(i2cBus, I2C_SLAVE, this->address) < 0) {
@@ -57,10 +53,14 @@ namespace ri2c {
             throw except::i2c_error(error);
         }
 
-        //Set FSR to 6.144 V, continuous mode, 3.3ksps, rest defaults
-        unsigned char configuration[2] = {0b10000000, 0b10000011};
+        //Read config from toml and write to config register
+        unsigned char configuration[2] = {this->conf0, this->conf1};
         this->sendConfig(i2cBus, ADS1014_CONF_REG, 2, configuration);
     }
+
+    // PAA_7LC_30BAR definitions -----------------------------------
+    PAA_7LC_30BAR::PAA_7LC_30BAR(::toml::node_view<::toml::node> toml) : ADS1014(toml){}
+    PAA_7LC_30BAR::~PAA_7LC_30BAR(){}
 
     float PAA_7LC_30BAR::read(int i2cBus) {
         // Do all read functions here includeing conversions to float
@@ -80,21 +80,6 @@ namespace ri2c {
     // LoadcellBridge definitions ----------------
     LoadcellBridge::LoadcellBridge(::toml::node_view<::toml::node> toml) : ADS1014(toml){}
     LoadcellBridge::~LoadcellBridge(){}
-
-
-    void LoadcellBridge::init(int i2cBus) {
-        // Do all init functions here
-        // If they are not the same for each sensor, make this function virtual and implement in unique superclasses that inherit ADS1014
-        if (ioctl(i2cBus, I2C_SLAVE, this->address) < 0) {
-            std::string error = fmt::format("Failed to set i2c slave at address '0x{:x}'", this->address);
-
-            throw except::i2c_error(error);
-        }
-
-        //Set FSR to 6.144 V, continuous mode, 1.6ksps, rest defaults
-        unsigned char configuration[2] = {0b10000000, 0b10000011};
-        this->sendConfig(i2cBus, ADS1014_CONF_REG, 2, configuration);
-    }
 
     float LoadcellBridge::read(int i2cBus) {
         // Do all read functions here includeing conversions to float
@@ -117,19 +102,6 @@ namespace ri2c {
     M5HB_30BAR::M5HB_30BAR(::toml::node_view<::toml::node> toml) : ADS1014(toml){}
     M5HB_30BAR::~M5HB_30BAR(){}
 
-    void M5HB_30BAR::init(int i2cBus) {
-        // Do all init functions here
-        // If they are not the same for each sensor, make this function virtual and implement in unique superclasses that inherit ADS1014
-        if (ioctl(i2cBus, I2C_SLAVE, this->address) < 0) {
-            std::string error = fmt::format("Failed to set i2c slave at address '0x{:x}'", this->address);
-
-            throw except::i2c_error(error);
-        }
-
-        //Set FSR to 6.144 V, continuous mode, 1.6ksps, rest defaults
-        unsigned char configuration[2] = {0b10000000, 0b10000011};
-        this->sendConfig(i2cBus, ADS1014_CONF_REG, 2, configuration);
-    }
 
     float M5HB_30BAR::read(int i2cBus) {
         // Do all read functions here includeing conversions to float
@@ -151,21 +123,6 @@ namespace ri2c {
     // K_TYPE definitions -------------
     K_TYPE::K_TYPE(::toml::node_view<::toml::node> toml) : ADS1014(toml){}
     K_TYPE::~K_TYPE(){}
-
-    void K_TYPE::init(int i2cBus) {
-        // Do all init functions here
-        // If they are not the same for each sensor, make this function virtual and implement in unique superclasses that inherit ADS1014
-        if (ioctl(i2cBus, I2C_SLAVE, this->address) < 0) {
-            std::string error = fmt::format("Failed to set i2c slave at address '0x{:x}'", this->address);
-
-            throw except::i2c_error(error);
-        }
-
-        // Set FSR to 0.256 V, continuous mode, 1.6ksps, rest defaults
-        // Outputs between -6.4 to 55 mV
-        unsigned char configuration[2] = {0b10001010, 0b10000011};
-        this->sendConfig(i2cBus, ADS1014_CONF_REG, 2, configuration);
-    }
 
     float K_TYPE::read(int i2cBus) {
         // Do all read functions here includeing conversions to float

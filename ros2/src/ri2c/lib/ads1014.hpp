@@ -26,10 +26,12 @@ namespace ri2c {
 
         void sendConfig(int, int, int, unsigned char*);
         float getRaw(int);
+        void init(int);
 
         int address;
+        int conf0;
+        int conf1;
 
-        virtual void init(int)  = 0;
         virtual float read(int) = 0;
 
     private:
@@ -40,7 +42,6 @@ namespace ri2c {
         PAA_7LC_30BAR(::toml::node_view<::toml::node>);
         ~PAA_7LC_30BAR();
 
-        void init(int) override final;
         float read(int) override final;
     private:
     };
@@ -50,7 +51,6 @@ namespace ri2c {
         LoadcellBridge(::toml::node_view<::toml::node>);
         ~LoadcellBridge();
 
-        void init(int) override final;
         float read(int) override final;
     private:
     };
@@ -60,7 +60,6 @@ namespace ri2c {
         M5HB_30BAR(::toml::node_view<::toml::node>);
         ~M5HB_30BAR();
 
-        void init(int) override final;
         float read(int) override final;
     private:
     };
@@ -70,7 +69,6 @@ namespace ri2c {
         K_TYPE(::toml::node_view<::toml::node>);
         ~K_TYPE();
 
-        void init(int) override final;
         float read(int) override final;
     private:
     };
