@@ -29,5 +29,5 @@
         conf1 = "0b10000011"
 
 [pressureControl]
-    pressureSetPoint = "20" #bar
+    pressureSetPoint = 20 #bar
     pressureControlPeriod = 5 #ms

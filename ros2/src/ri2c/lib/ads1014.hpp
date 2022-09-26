@@ -31,6 +31,7 @@ namespace ri2c {
         int address;
         int conf0;
         int conf1;
+        double LSB;
 
         virtual float read(int) = 0;
 
