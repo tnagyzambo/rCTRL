@@ -73,6 +73,19 @@ namespace recu {
         std::chrono::milliseconds ignitionSequenceOnHSDatalogging = -1ms;
         std::chrono::milliseconds ignitionSequenceOffHSDatalogging = -1ms;
 
+        bool ignitionSequenceOpenBVTriggered = false;
+        bool ignitionSequenceCloseBVTriggered = false;
+        bool ignitionSequenceOpenPVTriggered = false;
+        bool ignitionSequenceClosePVTriggered = false;
+        bool ignitionSequenceOpenMV1Triggered = false;
+        bool ignitionSequenceCloseMV1Triggered = false;
+        bool ignitionSequenceOpenMV2Triggered = false;
+        bool ignitionSequenceCloseMV2Triggered = false;
+        bool ignitionSequenceOnIgnitorTriggered = false;
+        bool ignitionSequenceOffIgnitorTriggered = false;
+        bool ignitionSequenceOnHSDataloggingTriggered = false;
+        bool ignitionSequenceOffHSDataloggingTriggered = false;
+
         rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_configure(
             const rclcpp_lifecycle::State &);
         rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_activate(

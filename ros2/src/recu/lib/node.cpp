@@ -246,98 +246,108 @@ namespace recu {
         std::chrono::milliseconds ignitionSequenceTime = std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::high_resolution_clock::now() - this->ignitionSequenceStartTime);
 
-        if (ignitionSequenceTime >= this->ignitionSequenceOpenBV && this->ignitionSequenceOpenBV >= 0ms) {
+        if (ignitionSequenceTime >= this->ignitionSequenceOpenBV && this->ignitionSequenceOpenBV >= 0ms &&
+            !this->ignitionSequenceOpenBVTriggered) {
             try {
                 this->valveBV->write(rgpio::gpio::line_level::HIGH);
             } catch (rgpio::except::gpio_error &e) {
                 RCLCPP_ERROR(this->get_logger(), "%s", e.what());
             }
-            this->ignitionSequenceOpenBV = -1ms;
+            this->ignitionSequenceOpenBVTriggered = true;
         }
 
-        if (ignitionSequenceTime >= this->ignitionSequenceCloseBV && this->ignitionSequenceCloseBV >= 0ms) {
+        if (ignitionSequenceTime >= this->ignitionSequenceCloseBV && this->ignitionSequenceCloseBV >= 0ms &&
+            !this->ignitionSequenceCloseBVTriggered) {
             try {
                 this->valveBV->write(rgpio::gpio::line_level::LOW);
             } catch (rgpio::except::gpio_error &e) {
                 RCLCPP_ERROR(this->get_logger(), "%s", e.what());
             }
-            this->ignitionSequenceCloseBV = -1ms;
+            this->ignitionSequenceCloseBVTriggered = true;
         }
 
-        if (ignitionSequenceTime >= this->ignitionSequenceOpenPV && this->ignitionSequenceOpenPV >= 0ms) {
+        if (ignitionSequenceTime >= this->ignitionSequenceOpenPV && this->ignitionSequenceOpenPV >= 0ms &&
+            !this->ignitionSequenceOpenPVTriggered) {
             try {
                 this->valvePV->write(rgpio::gpio::line_level::HIGH);
             } catch (rgpio::except::gpio_error &e) {
                 RCLCPP_ERROR(this->get_logger(), "%s", e.what());
             }
-            this->ignitionSequenceOpenPV = -1ms;
+            this->ignitionSequenceOpenPVTriggered = true;
         }
 
-        if (ignitionSequenceTime >= this->ignitionSequenceClosePV && this->ignitionSequenceClosePV >= 0ms) {
+        if (ignitionSequenceTime >= this->ignitionSequenceClosePV && this->ignitionSequenceClosePV >= 0ms &&
+            !this->ignitionSequenceClosePVTriggered) {
             try {
                 this->valvePV->write(rgpio::gpio::line_level::LOW);
             } catch (rgpio::except::gpio_error &e) {
                 RCLCPP_ERROR(this->get_logger(), "%s", e.what());
             }
-            this->ignitionSequenceClosePV = -1ms;
+            this->ignitionSequenceClosePVTriggered = true;
         }
 
-        if (ignitionSequenceTime >= this->ignitionSequenceOpenMV1 && this->ignitionSequenceOpenMV1 >= 0ms) {
+        if (ignitionSequenceTime >= this->ignitionSequenceOpenMV1 && this->ignitionSequenceOpenMV1 >= 0ms &&
+            !this->ignitionSequenceOpenMV1Triggered) {
             try {
                 this->valveMV1->write(rgpio::gpio::line_level::HIGH);
             } catch (rgpio::except::gpio_error &e) {
                 RCLCPP_ERROR(this->get_logger(), "%s", e.what());
             }
-            this->ignitionSequenceOpenMV1 = -1ms;
+            this->ignitionSequenceOpenMV1Triggered = true;
         }
 
-        if (ignitionSequenceTime >= this->ignitionSequenceCloseMV1 && this->ignitionSequenceCloseMV1 >= 0ms) {
+        if (ignitionSequenceTime >= this->ignitionSequenceCloseMV1 && this->ignitionSequenceCloseMV1 >= 0ms &&
+            !this->ignitionSequenceCloseMV1Triggered) {
             try {
                 this->valveMV1->write(rgpio::gpio::line_level::LOW);
             } catch (rgpio::except::gpio_error &e) {
                 RCLCPP_ERROR(this->get_logger(), "%s", e.what());
             }
-            this->ignitionSequenceCloseMV1 = -1ms;
+            this->ignitionSequenceCloseMV1Triggered = true;
         }
 
-        if (ignitionSequenceTime >= this->ignitionSequenceOpenMV2 && this->ignitionSequenceOpenMV2 >= 0ms) {
+        if (ignitionSequenceTime >= this->ignitionSequenceOpenMV2 && this->ignitionSequenceOpenMV2 >= 0ms &&
+            !this->ignitionSequenceOpenMV2Triggered) {
             try {
                 this->valveMV2->write(rgpio::gpio::line_level::HIGH);
             } catch (rgpio::except::gpio_error &e) {
                 RCLCPP_ERROR(this->get_logger(), "%s", e.what());
             }
-            this->ignitionSequenceOpenMV2 = -1ms;
+            this->ignitionSequenceOpenMV2Triggered = true;
         }
 
-        if (ignitionSequenceTime >= this->ignitionSequenceCloseMV2 && this->ignitionSequenceCloseMV2 >= 0ms) {
+        if (ignitionSequenceTime >= this->ignitionSequenceCloseMV2 && this->ignitionSequenceCloseMV2 >= 0ms &&
+            !this->ignitionSequenceCloseMV2Triggered) {
             try {
                 this->valveMV2->write(rgpio::gpio::line_level::LOW);
             } catch (rgpio::except::gpio_error &e) {
                 RCLCPP_ERROR(this->get_logger(), "%s", e.what());
             }
-            this->ignitionSequenceCloseMV2 = -1ms;
+            this->ignitionSequenceCloseMV2Triggered = true;
         }
 
-        if (ignitionSequenceTime >= this->ignitionSequenceOnIgnitor && this->ignitionSequenceOnIgnitor >= 0ms) {
+        if (ignitionSequenceTime >= this->ignitionSequenceOnIgnitor && this->ignitionSequenceOnIgnitor >= 0ms &&
+            !this->ignitionSequenceOnIgnitorTriggered) {
             try {
                 this->pyro->write(rgpio::gpio::line_level::HIGH);
             } catch (rgpio::except::gpio_error &e) {
                 RCLCPP_ERROR(this->get_logger(), "%s", e.what());
             }
-            this->ignitionSequenceOnIgnitor = -1ms;
+            this->ignitionSequenceOnIgnitorTriggered = true;
         }
 
-        if (ignitionSequenceTime >= this->ignitionSequenceOffIgnitor && this->ignitionSequenceOffIgnitor >= 0ms) {
+        if (ignitionSequenceTime >= this->ignitionSequenceOffIgnitor && this->ignitionSequenceOffIgnitor >= 0ms &&
+            !this->ignitionSequenceOffIgnitorTriggered) {
             try {
                 this->pyro->write(rgpio::gpio::line_level::LOW);
             } catch (rgpio::except::gpio_error &e) {
                 RCLCPP_ERROR(this->get_logger(), "%s", e.what());
             }
-            this->ignitionSequenceOffIgnitor = -1ms;
+            this->ignitionSequenceOffIgnitorTriggered = true;
         }
 
         if (ignitionSequenceTime >= this->ignitionSequenceOnHSDatalogging &&
-            this->ignitionSequenceOnHSDatalogging >= 0ms) {
+            this->ignitionSequenceOnHSDatalogging >= 0ms && !this->ignitionSequenceOnHSDataloggingTriggered) {
             try {
                 auto request = std::make_shared<ri2c_msgs::srv::HighSpeedDataLoggingAction::Request>();
                 auto result = this->clHighSpeedDataLoggingOn->async_send_request(request);
@@ -347,12 +357,11 @@ namespace recu {
             } catch (std::runtime_error &e) {
                 RCLCPP_ERROR(this->get_logger(), "%s", e.what());
             }
-
-            this->ignitionSequenceOnHSDatalogging = -1ms;
+            this->ignitionSequenceOnHSDataloggingTriggered = true;
         }
 
         if (ignitionSequenceTime >= this->ignitionSequenceOffHSDatalogging &&
-            this->ignitionSequenceOffHSDatalogging >= 0ms) {
+            this->ignitionSequenceOffHSDatalogging >= 0ms && !this->ignitionSequenceOffHSDataloggingTriggered) {
             try {
                 auto request = std::make_shared<ri2c_msgs::srv::HighSpeedDataLoggingAction::Request>();
                 auto result = this->clHighSpeedDataLoggingOff->async_send_request(request);
@@ -363,11 +372,10 @@ namespace recu {
                 RCLCPP_ERROR(this->get_logger(), "%s", e.what());
             }
 
-            this->ignitionSequenceOffHSDatalogging = -1ms;
+            this->ignitionSequenceOffHSDataloggingTriggered = true;
         }
 
         if (ignitionSequenceTime >= this->ignitionSequenceEnd) {
-            this->ignitionSequenceEnd = -1ms;
             this->ignitionSequenceTimer->cancel();
             RCLCPP_INFO(this->get_logger(), "Ignition sequence over");
         }
