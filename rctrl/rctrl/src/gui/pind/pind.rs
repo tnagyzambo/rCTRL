@@ -34,10 +34,10 @@ impl PInD {
             ws_lock: Rc::clone(&ws_lock),
             rstate_panel: RStatePanel::new(ws_lock),
             texture: None,
-            valve_control_mv1: ValveControl::new(ws_lock, "mv1".to_string(), "MV1".to_string()),
-            valve_control_mv2: ValveControl::new(ws_lock, "mv2".to_string(), "MV2".to_string()),
-            valve_control_esv: ValveControl::new(ws_lock, "bv".to_string(), "BV".to_string()),
-            valve_control_pv: ValveControl::new(ws_lock, "pv".to_string(), "PV".to_string()),
+            valve_control_mv1: ValveControl::new(ws_lock, "recu/mv1".to_string(), "MV1".to_string()),
+            valve_control_mv2: ValveControl::new(ws_lock, "recu/mv2".to_string(), "MV2".to_string()),
+            valve_control_esv: ValveControl::new(ws_lock, "recu/bv".to_string(), "BV".to_string()),
+            valve_control_pv: ValveControl::new(ws_lock, "ri2c/p_control".to_string(), "PV".to_string()),
             fire_button: FireButton::new(ws_lock),
             abort_button: AbortButton::new(ws_lock),
         }
@@ -165,7 +165,7 @@ impl App for PInD {
             self.ws_lock.add_ws_write(serde_json::to_string(&cmd).unwrap());
 
             // Request valve state
-            let topic = "/recu/pv/get_state";
+            let topic = "/ri2c/p_control/get_state";
             let cmd = rctrl_rosbridge::protocol::CallService::<u8>::new(&topic);
             self.ws_lock.add_ws_write(serde_json::to_string(&cmd).unwrap());
         }

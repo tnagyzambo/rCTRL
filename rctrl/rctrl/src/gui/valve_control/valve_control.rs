@@ -36,29 +36,29 @@ impl ValveControl {
                 match state_display_lock.state {
                     ValveState::Closed => {
                         if ui.button("Open").clicked() {
-                            let service = format!("/recu/{}/open", self.valve_name.to_owned());
+                            let service = format!("/{}/open", self.valve_name.to_owned());
                             let cmd = rctrl_rosbridge::protocol::CallService::<u8>::new(&service);
                             self.ws_lock.add_ws_write(serde_json::to_string(&cmd).unwrap());
 
-                            let service = format!("/recu/{}/get_state", self.valve_name.to_owned());
+                            let service = format!("/{}/get_state", self.valve_name.to_owned());
                             let cmd = rctrl_rosbridge::protocol::CallService::<u8>::new(&service);
                             self.ws_lock.add_ws_write(serde_json::to_string(&cmd).unwrap());
                         }
                     }
                     ValveState::Open => {
                         if ui.button("Close").clicked() {
-                            let service = format!("/recu/{}/close", self.valve_name.to_owned());
+                            let service = format!("/{}/close", self.valve_name.to_owned());
                             let cmd = rctrl_rosbridge::protocol::CallService::<u8>::new(&service);
                             self.ws_lock.add_ws_write(serde_json::to_string(&cmd).unwrap());
 
-                            let service = format!("/recu/{}/get_state", self.valve_name.to_owned());
+                            let service = format!("/{}/get_state", self.valve_name.to_owned());
                             let cmd = rctrl_rosbridge::protocol::CallService::<u8>::new(&service);
                             self.ws_lock.add_ws_write(serde_json::to_string(&cmd).unwrap());
                         }
                     }
                     ValveState::Unknown => {
                         if ui.button("🔄").clicked() {
-                            let service = format!("/recu/{}/get_state", self.valve_name.to_owned());
+                            let service = format!("/{}/get_state", self.valve_name.to_owned());
                             let cmd = rctrl_rosbridge::protocol::CallService::<u8>::new(&service);
                             self.ws_lock.add_ws_write(serde_json::to_string(&cmd).unwrap());
                         }
