@@ -9,7 +9,7 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 rctrl_rosbridge = { path = "../rctrl_rosbridge" }
 
-wasm-bindgen = "0.2.79"
+wasm-bindgen = "0.2.83"
 eframe = "0.17.0"
 syntect = { version = "4.6.0", default-features = false, features = ["default-fancy"] }
 

@@ -377,6 +377,18 @@ namespace recu {
 
         if (ignitionSequenceTime >= this->ignitionSequenceEnd) {
             this->ignitionSequenceTimer->cancel();
+            this->ignitionSequenceOpenBVTriggered = false;
+            this->ignitionSequenceCloseBVTriggered = false;
+            this->ignitionSequenceOpenPVTriggered = false;
+            this->ignitionSequenceClosePVTriggered = false;
+            this->ignitionSequenceOpenMV1Triggered = false;
+            this->ignitionSequenceCloseMV1Triggered = false;
+            this->ignitionSequenceOpenMV2Triggered = false;
+            this->ignitionSequenceCloseMV2Triggered = false;
+            this->ignitionSequenceOnIgnitorTriggered = false;
+            this->ignitionSequenceOffIgnitorTriggered = false;
+            this->ignitionSequenceOnHSDataloggingTriggered = false;
+            this->ignitionSequenceOffHSDataloggingTriggered = false;
             RCLCPP_INFO(this->get_logger(), "Ignition sequence over");
         }
     }
