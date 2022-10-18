@@ -90,13 +90,14 @@ namespace ri2c {
         RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::srv::created("ri2c/p_control/open").c_str());
 
         this->srvPresControlOff = this->create_service<ri2c_msgs::srv::PresControlLoopAction>(
-            "ri2c/p_control/closed",
+            "ri2c/p_control/close",
             std::bind(&Node::callbackPresControlOff, this, std::placeholders::_1, std::placeholders::_2));
-        RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::srv::created("ri2c/p_control/closed").c_str());
-        
-        this->PresControlState = false;
+        RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::srv::created("ri2c/p_control/close").c_str());
+
+        this->presControlState = false;
         this->srvPresControlGetState = this->create_service<ri2c_msgs::srv::GetValveState>(
-            "ri2c/p_control/get_state", std::bind(&Node::PresControl_GetState, this, std::placeholders::_1, std::placeholders::_2));
+            "ri2c/p_control/get_state",
+            std::bind(&Node::PresControl_GetState, this, std::placeholders::_1, std::placeholders::_2));
         RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::srv::created("ri2c/p_control/get_state").c_str());
 
         this->clPV_Open = this->create_client<recu_msgs::srv::ValveAction>("recu/pv/open");
@@ -212,9 +213,9 @@ namespace ri2c {
             // Read pressure control configuration settings
             auto pressureControlView = rutil::toml::viewOfTable(tomlView, "pressureControl");
 
-            this->pressureControlLoopRate =
-                std::chrone::milliseconds(rutil::toml::getTomlEntryByKey<int>(pressureControlView, "pressureControlPeriod"));
-            this->pressureSetPoint = (float)rutil::tomlgetTomlByKey<int>(pressureControlView, "PressureSetPoint");
+            this->pressureControlLoopRate = std::chrono::milliseconds(
+                rutil::toml::getTomlEntryByKey<int>(pressureControlView, "pressureControlPeriod"));
+            this->pressureSetPoint = (float)rutil::toml::getTomlEntryByKey<int>(pressureControlView, "pressureSetPoint");
             this->lastPressureControlCommand = false;
 
         } catch (rutil::except::toml_parse_error &e) {
@@ -268,23 +269,23 @@ namespace ri2c {
         RCLCPP_INFO(this->get_logger(), "High Speed Data Logging Off");
     }
 
-    void Node::callbackPresControlOn(
-        const std::shared_ptr<ri2c_msgs::srv::PresControlLoopAction::Request> request,
-        std::shared_ptr<ri2c_msgs::srv::PresControlLoopAction::Response> response) {
+    void Node::callbackPresControlOn(const std::shared_ptr<ri2c_msgs::srv::PresControlLoopAction::Request> request,
+                                     std::shared_ptr<ri2c_msgs::srv::PresControlLoopAction::Response> response) {
         (void)request;
         (void)response;
         // Turn on control loop timer
         this->timerPressureControlLoop->reset();
-        this->PresControlState = true;
+        this->presControlState = true;
+        this->lastPressureControlCommand = false;
     }
 
-    void Node::callbackPresControlOff(
-        const std::shared_ptr<ri2c_msgs::srv::PresControlLoopAction::Request> request,
-        std::shared_ptr<ri2c_msgs::srv::PresControlLoopAction::Response> response) {
+    void Node::callbackPresControlOff(const std::shared_ptr<ri2c_msgs::srv::PresControlLoopAction::Request> request,
+                                      std::shared_ptr<ri2c_msgs::srv::PresControlLoopAction::Response> response) {
         (void)request;
         (void)response;
         // Turn off control loop timer and close valve
-        this->PresControlState = false;
+        this->presControlState = false;
+        this->lastPressureControlCommand = false;
         this->timerPressureControlLoop->cancel();
         // Close PV Valve
         try {
@@ -297,17 +298,15 @@ namespace ri2c {
     }
 
     void Node::PresControl_GetState(const std::shared_ptr<ri2c_msgs::srv::GetValveState::Request> request,
-                            std::shared_ptr<ri2c_msgs::srv::GetValveState::Response> response) {
+                                    std::shared_ptr<ri2c_msgs::srv::GetValveState::Response> response) {
         (void)request;
 
-        *response = createValveStateResponse(this->PresControlState);
-
+        *response = createValveStateResponse(this->presControlState);
     }
 
-
-    void Node::calbackPressureControlLoop() {
+    void Node::callbackPressureControlLoop() {
         float pressureTank = this->p_h2o2->read(this->i2cBus);
-        float pressureE = PressureSetPoint - tank_pressure; // Create error signal
+        float pressureE = this->pressureSetPoint - pressureTank; // Create error signal
 
         // If pressure is lower than set point
         // AND the last command sent was to turn the valve off (false)
@@ -320,10 +319,10 @@ namespace ri2c {
             } catch (std::runtime_error &e) {
                 RCLCPP_ERROR(this->get_logger(), "%s", e.what());
             }
+            this->lastPressureControlCommand = true;
+            RCLCPP_INFO(this->get_logger(), "Powered pressurization valve. PE: %f", pressureE);
 
-            RCLCPP_INFO(this->get_logger(), "Powered pressurization valve. PE: " + std::to_string(pressureE));
-
-        } else if (pressureE < 0 && this->lastpressureControlCommand) {
+        } else if (pressureE < 0 && this->lastPressureControlCommand) {
             // Request to close PV
             try {
                 auto request = std::make_shared<recu_msgs::srv::ValveAction::Request>();
@@ -332,8 +331,8 @@ namespace ri2c {
             } catch (std::runtime_error &e) {
                 RCLCPP_ERROR(this->get_logger(), "%s", e.what());
             }
-
-            RCLCPP_INFO(this->get_logger(), "Unpowered pressurization valve. PE:" + std::to_string(pressureE));
+            this->lastPressureControlCommand = false;
+            RCLCPP_INFO(this->get_logger(), "Unpowered pressurization valve. PE: %f", pressureE);
         }
     }
 
@@ -342,7 +341,7 @@ namespace ri2c {
 
         response.current_state.id = (int)valveState;
 
-        switch (valveState) {
+        switch ((int)valveState) {
         case true:
             response.current_state.label = "on";
             break;

@@ -83,7 +83,7 @@ struct ValveStateDisplay {
 
 impl ValveStateDisplay {
     pub fn new_shared(ws_lock: &Rc<WsLock>, valve_name: String) -> Rc<Mutex<Self>> {
-        let service = format!("/recu/{}/get_state", valve_name.to_owned());
+        let service = format!("/{}/get_state", valve_name.to_owned());
 
         let valve_state_display = Self {
             id: gen_gui_elem_id(),

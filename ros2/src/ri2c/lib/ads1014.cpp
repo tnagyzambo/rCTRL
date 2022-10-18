@@ -62,7 +62,7 @@ namespace ri2c {
         // gain bits are stored in bit 11,10,9 of conf0
         // xxxx010x =>> >>1 = 0xxxx010
         // 0xxxx010&00000111 =>> 00000 010
-        auto PGA_bits = (this->conf0>>1)&0b00000111;
+        auto PGA_bits = (this->conf0 >> 1) & 0b00000111;
         if (PGA_bits == 0b000) {
             this->LSB = 3e-3;
         } else if (PGA_bits == 0b001) {
@@ -76,7 +76,6 @@ namespace ri2c {
         } else {
             this->LSB = 0.125e-3;
         }
-        
     }
 
     // PAA_7LC_30BAR definitions -----------------------------------
@@ -94,8 +93,8 @@ namespace ri2c {
         // The LSB is 6.144V/2^12.
         // The LSB is 3mV
         // We also need to multiply by a PS_MAX/4 to as the sensor outputs between .1 and .9 V/V
-        long double ps_slope = this->LSB*PS_MAX/4;
-        return ps_slope*rawData-PS_MAX/8;
+        long double ps_slope = this->LSB * PS_MAX / 4;
+        return ps_slope * rawData - PS_MAX / 8;
     }
 
     // LoadcellBridge definitions ----------------
@@ -134,9 +133,8 @@ namespace ri2c {
         // The LSB is 3mV
         // The sensor outputs a value between 0 and 10 volts.
         // We use a voltage divider to bring the voltage within 0-5V
-        long double ps_slope = this->LSB*PS_MAX/5.0; //at 10V 
-        return ps_slope*rawData;
-
+        long double ps_slope = this->LSB * PS_MAX / 5.0; // at 10V
+        return ps_slope * rawData;
     }
 
     // K_TYPE definitions -------------
@@ -157,8 +155,7 @@ namespace ri2c {
         // float temperature = (float)thermocoupleMvToC((unsigned long)micro_volts);
         // Assumed ambient of 15 degrees c
 
-
-        //Just output V for now
-        return this->LSB*rawData;
+        // Just output V for now
+        return this->LSB * rawData;
     }
 } // namespace ri2c

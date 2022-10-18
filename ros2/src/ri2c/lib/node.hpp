@@ -11,7 +11,10 @@
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_lifecycle/lifecycle_node.hpp>
 #include <rdata/logger.hpp>
+#include <recu_msgs/srv/valve_action.hpp>
+#include <ri2c_msgs/msg/valve_state.hpp>
 #include <ri2c_msgs/srv/detail/high_speed_data_logging_action__struct.hpp>
+#include <ri2c_msgs/srv/get_valve_state.hpp>
 #include <ri2c_msgs/srv/high_speed_data_logging_action.hpp>
 #include <ri2c_msgs/srv/pres_control_loop_action.hpp>
 #include <rutil/except.hpp>
@@ -38,7 +41,7 @@ namespace ri2c {
         int i2cBus;
         std::string i2cBusName;
         float pressureSetPoint;
-        bool PresControlState;
+        bool presControlState;
         bool lastPressureControlCommand; // True for powered, false for unpowered. Used to avoid sending extra service calls
 
         std::unique_ptr<PAA_7LC_30BAR> p_h2o2;
@@ -52,7 +55,7 @@ namespace ri2c {
         std::chrono::milliseconds samplePeriodLowSpeed;
         std::chrono::milliseconds loggingPeriodLowSpeed;
         std::chrono::milliseconds samplePeriodHighSpeed;
-        std::chrone::milliseconds pressureControlLoopRate;
+        std::chrono::milliseconds pressureControlLoopRate;
 
         rclcpp::TimerBase::SharedPtr timerDataLoggingLowSpeed;
         rclcpp::TimerBase::SharedPtr timerDataLoggingLowSpeedWrite;
@@ -64,6 +67,9 @@ namespace ri2c {
         rclcpp::Service<ri2c_msgs::srv::PresControlLoopAction>::SharedPtr srvPresControlOn;
         rclcpp::Service<ri2c_msgs::srv::PresControlLoopAction>::SharedPtr srvPresControlOff;
         rclcpp::Service<ri2c_msgs::srv::GetValveState>::SharedPtr srvPresControlGetState;
+
+        rclcpp::Client<recu_msgs::srv::ValveAction>::SharedPtr clPV_Open;
+        rclcpp::Client<recu_msgs::srv::ValveAction>::SharedPtr clPV_Close;
 
         void callbackDataLoggingHighSpeedOn(const std::shared_ptr<ri2c_msgs::srv::HighSpeedDataLoggingAction::Request>,
                                             std::shared_ptr<ri2c_msgs::srv::HighSpeedDataLoggingAction::Response>);
@@ -86,14 +92,14 @@ namespace ri2c {
         rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_shutdown(
             const rclcpp_lifecycle::State &);
 
-        ri2c_msgs::srv::GetValveState::Response createValveStateResponse(ValveState);
+        ri2c_msgs::srv::GetValveState::Response createValveStateResponse(bool);
 
         void callbackDataLoggingLowSpeed();
         void callbackDataLoggingLowSpeedWrite();
         void callbackDataLoggingHighSpeed();
         void callbackPressureControlLoop();
         void PresControl_GetState(const std::shared_ptr<ri2c_msgs::srv::GetValveState::Request>,
-                          std::shared_ptr<ri2c_msgs::srv::GetValveState::Response>);
+                                  std::shared_ptr<ri2c_msgs::srv::GetValveState::Response>);
 
         void readConfig(toml::table);
 
