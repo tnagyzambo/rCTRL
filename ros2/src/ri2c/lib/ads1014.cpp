@@ -57,6 +57,26 @@ namespace ri2c {
         unsigned char configuration[2] = {static_cast<unsigned char>(this->conf0),
                                           static_cast<unsigned char>(this->conf1)};
         this->sendConfig(i2cBus, ADS1014_CONF_REG, 2, configuration);
+
+        // Set LSB (volts) given config
+        // gain bits are stored in bit 11,10,9 of conf0
+        // xxxx010x =>> >>1 = 0xxxx010
+        // 0xxxx010&00000111 =>> 00000 010
+        auto PGA_bits = (this->conf0>>1)&0b00000111;
+        if (PGA_bits == 0b000) {
+            this->LSB = 3e-3;
+        } else if (PGA_bits == 0b001) {
+            this->LSB = 2e-3;
+        } else if (PGA_bits == 0b010) {
+            this->LSB = 1e-3;
+        } else if (PGA_bits == 0b011) {
+            this->LSB = 0.5e-3;
+        } else if (PGA_bits == 0b100) {
+            this->LSB = 0.25e-3;
+        } else {
+            this->LSB = 0.125e-3;
+        }
+        
     }
 
     // PAA_7LC_30BAR definitions -----------------------------------
@@ -65,7 +85,7 @@ namespace ri2c {
 
     float PAA_7LC_30BAR::read(int i2cBus) {
         // Do all read functions here includeing conversions to float
-        float PS_MAX = 30;
+        float PS_MAX = 30.0;
         // go to conversion register and get bytes back
         float rawData = this->getRaw(i2cBus);
 
@@ -74,8 +94,8 @@ namespace ri2c {
         // The LSB is 6.144V/2^12.
         // The LSB is 3mV
         // We also need to multiply by a PS_MAX/4 to as the sensor outputs between .1 and .9 V/V
-        long double ps_slope = (3e-3) * PS_MAX / 4;
-        return ps_slope * rawData - PS_MAX / 8;
+        long double ps_slope = this->LSB*PS_MAX/4;
+        return ps_slope*rawData-PS_MAX/8;
     }
 
     // LoadcellBridge definitions ----------------
@@ -93,7 +113,7 @@ namespace ri2c {
         // The LSB is 3mV
         // For now just outputting volts directly
         // TODO: increase gain and calibrate
-        double lc_slope = 3e-3;
+        double lc_slope = this->LSB;
         double lc_offset = 0;
         return lc_slope * rawData + lc_offset;
     }
@@ -114,8 +134,9 @@ namespace ri2c {
         // The LSB is 3mV
         // The sensor outputs a value between 0 and 10 volts.
         // We use a voltage divider to bring the voltage within 0-5V
-        long double ps_slope = (3.0e-3) * PS_MAX / 5.0; // at 10V
-        return ps_slope * rawData;
+        long double ps_slope = this->LSB*PS_MAX/5.0; //at 10V 
+        return ps_slope*rawData;
+
     }
 
     // K_TYPE definitions -------------
@@ -136,7 +157,8 @@ namespace ri2c {
         // float temperature = (float)thermocoupleMvToC((unsigned long)micro_volts);
         // Assumed ambient of 15 degrees c
 
-        // Just output V for now
-        return (0.125e-3) * rawData;
+
+        //Just output V for now
+        return this->LSB*rawData;
     }
 } // namespace ri2c

@@ -36,9 +36,11 @@ namespace ri2c {
     private:
         int i2cBus;
         std::string i2cBusName;
+        float pressureSetPoint;
+        bool lastPressureControlCommand; // True for powered, false for unpowered. Used to avoid sending extra service calls
 
         std::unique_ptr<PAA_7LC_30BAR> p_h2o2;
-        std::unique_ptr<LoadcellBridge> loadcell;
+        std::unique_ptr<LoadcellBridge> loadcell; 
         std::unique_ptr<M5HB_30BAR> p_chamber;
         std::unique_ptr<K_TYPE> t_chamber;
 
@@ -48,10 +50,12 @@ namespace ri2c {
         std::chrono::milliseconds samplePeriodLowSpeed;
         std::chrono::milliseconds loggingPeriodLowSpeed;
         std::chrono::milliseconds samplePeriodHighSpeed;
+        std::chrone::milliseconds pressureControlLoopRate;
 
         rclcpp::TimerBase::SharedPtr timerDataLoggingLowSpeed;
         rclcpp::TimerBase::SharedPtr timerDataLoggingLowSpeedWrite;
         rclcpp::TimerBase::SharedPtr timerDataLoggingHighSpeed;
+        rclcpp::TimerBase::SharedPtr timerPressureControlLoop;
 
         rclcpp::Service<ri2c_msgs::srv::HighSpeedDataLoggingAction>::SharedPtr srvDataLoggingHighSpeedOn;
         rclcpp::Service<ri2c_msgs::srv::HighSpeedDataLoggingAction>::SharedPtr srvDataLoggingHighSpeedOff;
@@ -75,6 +79,7 @@ namespace ri2c {
         void callbackDataLoggingLowSpeed();
         void callbackDataLoggingLowSpeedWrite();
         void callbackDataLoggingHighSpeed();
+        void callbackPressureControlLoop();
 
         void readConfig(toml::table);
 
