@@ -58,6 +58,10 @@ namespace ri2c {
             this->create_wall_timer(samplePeriodHighSpeed, std::bind(&Node::callbackDataLoggingHighSpeed, this));
         this->timerDataLoggingHighSpeed->cancel();
 
+        this->timerPressureControlLoop =
+            this->create_wall_timer(pressureControlLoopRate, std::bind(&Node::callbackPressureControlLoop, this));
+        this->timerPressureControlLoop->cancel();
+
         RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::state::inactive().c_str());
         return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
     }
@@ -69,6 +73,7 @@ namespace ri2c {
         // Start timers
         this->timerDataLoggingLowSpeed->reset();
         this->timerDataLoggingLowSpeedWrite->reset();
+        this->timerPressureControlLoop->reset();
 
         this->srvDataLoggingHighSpeedOn = this->create_service<ri2c_msgs::srv::HighSpeedDataLoggingAction>(
             "ri2c/hs_datalog/on",
@@ -79,6 +84,9 @@ namespace ri2c {
             "ri2c/hs_datalog/off",
             std::bind(&Node::callbackDataLoggingHighSpeedOff, this, std::placeholders::_1, std::placeholders::_2));
         RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::srv::created("ri2c/hs_datalog/off").c_str());
+
+        this->clPV_Open = this->create_client<recu_msgs::srv::ValveAction>("recu/pv/open");
+        this->clPV_Close = this->create_client<recu_msgs::srv::ValveAction>("recu/pv/close");
 
         RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::state::active().c_str());
 
@@ -92,6 +100,7 @@ namespace ri2c {
         // Stop timers
         this->timerDataLoggingLowSpeed->cancel();
         this->timerDataLoggingHighSpeed->cancel();
+        this->timerPressureControlLoop->cancel();
 
         RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::state::inactive().c_str());
 
@@ -131,6 +140,7 @@ namespace ri2c {
         this->timerDataLoggingLowSpeed.reset();
         this->timerDataLoggingLowSpeedWrite.reset();
         this->timerDataLoggingHighSpeed.reset();
+        this->timerPressureControlLoop.reset();
 
         this->loggerLowSpeed.reset();
         this->loggerHighSpeed.reset();
@@ -168,6 +178,15 @@ namespace ri2c {
 
             this->samplePeriodHighSpeed =
                 std::chrono::milliseconds(rutil::toml::getTomlEntryByKey<int>(highSpeedView, "sample_period"));
+
+            // Read pressure control configuration settings
+            auto pressureControlView = rutil::toml::viewOfTable(tomlView, "pressureControl");
+
+            this->pressureControlLoopRate =
+                std::chrone::milliseconds(rutil::toml::getTomlEntryByKey<int>(pressureControlView, "pressureControlPeriod"));
+            this->pressureSetPoint = (float)rutil::tomlgetTomlByKey<int>(pressureControlView, "PressureSetPoint");
+            this->lastPressureControlCommand = false;
+
         } catch (rutil::except::toml_parse_error &e) {
             throw ri2c::except::config_parse_error(e.what());
         }
@@ -217,5 +236,37 @@ namespace ri2c {
         (void)response;
         this->timerDataLoggingHighSpeed->cancel();
         RCLCPP_INFO(this->get_logger(), "High Speed Data Logging Off");
+    }
+
+    void Node::calbackPressureControlLoop() {
+        float pressureTank = this->p_h2o2->read(this->i2cBus);
+        float pressureE = PressureSetPoint - tank_pressure; // Create error signal
+
+        // If pressure is lower than set point 
+        // AND the last command sent was to turn the valve off (false)
+        if (pressureE>0 && !this->lastPressureControlCommand) {
+            //Request to open PV
+            try {
+                auto request = std::make_shared<recu_msgs::srv::ValveAction::Request>();
+                auto result = this->clPV_Open->async_send_request(request);
+
+            } catch (std::runtime_error &e) {
+                RCLCPP_ERROR(this->get_logger(), "%s", e.what());
+            }
+
+        RCLCPP_INFO(this->get_logger(), "Powered pressurization valve. PE: " + std::to_string(pressureE));
+
+        } else if (pressureE<0 && this->lastpressureControlCommand) {
+            // Request to close PV
+            try {
+                auto request = std::make_shared<recu_msgs::srv::ValveAction::Request>();
+                auto result = this->clPV_Close->async_send_request(request);
+
+            } catch (std::runtime_error &e) {
+                RCLCPP_ERROR(this->get_logger(), "%s", e.what());
+            }
+
+            RCLCPP_INFO(this->get_logger(), "Unpowered pressurization valve. PE:" + std::to_string(pressureE));
+        }
     }
 } // namespace ri2c
