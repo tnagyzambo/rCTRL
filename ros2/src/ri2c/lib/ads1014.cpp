@@ -13,32 +13,33 @@ namespace ri2c {
 
     void ADS1014::sendConfig(int i2cBus, int reg, int num_bytes, unsigned char *bytes) {
         if (i2c_smbus_write_i2c_block_data(i2cBus, reg, num_bytes, bytes) < 0) {
-            std::string error = fmt::format("Failed to configure i2c slave at address '0x{:x}'", this->address);
+            std::string error = fmt::format(
+                "Failed to configure i2c slave at address '0x{:#x}', channel '0x{:#x}'", this->address, this->channel);
 
             throw except::i2c_error(error);
         }
     }
 
     float ADS1014::getRaw(int i2cBus) {
-        if 0 < this->channel < 7 {
         if (ioctl(i2cBus, I2C_SLAVE, TCAADDR) < 0) {
-            std::string error = fmt::format("Failed to set i2c channel on multiplexer '0x{:x}'", this->address);
+            std::string error = fmt::format("Failed to set i2c channel on multiplexer '0x{:#x}'", this->address);
 
             throw except::i2c_error(error);
         }
 
-        i2c_smbus_write_i2c_byte_data(i2cBus, this->channel);
-        } else {
-            if (ioctl(i2cBus, I2C_SLAVE, this->address) < 0) {
-                std::string error = fmt::format("Failed to set i2c slave at address '0x{:x}'", this->address);
+        i2c_smbus_write_byte(i2cBus, this->channel);
 
-                throw except::i2c_error(error);
-            }
+        if (ioctl(i2cBus, I2C_SLAVE, this->address) < 0) {
+            std::string error = fmt::format(
+                "Failed to set i2c slave at address '0x{:#x}', channel '0x{:#x}'", this->address, this->channel);
+
+            throw except::i2c_error(error);
         }
 
         __s32 res = i2c_smbus_read_word_data(i2cBus, 0b00000000);
         if (res < 0) {
-            std::string error = fmt::format("Failed to read i2c slave at address '0x{:x}'", this->address);
+            std::string error = fmt::format(
+                "Failed to read i2c slave at address '0x{:#x}', channel '0x{:#x}'", this->address, this->channel);
 
             throw except::i2c_error(error);
         }
@@ -58,20 +59,19 @@ namespace ri2c {
     void ADS1014::init(int i2cBus) {
         // Do all init functions here
         // If they are not the same for each sensor, make this function virtual and implement in unique superclasses that inherit ADS1014
-        if 0 < this->channel < 7 {
-            if (ioctl(i2cBus, I2C_SLAVE, TCAADDR) < 0) {
-                std::string error = fmt::format("Failed to set i2c channel on multiplexer '0x{:x}'", this->address);
+        if (ioctl(i2cBus, I2C_SLAVE, TCAADDR) < 0) {
+            std::string error = fmt::format("Failed to set i2c channel on multiplexer '0x{:#x}'", this->address);
 
-                throw except::i2c_error(error);
-            }
+            throw except::i2c_error(error);
+        }
 
-            i2c_smbus_write_i2c_byte_data(i2cBus, this->channel);
-        } else {
-            if (ioctl(i2cBus, I2C_SLAVE, this->address) < 0) {
-                std::string error = fmt::format("Failed to set i2c slave at address '0x{:x}'", this->address);
+        i2c_smbus_write_byte(i2cBus, this->channel);
 
-                throw except::i2c_error(error);
-            }
+        if (ioctl(i2cBus, I2C_SLAVE, this->address) < 0) {
+            std::string error = fmt::format(
+                "Failed to set i2c slave at address '0x{:#x}', channel '0x{:#x}'", this->address, this->channel);
+
+            throw except::i2c_error(error);
         }
 
         // Read config from toml and write to config register

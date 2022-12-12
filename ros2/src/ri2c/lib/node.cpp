@@ -207,7 +207,7 @@ namespace ri2c {
             this->p_chamber =
                 std::make_unique<M5HB_30BAR>(M5HB_30BAR(rutil::toml::viewOfTable(ads1014View, "p_chamber")));
             this->p_manifold =
-                std::make_unique<PAA_7LC_30BAR>(PAA_7LC_30BAR(rutil::toml::viewOfTable(ads1014View, "p_manifold")));
+                std::make_unique<M5HB_30BAR>(M5HB_30BAR(rutil::toml::viewOfTable(ads1014View, "p_manifold")));
             this->t_chamber = std::make_unique<K_TYPE>(K_TYPE(rutil::toml::viewOfTable(ads1014View, "t_chamber")));
 
             auto loggingView = rutil::toml::viewOfTable(tomlView, "data_logging");
