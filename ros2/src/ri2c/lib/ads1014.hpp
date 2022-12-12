@@ -17,7 +17,7 @@ using namespace std::chrono_literals;
 
 namespace ri2c {
     #define ADS1014_CONF_REG 0b00000001
-
+    #define TCAADDR 0x70
     
     class ADS1014 {
     public:
@@ -28,6 +28,7 @@ namespace ri2c {
         float getRaw(int);
         void init(int);
 
+        int channel;
         int address;
         int conf0;
         int conf1;

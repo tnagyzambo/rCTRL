@@ -9,21 +9,43 @@
 [i2c]
     bus = "/dev/i2c-1"
     [i2c.ads1014.p_h2o2]
+        channel = "1"
+        address = "0x48"
+        conf0 = "0b10000000"
+        conf1 = "0b10000011"
+
+    [i2c.ads1014.p_ethanol]
+        channel = "1"
+        address = "0x48"
+        conf0 = "0b10000000"
+        conf1 = "0b10000011"
+
+    [i2c.ads1014.p_pressurant]
+        channel = "1"
         address = "0x48"
         conf0 = "0b10000000"
         conf1 = "0b10000011"
 
     [i2c.ads1014.loadcell]
+        channel = "1"
         address = "0x49"
         conf0 = "0b10000000"
         conf1 = "0b10000011"
 
     [i2c.ads1014.p_chamber]
+        channel = "1"
+        address = "0x4A"
+        conf0 = "0b10000000"
+        conf1 = "0b10000011"
+
+    [i2c.ads1014.p_manifold]
+        channel = "1"
         address = "0x4A"
         conf0 = "0b10000000"
         conf1 = "0b10000011"
 
     [i2c.ads1014.t_chamber]
+        channel = "1"
         address = "0x4B"
         conf0 = "0b10001010"
         conf1 = "0b10000011"

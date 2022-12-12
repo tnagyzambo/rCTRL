@@ -3,9 +3,9 @@
 #include <thermocouple.h>
 
 namespace ri2c {
-
     // High level function definitions
     ADS1014::ADS1014(::toml::node_view<::toml::node> toml) {
+        this->channel = std::stoul(rutil::toml::getTomlEntryByKey<std::string>(toml, "channel"), nullptr, 16);
         this->address = std::stoul(rutil::toml::getTomlEntryByKey<std::string>(toml, "address"), nullptr, 16);
     }
 
@@ -20,11 +20,22 @@ namespace ri2c {
     }
 
     float ADS1014::getRaw(int i2cBus) {
-        if (ioctl(i2cBus, I2C_SLAVE, this->address) < 0) {
-            std::string error = fmt::format("Failed to set i2c slave at address '0x{:x}'", this->address);
+        if 0 < this->channel < 7 {
+        if (ioctl(i2cBus, I2C_SLAVE, TCAADDR) < 0) {
+            std::string error = fmt::format("Failed to set i2c channel on multiplexer '0x{:x}'", this->address);
 
             throw except::i2c_error(error);
         }
+
+        i2c_smbus_write_i2c_byte_data(i2cBus, this->channel);
+        } else {
+            if (ioctl(i2cBus, I2C_SLAVE, this->address) < 0) {
+                std::string error = fmt::format("Failed to set i2c slave at address '0x{:x}'", this->address);
+
+                throw except::i2c_error(error);
+            }
+        }
+
         __s32 res = i2c_smbus_read_word_data(i2cBus, 0b00000000);
         if (res < 0) {
             std::string error = fmt::format("Failed to read i2c slave at address '0x{:x}'", this->address);
@@ -47,10 +58,20 @@ namespace ri2c {
     void ADS1014::init(int i2cBus) {
         // Do all init functions here
         // If they are not the same for each sensor, make this function virtual and implement in unique superclasses that inherit ADS1014
-        if (ioctl(i2cBus, I2C_SLAVE, this->address) < 0) {
-            std::string error = fmt::format("Failed to set i2c slave at address '0x{:x}'", this->address);
+        if 0 < this->channel < 7 {
+            if (ioctl(i2cBus, I2C_SLAVE, TCAADDR) < 0) {
+                std::string error = fmt::format("Failed to set i2c channel on multiplexer '0x{:x}'", this->address);
 
-            throw except::i2c_error(error);
+                throw except::i2c_error(error);
+            }
+
+            i2c_smbus_write_i2c_byte_data(i2cBus, this->channel);
+        } else {
+            if (ioctl(i2cBus, I2C_SLAVE, this->address) < 0) {
+                std::string error = fmt::format("Failed to set i2c slave at address '0x{:x}'", this->address);
+
+                throw except::i2c_error(error);
+            }
         }
 
         // Read config from toml and write to config register

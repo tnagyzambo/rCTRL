@@ -30,9 +30,15 @@ namespace ri2c {
 
         this->p_h2o2->init(this->i2cBus);
         std::this_thread::sleep_for(std::chrono::nanoseconds(1000000));
+        this->p_ethanol->init(this->i2cBus);
+        std::this_thread::sleep_for(std::chrono::nanoseconds(1000000));
+        this->p_pressurant->init(this->i2cBus);
+        std::this_thread::sleep_for(std::chrono::nanoseconds(1000000));
         this->loadcell->init(this->i2cBus);
         std::this_thread::sleep_for(std::chrono::nanoseconds(1000000));
         this->p_chamber->init(this->i2cBus);
+        std::this_thread::sleep_for(std::chrono::nanoseconds(1000000));
+        this->p_manifold->init(this->i2cBus);
         std::this_thread::sleep_for(std::chrono::nanoseconds(1000000));
         this->t_chamber->init(this->i2cBus);
 
@@ -157,8 +163,11 @@ namespace ri2c {
 
     void Node::deleteAllPointers() {
         this->p_h2o2.reset();
+        this->p_ethanol.reset();
+        this->p_pressurant.reset();
         this->loadcell.reset();
         this->p_chamber.reset();
+        this->p_manifold.reset();
         this->t_chamber.reset();
 
         this->timerDataLoggingLowSpeed.reset();
@@ -189,10 +198,16 @@ namespace ri2c {
 
             this->p_h2o2 =
                 std::make_unique<PAA_7LC_30BAR>(PAA_7LC_30BAR(rutil::toml::viewOfTable(ads1014View, "p_h2o2")));
+            this->p_ethanol =
+                std::make_unique<PAA_7LC_30BAR>(PAA_7LC_30BAR(rutil::toml::viewOfTable(ads1014View, "p_ethanol")));
+            this->p_pressurant =
+                std::make_unique<PAA_7LC_30BAR>(PAA_7LC_30BAR(rutil::toml::viewOfTable(ads1014View, "p_pressurant")));
             this->loadcell =
                 std::make_unique<LoadcellBridge>(LoadcellBridge(rutil::toml::viewOfTable(ads1014View, "loadcell")));
             this->p_chamber =
                 std::make_unique<M5HB_30BAR>(M5HB_30BAR(rutil::toml::viewOfTable(ads1014View, "p_chamber")));
+            this->p_manifold =
+                std::make_unique<PAA_7LC_30BAR>(PAA_7LC_30BAR(rutil::toml::viewOfTable(ads1014View, "p_manifold")));
             this->t_chamber = std::make_unique<K_TYPE>(K_TYPE(rutil::toml::viewOfTable(ads1014View, "t_chamber")));
 
             auto loggingView = rutil::toml::viewOfTable(tomlView, "data_logging");
@@ -226,14 +241,20 @@ namespace ri2c {
     // Write to buffer
     void Node::callbackDataLoggingLowSpeed() {
         float value1 = this->p_h2o2->read(this->i2cBus);
-        float value2 = this->loadcell->read(this->i2cBus);
-        float value3 = this->p_chamber->read(this->i2cBus);
-        float value4 = this->t_chamber->read(this->i2cBus);
+        float value2 = this->p_ethanol->read(this->i2cBus);
+        float value3 = this->p_pressurant->read(this->i2cBus);
+        float value4 = this->loadcell->read(this->i2cBus);
+        float value5 = this->p_chamber->read(this->i2cBus);
+        float value6 = this->p_manifold->read(this->i2cBus);
+        float value7 = this->t_chamber->read(this->i2cBus);
 
         this->loggerLowSpeed->log(fmt::format("sensor=p_h2o2 Bar={}", value1));
-        this->loggerLowSpeed->log(fmt::format("sensor=loadcell Volts={}", value2));
-        this->loggerLowSpeed->log(fmt::format("sensor=p_chamber Bar={}", value3));
-        this->loggerLowSpeed->log(fmt::format("sensor=t_chamber Volts={}", value4));
+        this->loggerLowSpeed->log(fmt::format("sensor=p_ethanol Bar={}", value2));
+        this->loggerLowSpeed->log(fmt::format("sensor=p_pressurant Bar={}", value3));
+        this->loggerLowSpeed->log(fmt::format("sensor=loadcell Volts={}", value4));
+        this->loggerLowSpeed->log(fmt::format("sensor=p_chamber Bar={}", value5));
+        this->loggerLowSpeed->log(fmt::format("sensor=p_manifold Bar={}", value6));
+        this->loggerLowSpeed->log(fmt::format("sensor=t_chamber Volts={}", value7));
     }
 
     // Write buffer to influx
@@ -241,14 +262,20 @@ namespace ri2c {
 
     void Node::callbackDataLoggingHighSpeed() {
         float value1 = this->p_h2o2->read(this->i2cBus);
-        float value2 = this->loadcell->read(this->i2cBus);
-        float value3 = this->p_chamber->read(this->i2cBus);
-        float value4 = this->t_chamber->read(this->i2cBus);
+        float value2 = this->p_ethanol->read(this->i2cBus);
+        float value3 = this->p_pressurant->read(this->i2cBus);
+        float value4 = this->loadcell->read(this->i2cBus);
+        float value5 = this->p_chamber->read(this->i2cBus);
+        float value6 = this->p_manifold->read(this->i2cBus);
+        float value7 = this->t_chamber->read(this->i2cBus);
 
-        this->loggerHighSpeed->log(fmt::format("sensor=p_h2o2 Bar={}", value1));
-        this->loggerHighSpeed->log(fmt::format("sensor=loadcell Volts={}", value2));
-        this->loggerHighSpeed->log(fmt::format("sensor=p_chamber Bar={}", value3));
-        this->loggerHighSpeed->log(fmt::format("sensor=t_chamber Volts={}", value4));
+        this->loggerLowSpeed->log(fmt::format("sensor=p_h2o2 Bar={}", value1));
+        this->loggerLowSpeed->log(fmt::format("sensor=p_ethanol Bar={}", value2));
+        this->loggerLowSpeed->log(fmt::format("sensor=p_pressurant Bar={}", value3));
+        this->loggerLowSpeed->log(fmt::format("sensor=loadcell Volts={}", value4));
+        this->loggerLowSpeed->log(fmt::format("sensor=p_chamber Bar={}", value5));
+        this->loggerLowSpeed->log(fmt::format("sensor=p_manifold Bar={}", value6));
+        this->loggerLowSpeed->log(fmt::format("sensor=t_chamber Volts={}", value7));
     }
 
     void Node::callbackDataLoggingHighSpeedOn(
