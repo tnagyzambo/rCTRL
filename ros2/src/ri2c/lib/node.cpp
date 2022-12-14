@@ -254,7 +254,7 @@ namespace ri2c {
         this->loggerLowSpeed->log(fmt::format("sensor=loadcell Volts={}", value4));
         this->loggerLowSpeed->log(fmt::format("sensor=p_chamber Bar={}", value5));
         this->loggerLowSpeed->log(fmt::format("sensor=p_manifold Bar={}", value6));
-        this->loggerLowSpeed->log(fmt::format("sensor=t_chamber Volts={}", value7));
+        this->loggerLowSpeed->log(fmt::format("sensor=t_chamber Kelvin={}", value7));
     }
 
     // Write buffer to influx
@@ -275,7 +275,7 @@ namespace ri2c {
         this->loggerLowSpeed->log(fmt::format("sensor=loadcell Volts={}", value4));
         this->loggerLowSpeed->log(fmt::format("sensor=p_chamber Bar={}", value5));
         this->loggerLowSpeed->log(fmt::format("sensor=p_manifold Bar={}", value6));
-        this->loggerLowSpeed->log(fmt::format("sensor=t_chamber Volts={}", value7));
+        this->loggerLowSpeed->log(fmt::format("sensor=t_chamber Kelvin={}", value7));
     }
 
     void Node::callbackDataLoggingHighSpeedOn(

@@ -33,8 +33,8 @@
         conf1 = "0b10000011"
 
     [i2c.ads1014.p_chamber]
-        channel = "0x08"
-        address = "0x4b"
+        channel = "0x02"
+        address = "0x4a"
         conf0 = "0b10000000"
         conf1 = "0b10000011"
 
@@ -45,8 +45,8 @@
         conf1 = "0b10000011"
 
     [i2c.ads1014.t_chamber]
-        channel = "0x02"
-        address = "0x4a"
+        channel = "0x08"
+        address = "0x4b"
         conf0 = "0b10001010"
         conf1 = "0b10000011"
 
