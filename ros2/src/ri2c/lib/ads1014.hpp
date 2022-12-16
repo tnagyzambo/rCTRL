@@ -1,5 +1,6 @@
 #pragma once
 
+#include <asm-generic/int-ll64.h>
 #include <chrono>
 #include <except.hpp>
 #include <fmt/core.h>
@@ -16,22 +17,21 @@ extern "C" {
 using namespace std::chrono_literals;
 
 namespace ri2c {
-    #define ADS1014_CONF_REG 0b00000001
-    #define TCAADDR 0x70
-    
+#define ADS1014_CONF_REG 0b00000001
+#define TCAADDR 0x70
+
     class ADS1014 {
     public:
         ADS1014(::toml::node_view<::toml::node>);
         virtual ~ADS1014();
 
-        void sendConfig(int, int, int, unsigned char*);
-        float getRaw(int);
+        int16_t getRaw(int);
         void init(int);
 
-        int channel;
-        int address;
-        int conf0;
-        int conf1;
+        __u8 channel;
+        __u8 address;
+        __u8 conf0;
+        __u8 conf1;
         double LSB;
 
         virtual float read(int) = 0;
@@ -39,39 +39,43 @@ namespace ri2c {
     private:
     };
 
-    class PAA_7LC_30BAR: public ADS1014 {
+    class PAA_7LC_30BAR : public ADS1014 {
     public:
         PAA_7LC_30BAR(::toml::node_view<::toml::node>);
         ~PAA_7LC_30BAR();
 
         float read(int) override final;
+
     private:
     };
 
-    class LoadcellBridge: public ADS1014 {
+    class LoadcellBridge : public ADS1014 {
     public:
         LoadcellBridge(::toml::node_view<::toml::node>);
         ~LoadcellBridge();
 
         float read(int) override final;
+
     private:
     };
 
-    class M5HB_30BAR: public ADS1014 {
+    class M5HB_30BAR : public ADS1014 {
     public:
         M5HB_30BAR(::toml::node_view<::toml::node>);
         ~M5HB_30BAR();
 
         float read(int) override final;
+
     private:
     };
 
-    class K_TYPE: public ADS1014 {
+    class K_TYPE : public ADS1014 {
     public:
         K_TYPE(::toml::node_view<::toml::node>);
         ~K_TYPE();
 
         float read(int) override final;
+
     private:
     };
 } // namespace ri2c

@@ -41,6 +41,7 @@ namespace ri2c {
         this->p_manifold->init(this->i2cBus);
         std::this_thread::sleep_for(std::chrono::nanoseconds(1000000));
         this->t_chamber->init(this->i2cBus);
+        std::this_thread::sleep_for(std::chrono::nanoseconds(1000000));
 
         try {
             this->loggerLowSpeed = std::make_unique<rdata::Logger>("/home/ros/rdata/influx/credentials.toml");
@@ -254,7 +255,7 @@ namespace ri2c {
         this->loggerLowSpeed->log(fmt::format("sensor=loadcell Volts={}", value4));
         this->loggerLowSpeed->log(fmt::format("sensor=p_chamber Bar={}", value5));
         this->loggerLowSpeed->log(fmt::format("sensor=p_manifold Bar={}", value6));
-        this->loggerLowSpeed->log(fmt::format("sensor=t_chamber Kelvin={}", value7));
+        this->loggerLowSpeed->log(fmt::format("sensor=t_chamber Volts={}", value7));
     }
 
     // Write buffer to influx
@@ -275,7 +276,7 @@ namespace ri2c {
         this->loggerLowSpeed->log(fmt::format("sensor=loadcell Volts={}", value4));
         this->loggerLowSpeed->log(fmt::format("sensor=p_chamber Bar={}", value5));
         this->loggerLowSpeed->log(fmt::format("sensor=p_manifold Bar={}", value6));
-        this->loggerLowSpeed->log(fmt::format("sensor=t_chamber Kelvin={}", value7));
+        this->loggerLowSpeed->log(fmt::format("sensor=t_chamber Volts={}", value7));
     }
 
     void Node::callbackDataLoggingHighSpeedOn(

@@ -1,28 +1,24 @@
 #include <ads1014.hpp>
+#include <asm-generic/int-ll64.h>
+#include <cstdint>
 #include <i2c/smbus.h>
+#include <string>
 #include <thermocouple.h>
 
 namespace ri2c {
     // High level function definitions
     ADS1014::ADS1014(::toml::node_view<::toml::node> toml) {
-        this->channel = std::stoul(rutil::toml::getTomlEntryByKey<std::string>(toml, "channel"), nullptr, 16);
-        this->address = std::stoul(rutil::toml::getTomlEntryByKey<std::string>(toml, "address"), nullptr, 16);
+        this->channel = rutil::toml::getTomlEntryByKey<__u8>(toml, "channel");
+        this->address = rutil::toml::getTomlEntryByKey<__u8>(toml, "address");
+        this->conf0 = rutil::toml::getTomlEntryByKey<__u8>(toml, "conf0");
+        this->conf1 = rutil::toml::getTomlEntryByKey<__u8>(toml, "conf1");
     }
 
     ADS1014::~ADS1014() {}
 
-    void ADS1014::sendConfig(int i2cBus, int reg, int num_bytes, unsigned char *bytes) {
-        if (i2c_smbus_write_i2c_block_data(i2cBus, reg, num_bytes, bytes) < 0) {
-            std::string error = fmt::format(
-                "Failed to configure i2c slave at address '0x{:#x}', channel '0x{:#x}'", this->address, this->channel);
-
-            throw except::i2c_error(error);
-        }
-    }
-
-    float ADS1014::getRaw(int i2cBus) {
+    int16_t ADS1014::getRaw(int i2cBus) {
         if (ioctl(i2cBus, I2C_SLAVE, TCAADDR) < 0) {
-            std::string error = fmt::format("Failed to set i2c channel on multiplexer '0x{:#x}'", this->address);
+            std::string error = fmt::format("Failed to set i2c channel on multiplexer '{:#x}'", this->address);
 
             throw except::i2c_error(error);
         }
@@ -30,16 +26,16 @@ namespace ri2c {
         i2c_smbus_write_byte(i2cBus, this->channel);
 
         if (ioctl(i2cBus, I2C_SLAVE, this->address) < 0) {
-            std::string error = fmt::format(
-                "Failed to set i2c slave at address '0x{:#x}', channel '0x{:#x}'", this->address, this->channel);
+            std::string error =
+                fmt::format("Failed to set i2c slave at address '{:#x}', channel '{:#x}'", this->address, this->channel);
 
             throw except::i2c_error(error);
         }
 
         __s32 res = i2c_smbus_read_word_data(i2cBus, 0b00000000);
         if (res < 0) {
-            std::string error = fmt::format(
-                "Failed to read i2c slave at address '0x{:#x}', channel '0x{:#x}'", this->address, this->channel);
+            std::string error =
+                fmt::format("Failed to read i2c slave at address '{:#x}', channel '{:#x}'", this->address, this->channel);
 
             throw except::i2c_error(error);
         }
@@ -51,16 +47,21 @@ namespace ri2c {
         uint16_t MSB = (f & 0xff);
         uint16_t LSB = (f & 0xff00) >> 8;
         // shift bits to the right as we have a 12 bit value in a 16 bit int right justified
-        uint16_t out = (MSB << 8 | LSB) >> 4;
+        uint16_t data = (MSB << 8 | LSB);
 
-        return (float)out;
+        if ((data & 0b1000000000000000) != 0) {
+            // data is negative and need to be flipped as per binary two's compliment
+            return (int)(0b1111000000000000 | (data >> 4));
+        } else {
+            return (int)(data >> 4);
+        }
     }
 
     void ADS1014::init(int i2cBus) {
         // Do all init functions here
         // If they are not the same for each sensor, make this function virtual and implement in unique superclasses that inherit ADS1014
         if (ioctl(i2cBus, I2C_SLAVE, TCAADDR) < 0) {
-            std::string error = fmt::format("Failed to set i2c channel on multiplexer '0x{:#x}'", this->address);
+            std::string error = fmt::format("Failed to set i2c channel on multiplexer '{:#x}'", this->address);
 
             throw except::i2c_error(error);
         }
@@ -68,16 +69,21 @@ namespace ri2c {
         i2c_smbus_write_byte(i2cBus, this->channel);
 
         if (ioctl(i2cBus, I2C_SLAVE, this->address) < 0) {
-            std::string error = fmt::format(
-                "Failed to set i2c slave at address '0x{:#x}', channel '0x{:#x}'", this->address, this->channel);
+            std::string error =
+                fmt::format("Failed to set i2c slave at address '{:#x}', channel '{:#x}'", this->address, this->channel);
 
             throw except::i2c_error(error);
         }
 
         // Read config from toml and write to config register
-        unsigned char configuration[2] = {static_cast<unsigned char>(this->conf0),
-                                          static_cast<unsigned char>(this->conf1)};
-        this->sendConfig(i2cBus, ADS1014_CONF_REG, 2, configuration);
+        unsigned char configuration[2] = {this->conf0, this->conf1};
+
+        if (i2c_smbus_write_i2c_block_data(i2cBus, ADS1014_CONF_REG, 2, configuration) < 0) {
+            std::string error = fmt::format(
+                "Failed to configure i2c slave at address '{:#x}', channel '{:#x}'", this->address, this->channel);
+
+            throw except::i2c_error(error);
+        }
 
         // Set LSB (volts) given config
         // gain bits are stored in bit 11,10,9 of conf0
@@ -165,7 +171,7 @@ namespace ri2c {
     float K_TYPE::read(int i2cBus) {
         // Do all read functions here includeing conversions to float
         // go to conversion register and get bytes back
-        float rawData = this->getRaw(i2cBus);
+        float rawData = (float)this->getRaw(i2cBus);
         // Convert data to useful information
         // Our reference voltage is 0.256 V.
         // The LSB is 0.256V/2^12.
@@ -176,7 +182,9 @@ namespace ri2c {
         // float temperature = (float)thermocoupleMvToC((unsigned long)micro_volts);
         // Assumed ambient of 15 degrees c
 
-        // Just output V for now
-        return this->LSB * rawData;
+        // float v = this->LSB * rawData * 1.0E6;
+        float v = this->LSB * rawData;
+        // float temp = v * 2.508355E-2 + pow(v, 2) * 7.5860106E-8 - pow(v, 3) * 2.503131E-10 + pow(v, 4) * 8.315270E-14;
+        return v;
     }
 } // namespace ri2c
