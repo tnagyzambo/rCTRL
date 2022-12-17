@@ -49,6 +49,16 @@ namespace ri2c {
     private:
     };
 
+    class PAA_7LHPC_300BAR : public ADS1014 {
+    public:
+        PAA_7LHPC_300BAR(::toml::node_view<::toml::node>);
+        ~PAA_7LHPC_300BAR();
+
+        float read(int) override final;
+
+    private:
+    };
+
     class LoadcellBridge : public ADS1014 {
     public:
         LoadcellBridge(::toml::node_view<::toml::node>);

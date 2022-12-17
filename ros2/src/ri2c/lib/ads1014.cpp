@@ -124,6 +124,25 @@ namespace ri2c {
         return ps_slope * rawData - PS_MAX / 8;
     }
 
+    // PAA_7LHPC_300BAR definitions ------------------------------
+    PAA_7LHPC_300BAR::PAA_7LHPC_300BAR(::toml::node_view<::toml::node> toml) : ADS1014(toml) {}
+    PAA_7LHPC_300BAR::~PAA_7LHPC_300BAR() {}
+
+    float PAA_7LHPC_300BAR::read(int i2cBus) {
+        // Do all read functions here includeing conversions to float
+        float PS_MAX = 300.0;
+        // go to conversion register and get bytes back
+        float rawData = this->getRaw(i2cBus);
+
+        // Convert data to useful information
+        // Our reference voltage is 6.144V.
+        // The LSB is 6.144V/2^12.
+        // The LSB is 3mV
+        // We also need to multiply by a PS_MAX/4 to as the sensor outputs between .1 and .9 V/V
+        long double ps_slope = this->LSB * PS_MAX / 4;
+        return ps_slope * rawData - PS_MAX / 8;
+    }
+
     // LoadcellBridge definitions ----------------
     LoadcellBridge::LoadcellBridge(::toml::node_view<::toml::node> toml) : ADS1014(toml) {}
     LoadcellBridge::~LoadcellBridge() {}

@@ -201,8 +201,8 @@ namespace ri2c {
                 std::make_unique<PAA_7LC_30BAR>(PAA_7LC_30BAR(rutil::toml::viewOfTable(ads1014View, "p_h2o2")));
             this->p_ethanol =
                 std::make_unique<PAA_7LC_30BAR>(PAA_7LC_30BAR(rutil::toml::viewOfTable(ads1014View, "p_ethanol")));
-            this->p_pressurant =
-                std::make_unique<PAA_7LC_30BAR>(PAA_7LC_30BAR(rutil::toml::viewOfTable(ads1014View, "p_pressurant")));
+            this->p_pressurant = std::make_unique<PAA_7LHPC_300BAR>(
+                PAA_7LHPC_300BAR(rutil::toml::viewOfTable(ads1014View, "p_pressurant")));
             this->loadcell =
                 std::make_unique<LoadcellBridge>(LoadcellBridge(rutil::toml::viewOfTable(ads1014View, "loadcell")));
             this->p_chamber =
