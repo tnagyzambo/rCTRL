@@ -49,10 +49,10 @@ namespace ri2c {
     private:
     };
 
-    class PAA_7LHPC_300BAR : public ADS1014 {
+    class PA_7LHPC_400BAR : public ADS1014 {
     public:
-        PAA_7LHPC_300BAR(::toml::node_view<::toml::node>);
-        ~PAA_7LHPC_300BAR();
+        PA_7LHPC_400BAR(::toml::node_view<::toml::node>);
+        ~PA_7LHPC_400BAR();
 
         float read(int) override final;
 

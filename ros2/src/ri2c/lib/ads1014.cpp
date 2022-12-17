@@ -124,13 +124,13 @@ namespace ri2c {
         return ps_slope * rawData - PS_MAX / 8;
     }
 
-    // PAA_7LHPC_300BAR definitions ------------------------------
-    PAA_7LHPC_300BAR::PAA_7LHPC_300BAR(::toml::node_view<::toml::node> toml) : ADS1014(toml) {}
-    PAA_7LHPC_300BAR::~PAA_7LHPC_300BAR() {}
+    // PA_7LHPC_400BAR definitions ------------------------------
+    PA_7LHPC_400BAR::PA_7LHPC_400BAR(::toml::node_view<::toml::node> toml) : ADS1014(toml) {}
+    PA_7LHPC_400BAR::~PA_7LHPC_400BAR() {}
 
-    float PAA_7LHPC_300BAR::read(int i2cBus) {
+    float PA_7LHPC_400BAR::read(int i2cBus) {
         // Do all read functions here includeing conversions to float
-        float PS_MAX = 300.0;
+        float PS_MAX = 400.0;
         // go to conversion register and get bytes back
         float rawData = this->getRaw(i2cBus);
 
