@@ -112,16 +112,37 @@ namespace ri2c {
     float PAA_7LC_30BAR::read(int i2cBus) {
         // Do all read functions here includeing conversions to float
         float PS_MAX = 30.0;
-        // go to conversion register and get bytes back
-        float rawData = this->getRaw(i2cBus);
 
         // Convert data to useful information
         // Our reference voltage is 6.144V.
         // The LSB is 6.144V/2^12.
         // The LSB is 3mV
-        // We also need to multiply by a PS_MAX/4 to as the sensor outputs between .1 and .9 V/V
-        long double ps_slope = this->LSB * PS_MAX / 4;
-        return ps_slope * rawData - PS_MAX / 8;
+        // Sensor outputs between 0.5 and 4.5V
+        // Slope is over 4V output range
+        // Minus 0.5V offset from voltage
+        long double ps_slope = PS_MAX / 4;
+        long double pressure = ps_slope * (this->LSB * this->getRaw(i2cBus) - 0.5);
+        return pressure;
+    }
+
+    // PAA_7LC_400BAR definitions -----------------------------------
+    PAA_7LHPC_400BAR::PAA_7LHPC_400BAR(::toml::node_view<::toml::node> toml) : ADS1014(toml) {}
+    PAA_7LHPC_400BAR::~PAA_7LHPC_400BAR() {}
+
+    float PAA_7LHPC_400BAR::read(int i2cBus) {
+        // Do all read functions here includeing conversions to float
+        float PS_MAX = 400.0;
+
+        // Convert data to useful information
+        // Our reference voltage is 6.144V.
+        // The LSB is 6.144V/2^12.
+        // The LSB is 3mV
+        // Sensor outputs between 0.5 and 4.5V
+        // Slope is over 4V output range
+        // Minus 0.5V offset from voltage
+        long double ps_slope = PS_MAX / 4;
+        long double pressure = ps_slope * (this->LSB * this->getRaw(i2cBus) - 0.5);
+        return pressure;
     }
 
     // PA_7LHPC_400BAR definitions ------------------------------
