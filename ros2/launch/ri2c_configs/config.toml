@@ -21,7 +21,7 @@
         conf1 = 0b10000011
 
     [i2c.ads1014.p_pressurant]
-        channel = 0x01
+        channel = 0x20
         address = 0x48
         conf0 = 0b10000000
         conf1 = 0b10000011

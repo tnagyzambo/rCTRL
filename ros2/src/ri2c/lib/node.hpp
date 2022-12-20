@@ -46,7 +46,7 @@ namespace ri2c {
 
         std::unique_ptr<PAA_7LC_30BAR> p_h2o2;
         std::unique_ptr<PAA_7LC_30BAR> p_ethanol;
-        std::unique_ptr<PA_7LHPC_400BAR> p_pressurant;
+        std::unique_ptr<PAA_7LHPC_400BAR> p_pressurant;
         std::unique_ptr<LoadcellBridge> loadcell;
         std::unique_ptr<M5HB_30BAR> p_chamber;
         std::unique_ptr<M5HB_30BAR> p_manifold;

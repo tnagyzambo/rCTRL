@@ -20,7 +20,7 @@ namespace ri2c {
         if (ioctl(i2cBus, I2C_SLAVE, TCAADDR) < 0) {
             std::string error = fmt::format("Failed to set i2c channel on multiplexer '{:#x}'", this->address);
 
-            throw except::i2c_error(error);
+            // throw except::i2c_error(error);
         }
 
         i2c_smbus_write_byte(i2cBus, this->channel);
@@ -29,7 +29,7 @@ namespace ri2c {
             std::string error =
                 fmt::format("Failed to set i2c slave at address '{:#x}', channel '{:#x}'", this->address, this->channel);
 
-            throw except::i2c_error(error);
+            // throw except::i2c_error(error);
         }
 
         __s32 res = i2c_smbus_read_word_data(i2cBus, 0b00000000);
@@ -37,7 +37,7 @@ namespace ri2c {
             std::string error =
                 fmt::format("Failed to read i2c slave at address '{:#x}', channel '{:#x}'", this->address, this->channel);
 
-            throw except::i2c_error(error);
+            // throw except::i2c_error(error);
         }
 
         // Shift
@@ -143,25 +143,6 @@ namespace ri2c {
         long double ps_slope = PS_MAX / 4;
         long double pressure = ps_slope * (this->LSB * this->getRaw(i2cBus) - 0.5);
         return pressure;
-    }
-
-    // PA_7LHPC_400BAR definitions ------------------------------
-    PA_7LHPC_400BAR::PA_7LHPC_400BAR(::toml::node_view<::toml::node> toml) : ADS1014(toml) {}
-    PA_7LHPC_400BAR::~PA_7LHPC_400BAR() {}
-
-    float PA_7LHPC_400BAR::read(int i2cBus) {
-        // Do all read functions here includeing conversions to float
-        float PS_MAX = 400.0;
-        // go to conversion register and get bytes back
-        float rawData = this->getRaw(i2cBus);
-
-        // Convert data to useful information
-        // Our reference voltage is 6.144V.
-        // The LSB is 6.144V/2^12.
-        // The LSB is 3mV
-        // We also need to multiply by a PS_MAX/4 to as the sensor outputs between .1 and .9 V/V
-        long double ps_slope = this->LSB * PS_MAX / 4;
-        return ps_slope * rawData - PS_MAX / 8;
     }
 
     // LoadcellBridge definitions ----------------

@@ -3,6 +3,7 @@
 #include <rclcpp/client.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_lifecycle/lifecycle_node.hpp>
+#include <rdata/logger.hpp>
 #include <recu_msgs/msg/valve_state.hpp>
 #include <recu_msgs/srv/get_valve_state.hpp>
 #include <recu_msgs/srv/valve_action.hpp>
@@ -59,6 +60,17 @@ namespace recu {
         rclcpp::Client<ri2c_msgs::srv::HighSpeedDataLoggingAction>::SharedPtr clHighSpeedDataLoggingOn;
         rclcpp::Client<ri2c_msgs::srv::HighSpeedDataLoggingAction>::SharedPtr clHighSpeedDataLoggingOff;
 
+        std::unique_ptr<rdata::Logger> loggerLowSpeed;
+        std::unique_ptr<rdata::Logger> loggerHighSpeed;
+
+        std::chrono::milliseconds samplePeriodLowSpeed;
+        std::chrono::milliseconds loggingPeriodLowSpeed;
+        std::chrono::milliseconds samplePeriodHighSpeed;
+
+        rclcpp::TimerBase::SharedPtr timerDataLoggingLowSpeed;
+        rclcpp::TimerBase::SharedPtr timerDataLoggingLowSpeedWrite;
+        rclcpp::TimerBase::SharedPtr timerDataLoggingHighSpeed;
+
         std::chrono::milliseconds ignitionSequenceEnd = -1ms;
         std::chrono::milliseconds ignitionSequenceOpenBV = -1ms;
         std::chrono::milliseconds ignitionSequenceCloseBV = -1ms;
@@ -99,6 +111,9 @@ namespace recu {
 
         void readConfig(toml::table toml);
 
+        void callbackDataLoggingLowSpeed();
+        void callbackDataLoggingLowSpeedWrite();
+        void callbackDataLoggingHighSpeed();
         void ignitionSequenceCallback();
 
         recu_msgs::srv::GetValveState::Response createValveStateResponse(ValveState);

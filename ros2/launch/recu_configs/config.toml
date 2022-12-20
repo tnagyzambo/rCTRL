@@ -1,6 +1,14 @@
 # https://www.beyondlogic.org/an-introduction-to-chardev-gpio-and-libgpiod-on-the-raspberry-pi/
 # https://embeddedbits.org/new-linux-kernel-gpio-user-space-interface/
 
+[data_logging]
+    [data_logging.low_speed]
+        sample_period = 20 # ms
+        logging_period = 1000 # ms
+
+    [data_logging.high_speed]
+        sample_period = 1 # ms
+
 [ignition_sequence]
     [ignition_sequence.BV]
     open = -1 # Not actuated

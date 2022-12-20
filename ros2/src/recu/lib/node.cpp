@@ -26,6 +26,28 @@ namespace recu {
             return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::FAILURE;
         }
 
+        try {
+            this->loggerLowSpeed = std::make_unique<rdata::Logger>("/home/ros/rdata/influx/credentials.toml");
+            this->loggerHighSpeed = std::make_unique<rdata::Logger>("/home/ros/rdata/influx/credentials.toml");
+        } catch (const std::runtime_error &e) {
+            RCLCPP_ERROR(this->get_logger(), "Failed to configure node!\nWhat: %s", e.what());
+
+            return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::FAILURE;
+        }
+
+        // Construct timers and immediately stop them
+        this->timerDataLoggingLowSpeed =
+            this->create_wall_timer(samplePeriodLowSpeed, std::bind(&Node::callbackDataLoggingLowSpeed, this));
+        this->timerDataLoggingLowSpeed->cancel();
+
+        this->timerDataLoggingLowSpeedWrite =
+            this->create_wall_timer(loggingPeriodLowSpeed, std::bind(&Node::callbackDataLoggingLowSpeedWrite, this));
+        this->timerDataLoggingLowSpeedWrite->cancel();
+
+        this->timerDataLoggingHighSpeed =
+            this->create_wall_timer(samplePeriodHighSpeed, std::bind(&Node::callbackDataLoggingHighSpeed, this));
+        this->timerDataLoggingHighSpeed->cancel();
+
         RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::state::inactive().c_str());
         return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
     }
@@ -33,6 +55,10 @@ namespace recu {
     rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn Node::on_activate(
         const rclcpp_lifecycle::State &) {
         RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::transition::activating().c_str());
+
+        // Start logging
+        this->timerDataLoggingLowSpeed->reset();
+        this->timerDataLoggingLowSpeedWrite->reset();
 
         this->srvIgnitionSequence = this->create_service<recu_msgs::srv::ValveAction>(
             "recu/fire", std::bind(&Node::IgnitionSequence, this, std::placeholders::_1, std::placeholders::_2));
@@ -119,6 +145,9 @@ namespace recu {
         this->srvMV2_Close.reset();
         this->srvMV2_GetState.reset();
 
+        this->timerDataLoggingLowSpeed->cancel();
+        this->timerDataLoggingLowSpeedWrite->cancel();
+        this->timerDataLoggingHighSpeed->cancel();
         this->ignitionSequenceTimer->cancel();
 
         RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::state::inactive().c_str());
@@ -146,6 +175,9 @@ namespace recu {
         this->ignitionSequenceOnHSDatalogging = -1ms;
         this->ignitionSequenceOffHSDatalogging = -1ms;
 
+        this->timerDataLoggingLowSpeed->cancel();
+        this->timerDataLoggingLowSpeedWrite->cancel();
+        this->timerDataLoggingHighSpeed->cancel();
         this->ignitionSequenceTimer->cancel();
 
         RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::state::unconfigured().c_str());
@@ -240,6 +272,49 @@ namespace recu {
         auto ignitionSequenceEndView = rutil::toml::viewOfTable(ignitionSequenceView, "end");
         this->ignitionSequenceEnd =
             (std::chrono::milliseconds)rutil::toml::getTomlEntryByKey<int>(ignitionSequenceEndView, "end");
+
+        auto loggingView = rutil::toml::viewOfTable(tomlView, "data_logging");
+
+        auto lowSpeedView = rutil::toml::viewOfTable(loggingView, "low_speed");
+
+        this->samplePeriodLowSpeed =
+            std::chrono::milliseconds(rutil::toml::getTomlEntryByKey<int>(lowSpeedView, "sample_period"));
+
+        this->loggingPeriodLowSpeed =
+            std::chrono::milliseconds(rutil::toml::getTomlEntryByKey<int>(lowSpeedView, "logging_period"));
+
+        auto highSpeedView = rutil::toml::viewOfTable(loggingView, "high_speed");
+
+        this->samplePeriodHighSpeed =
+            std::chrono::milliseconds(rutil::toml::getTomlEntryByKey<int>(highSpeedView, "sample_period"));
+    }
+
+    // Write to buffer
+    void Node::callbackDataLoggingLowSpeed() {
+        int value1 = this->valvePV->getState();
+        int value2 = this->valveBV->getState();
+        int value3 = this->valveMV1->getState();
+        int value4 = this->valveMV2->getState();
+
+        this->loggerLowSpeed->log(fmt::format("valve=pv State={}i", value1));
+        this->loggerLowSpeed->log(fmt::format("valve=bv State={}i", value2));
+        this->loggerLowSpeed->log(fmt::format("valve=mv1 State={}i", value3));
+        this->loggerLowSpeed->log(fmt::format("valve=mv2 State={}i", value4));
+    }
+
+    // Write buffer to influx
+    void Node::callbackDataLoggingLowSpeedWrite() { this->loggerLowSpeed->writeToInflux(); }
+
+    void Node::callbackDataLoggingHighSpeed() {
+        int value1 = this->valvePV->getState();
+        int value2 = this->valveBV->getState();
+        int value3 = this->valveMV1->getState();
+        int value4 = this->valveMV2->getState();
+
+        this->loggerHighSpeed->log(fmt::format("valve=pv State={}i", value1));
+        this->loggerHighSpeed->log(fmt::format("valve=bv State={}i", value2));
+        this->loggerHighSpeed->log(fmt::format("valve=mv1 State={}i", value3));
+        this->loggerHighSpeed->log(fmt::format("valve=mv2 State={}i", value4));
     }
 
     void Node::ignitionSequenceCallback() {
@@ -352,6 +427,9 @@ namespace recu {
                 auto request = std::make_shared<ri2c_msgs::srv::HighSpeedDataLoggingAction::Request>();
                 auto result = this->clHighSpeedDataLoggingOn->async_send_request(request);
 
+                this->timerDataLoggingHighSpeed->reset();
+                RCLCPP_INFO(this->get_logger(), "High Speed Data Logging On");
+
                 // transfer the future's shared state to a longer-lived future
                 this->pending_futures.push_back(std::move(result));
             } catch (std::runtime_error &e) {
@@ -365,6 +443,10 @@ namespace recu {
             try {
                 auto request = std::make_shared<ri2c_msgs::srv::HighSpeedDataLoggingAction::Request>();
                 auto result = this->clHighSpeedDataLoggingOff->async_send_request(request);
+
+                this->timerDataLoggingHighSpeed->cancel();
+                this->loggerHighSpeed->writeToInflux();
+                RCLCPP_INFO(this->get_logger(), "High Speed Data Logging Off");
 
                 // transfer the future's shared state to a longer-lived future
                 this->pending_futures.push_back(std::move(result));
