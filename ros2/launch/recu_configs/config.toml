@@ -19,16 +19,16 @@
     close = 20000 # ms
 
     [ignition_sequence.MV1]
-    open = 2000 # ms
-    close = 4000 # ms
+    open = 12000 # ms
+    close = 17000 # ms
 
     [ignition_sequence.MV2]
-    open = 2000 # ms
-    close = 4000 # ms
+    open = 12000 # ms
+    close = 17000 # ms
 
     [ignition_sequence.ignitor]
-    on = 10000 # ms
-    off = 10500 # ms
+    on = -1 # ms
+    off = -1 # ms
 
     [ignition_sequence.high_speed_data_logging]
     on = 0 # ms

@@ -9,6 +9,7 @@
 #include <recu_msgs/srv/valve_action.hpp>
 #include <rgpio/input.hpp>
 #include <rgpio/output.hpp>
+#include <ri2c_msgs/srv/detail/pres_control_loop_action__struct.hpp>
 #include <ri2c_msgs/srv/high_speed_data_logging_action.hpp>
 #include <rutil/fmt.hpp>
 #include <rutil/toml.hpp>
@@ -32,6 +33,7 @@ namespace recu {
         // This is a horrible, very scary line but it should work for what we need to do
         // https://stackoverflow.com/questions/21531096/can-i-use-stdasync-without-waiting-for-the-future-limitation
         std::vector<rclcpp::Client<ri2c_msgs::srv::HighSpeedDataLoggingAction>::FutureAndRequestId> pending_futures;
+        std::vector<rclcpp::Client<ri2c_msgs::srv::PresControlLoopAction>::FutureAndRequestId> pending_futures_pres;
 
         std::unique_ptr<rgpio::Output> valveBV;
         std::unique_ptr<rgpio::Output> valvePV;
@@ -59,6 +61,8 @@ namespace recu {
 
         rclcpp::Client<ri2c_msgs::srv::HighSpeedDataLoggingAction>::SharedPtr clHighSpeedDataLoggingOn;
         rclcpp::Client<ri2c_msgs::srv::HighSpeedDataLoggingAction>::SharedPtr clHighSpeedDataLoggingOff;
+        rclcpp::Client<ri2c_msgs::srv::PresControlLoopAction>::SharedPtr clPresControlLoopOn;
+        rclcpp::Client<ri2c_msgs::srv::PresControlLoopAction>::SharedPtr clPresControlLoopOff;
 
         std::unique_ptr<rdata::Logger> loggerLowSpeed;
         std::unique_ptr<rdata::Logger> loggerHighSpeed;

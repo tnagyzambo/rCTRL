@@ -334,7 +334,7 @@ namespace ri2c {
     }
 
     void Node::callbackPressureControlLoop() {
-        float pressureTank = this->p_h2o2->read(this->i2cBus);
+        float pressureTank = this->p_ethanol->read(this->i2cBus);
         float pressureE = this->pressureSetPoint - pressureTank; // Create error signal
 
         // If pressure is lower than set point

@@ -1,5 +1,6 @@
 #include <node.hpp>
 #include <ri2c_msgs/srv/detail/high_speed_data_logging_action__struct.hpp>
+#include <ri2c_msgs/srv/detail/pres_control_loop_action__struct.hpp>
 
 namespace recu {
     Node::Node() : rclcpp_lifecycle::LifecycleNode("recu") {
@@ -121,6 +122,10 @@ namespace recu {
 
         this->clHighSpeedDataLoggingOff =
             this->create_client<ri2c_msgs::srv::HighSpeedDataLoggingAction>("ri2c/hs_datalog/off");
+
+        this->clPresControlLoopOn = this->create_client<ri2c_msgs::srv::PresControlLoopAction>("ri2c/p_control/open");
+
+        this->clPresControlLoopOff = this->create_client<ri2c_msgs::srv::PresControlLoopAction>("ri2c/p_control/close");
 
         RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::state::active().c_str());
 
@@ -344,7 +349,11 @@ namespace recu {
         if (ignitionSequenceTime >= this->ignitionSequenceOpenPV && this->ignitionSequenceOpenPV >= 0ms &&
             !this->ignitionSequenceOpenPVTriggered) {
             try {
-                this->valvePV->write(rgpio::gpio::line_level::HIGH);
+                auto request = std::make_shared<ri2c_msgs::srv::PresControlLoopAction::Request>();
+                auto result = this->clPresControlLoopOn->async_send_request(request);
+
+                // transfer the future's shared state to a longer-lived future
+                this->pending_futures_pres.push_back(std::move(result));
             } catch (rgpio::except::gpio_error &e) {
                 RCLCPP_ERROR(this->get_logger(), "%s", e.what());
             }
@@ -354,7 +363,11 @@ namespace recu {
         if (ignitionSequenceTime >= this->ignitionSequenceClosePV && this->ignitionSequenceClosePV >= 0ms &&
             !this->ignitionSequenceClosePVTriggered) {
             try {
-                this->valvePV->write(rgpio::gpio::line_level::LOW);
+                auto request = std::make_shared<ri2c_msgs::srv::PresControlLoopAction::Request>();
+                auto result = this->clPresControlLoopOff->async_send_request(request);
+
+                // transfer the future's shared state to a longer-lived future
+                this->pending_futures_pres.push_back(std::move(result));
             } catch (rgpio::except::gpio_error &e) {
                 RCLCPP_ERROR(this->get_logger(), "%s", e.what());
             }
