@@ -117,6 +117,18 @@ namespace recu {
             "recu/mv2/get_state", std::bind(&Node::MV2_GetState, this, std::placeholders::_1, std::placeholders::_2));
         RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::srv::created("recu/mv2/get_state").c_str());
 
+        this->srvPurge_Open = this->create_service<recu_msgs::srv::ValveAction>(
+            "recu/purge/open", std::bind(&Node::Purge_Open, this, std::placeholders::_1, std::placeholders::_2));
+        RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::srv::created("recu/purge/open").c_str());
+
+        this->srvPurge_Close = this->create_service<recu_msgs::srv::ValveAction>(
+            "recu/purge/close", std::bind(&Node::Purge_Close, this, std::placeholders::_1, std::placeholders::_2));
+        RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::srv::created("recu/purge/close").c_str());
+
+        this->srvPurge_GetState = this->create_service<recu_msgs::srv::GetValveState>(
+            "recu/purge/get_state", std::bind(&Node::Purge_GetState, this, std::placeholders::_1, std::placeholders::_2));
+        RCLCPP_INFO(this->get_logger(), "%s", rutil::fmt::srv::created("recu/purge/get_state").c_str());
+
         this->clHighSpeedDataLoggingOn =
             this->create_client<ri2c_msgs::srv::HighSpeedDataLoggingAction>("ri2c/hs_datalog/on");
 
@@ -149,6 +161,9 @@ namespace recu {
         this->srvMV2_Open.reset();
         this->srvMV2_Close.reset();
         this->srvMV2_GetState.reset();
+        this->srvPurge_Open.reset();
+        this->srvPurge_Close.reset();
+        this->srvPurge_GetState.reset();
 
         this->timerDataLoggingLowSpeed->cancel();
         this->timerDataLoggingLowSpeedWrite->cancel();
@@ -175,6 +190,8 @@ namespace recu {
         this->ignitionSequenceCloseMV1 = -1ms;
         this->ignitionSequenceOpenMV2 = -1ms;
         this->ignitionSequenceCloseMV2 = -1ms;
+        this->ignitionSequenceOpenPurge = -1ms;
+        this->ignitionSequenceClosePurge = -1ms;
         this->ignitionSequenceOnIgnitor = -1ms;
         this->ignitionSequenceOffIgnitor = -1ms;
         this->ignitionSequenceOnHSDatalogging = -1ms;
@@ -206,6 +223,7 @@ namespace recu {
         this->valvePV.reset();
         this->valveMV1.reset();
         this->valveMV2.reset();
+        this->valvePurge.reset();
         this->pyro.reset();
 
         this->srvIgnitionSequence.reset();
@@ -221,6 +239,9 @@ namespace recu {
         this->srvMV2_Open.reset();
         this->srvMV2_Close.reset();
         this->srvMV2_GetState.reset();
+        this->srvPurge_Open.reset();
+        this->srvPurge_Close.reset();
+        this->srvPurge_GetState.reset();
     }
 
     // Parse .toml and create all commands
@@ -233,6 +254,7 @@ namespace recu {
         this->valvePV = std::make_unique<rgpio::Output>(rgpio::Output((rclcpp::Node *)this, gpioView, "valvePV"));
         this->valveMV1 = std::make_unique<rgpio::Output>(rgpio::Output((rclcpp::Node *)this, gpioView, "valveMV1"));
         this->valveMV2 = std::make_unique<rgpio::Output>(rgpio::Output((rclcpp::Node *)this, gpioView, "valveMV2"));
+        this->valvePurge = std::make_unique<rgpio::Output>(rgpio::Output((rclcpp::Node *)this, gpioView, "valvePurge"));
         this->pyro = std::make_unique<rgpio::Output>(rgpio::Output((rclcpp::Node *)this, gpioView, "pyro"));
 
         auto ignitionSequenceView = rutil::toml::viewOfTable(tomlView, "ignition_sequence");
@@ -260,6 +282,12 @@ namespace recu {
             (std::chrono::milliseconds)rutil::toml::getTomlEntryByKey<int>(ignitionSequenceMV2View, "open");
         this->ignitionSequenceCloseMV2 =
             (std::chrono::milliseconds)rutil::toml::getTomlEntryByKey<int>(ignitionSequenceMV2View, "close");
+
+        auto ignitionSequencePurgeView = rutil::toml::viewOfTable(ignitionSequenceView, "Purge");
+        this->ignitionSequenceOpenPurge =
+            (std::chrono::milliseconds)rutil::toml::getTomlEntryByKey<int>(ignitionSequencePurgeView, "open");
+        this->ignitionSequenceClosePurge =
+            (std::chrono::milliseconds)rutil::toml::getTomlEntryByKey<int>(ignitionSequencePurgeView, "close");
 
         auto ignitionSequenceIgnitorView = rutil::toml::viewOfTable(ignitionSequenceView, "ignitor");
         this->ignitionSequenceOnIgnitor =
@@ -300,11 +328,13 @@ namespace recu {
         int value2 = this->valveBV->getState();
         int value3 = this->valveMV1->getState();
         int value4 = this->valveMV2->getState();
+        int value5 = this->valvePurge->getState();
 
         this->loggerLowSpeed->log(fmt::format("valve=pv State={}i", value1));
         this->loggerLowSpeed->log(fmt::format("valve=bv State={}i", value2));
         this->loggerLowSpeed->log(fmt::format("valve=mv1 State={}i", value3));
         this->loggerLowSpeed->log(fmt::format("valve=mv2 State={}i", value4));
+        this->loggerLowSpeed->log(fmt::format("valve=purge State={}i", value5));
     }
 
     // Write buffer to influx
@@ -315,11 +345,13 @@ namespace recu {
         int value2 = this->valveBV->getState();
         int value3 = this->valveMV1->getState();
         int value4 = this->valveMV2->getState();
+        int value5 = this->valvePurge->getState();
 
         this->loggerHighSpeed->log(fmt::format("valve=pv State={}i", value1));
         this->loggerHighSpeed->log(fmt::format("valve=bv State={}i", value2));
         this->loggerHighSpeed->log(fmt::format("valve=mv1 State={}i", value3));
         this->loggerHighSpeed->log(fmt::format("valve=mv2 State={}i", value4));
+        this->loggerLowSpeed->log(fmt::format("valve=purge State={}i", value5));
     }
 
     void Node::ignitionSequenceCallback() {
@@ -414,6 +446,26 @@ namespace recu {
             this->ignitionSequenceCloseMV2Triggered = true;
         }
 
+        if (ignitionSequenceTime >= this->ignitionSequenceOpenPurge && this->ignitionSequenceOpenPurge >= 0ms &&
+            !this->ignitionSequenceOpenPurgeTriggered) {
+            try {
+                this->valvePurge->write(rgpio::gpio::line_level::HIGH);
+            } catch (rgpio::except::gpio_error &e) {
+                RCLCPP_ERROR(this->get_logger(), "%s", e.what());
+            }
+            this->ignitionSequenceOpenPurgeTriggered = true;
+        }
+
+        if (ignitionSequenceTime >= this->ignitionSequenceClosePurge && this->ignitionSequenceClosePurge >= 0ms &&
+            !this->ignitionSequenceClosePurgeTriggered) {
+            try {
+                this->valvePurge->write(rgpio::gpio::line_level::LOW);
+            } catch (rgpio::except::gpio_error &e) {
+                RCLCPP_ERROR(this->get_logger(), "%s", e.what());
+            }
+            this->ignitionSequenceClosePurgeTriggered = true;
+        }
+
         if (ignitionSequenceTime >= this->ignitionSequenceOnIgnitor && this->ignitionSequenceOnIgnitor >= 0ms &&
             !this->ignitionSequenceOnIgnitorTriggered) {
             try {
@@ -480,10 +532,13 @@ namespace recu {
             this->ignitionSequenceCloseMV1Triggered = false;
             this->ignitionSequenceOpenMV2Triggered = false;
             this->ignitionSequenceCloseMV2Triggered = false;
+            this->ignitionSequenceOpenPurgeTriggered = false;
+            this->ignitionSequenceClosePurgeTriggered = false;
             this->ignitionSequenceOnIgnitorTriggered = false;
             this->ignitionSequenceOffIgnitorTriggered = false;
             this->ignitionSequenceOnHSDataloggingTriggered = false;
             this->ignitionSequenceOffHSDataloggingTriggered = false;
+            this->loggerLowSpeed->log(fmt::format("info=sequence Info=\"end\""));
             RCLCPP_INFO(this->get_logger(), "Ignition sequence over");
         }
     }
@@ -517,6 +572,7 @@ namespace recu {
         (void)response;
 
         RCLCPP_WARN(this->get_logger(), "FIRING!!!");
+        this->loggerLowSpeed->log(fmt::format("info=sequence Info=\"start\""));
         this->ignitionSequenceStartTime = std::chrono::high_resolution_clock::now();
         this->ignitionSequenceTimer->reset();
     }
@@ -531,7 +587,9 @@ namespace recu {
         this->valvePV->write(rgpio::gpio::line_level::LOW);
         this->valveMV1->write(rgpio::gpio::line_level::LOW);
         this->valveMV2->write(rgpio::gpio::line_level::LOW);
+        this->valvePurge->write(rgpio::gpio::line_level::HIGH);
         this->pyro->write(rgpio::gpio::line_level::LOW);
+        this->loggerLowSpeed->log(fmt::format("info=sequence Info=\"abort\""));
 
         this->ignitionSequenceTimer->cancel();
 
@@ -672,6 +730,39 @@ namespace recu {
         (void)request;
         try {
             *response = createValveStateResponse((ValveState)rgpio::gpio::line_level::toInt(this->valveMV2->getState()));
+        } catch (rgpio::except::gpio_error &e) {
+            *response = createValveStateResponse(ValveState::Unknown);
+            RCLCPP_ERROR(this->get_logger(), "%s", e.what());
+        }
+    }
+
+    void Node::Purge_Open(const std::shared_ptr<recu_msgs::srv::ValveAction::Request> request,
+                        std::shared_ptr<recu_msgs::srv::ValveAction::Response> response) {
+        (void)request;
+        (void)response;
+        try {
+            this->valvePurge->write(rgpio::gpio::line_level::HIGH);
+        } catch (rgpio::except::gpio_error &e) {
+            RCLCPP_ERROR(this->get_logger(), "%s", e.what());
+        }
+    }
+
+    void Node::Purge_Close(const std::shared_ptr<recu_msgs::srv::ValveAction::Request> request,
+                         std::shared_ptr<recu_msgs::srv::ValveAction::Response> response) {
+        (void)request;
+        (void)response;
+        try {
+            this->valvePurge->write(rgpio::gpio::line_level::LOW);
+        } catch (rgpio::except::gpio_error &e) {
+            RCLCPP_ERROR(this->get_logger(), "%s", e.what());
+        }
+    }
+
+    void Node::Purge_GetState(const std::shared_ptr<recu_msgs::srv::GetValveState::Request> request,
+                            std::shared_ptr<recu_msgs::srv::GetValveState::Response> response) {
+        (void)request;
+        try {
+            *response = createValveStateResponse((ValveState)rgpio::gpio::line_level::toInt(this->valvePurge->getState()));
         } catch (rgpio::except::gpio_error &e) {
             *response = createValveStateResponse(ValveState::Unknown);
             RCLCPP_ERROR(this->get_logger(), "%s", e.what());

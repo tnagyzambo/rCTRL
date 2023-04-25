@@ -15,16 +15,20 @@
     close = -1 # Not actuated
 
     [ignition_sequence.PV]
-    open = 0 # ms
-    close = 20000 # ms
+    open = -1 # ms
+    close = -1 # ms
 
     [ignition_sequence.MV1]
-    open = 12000 # ms
-    close = 17000 # ms
+    open = 0 # ms
+    close = 1000 # ms
 
     [ignition_sequence.MV2]
-    open = 12000 # ms
-    close = 17000 # ms
+    open = -1 # ms
+    close = -1 # ms
+
+    [ignition_sequence.Purge]
+    open = 1100 # ms
+    close = 2000 # ms
 
     [ignition_sequence.ignitor]
     on = -1 # ms
@@ -32,10 +36,10 @@
 
     [ignition_sequence.high_speed_data_logging]
     on = 0 # ms
-    off = 20000 # ms
+    off = 2100 # ms
 
     [ignition_sequence.end]
-    end = 30000 # ms
+    end = 2500 # ms
 
 [gpio]
     [gpio.valveBV]
@@ -62,6 +66,13 @@
     [gpio.valveMV2]
     chipNumber = 0
     lineNumber = 24
+    sim = false
+    mode = "output"
+    defaultLevel = 0
+
+    [gpio.valvePurge]
+    chipNumber = 0
+    lineNumber = 25
     sim = false
     mode = "output"
     defaultLevel = 0

@@ -39,6 +39,7 @@ namespace recu {
         std::unique_ptr<rgpio::Output> valvePV;
         std::unique_ptr<rgpio::Output> valveMV1;
         std::unique_ptr<rgpio::Output> valveMV2;
+        std::unique_ptr<rgpio::Output> valvePurge;
         std::unique_ptr<rgpio::Output> pyro;
 
         rclcpp::TimerBase::SharedPtr ignitionSequenceTimer;
@@ -58,6 +59,9 @@ namespace recu {
         rclcpp::Service<recu_msgs::srv::ValveAction>::SharedPtr srvMV2_Open;
         rclcpp::Service<recu_msgs::srv::ValveAction>::SharedPtr srvMV2_Close;
         rclcpp::Service<recu_msgs::srv::GetValveState>::SharedPtr srvMV2_GetState;
+        rclcpp::Service<recu_msgs::srv::ValveAction>::SharedPtr srvPurge_Open;
+        rclcpp::Service<recu_msgs::srv::ValveAction>::SharedPtr srvPurge_Close;
+        rclcpp::Service<recu_msgs::srv::GetValveState>::SharedPtr srvPurge_GetState;
 
         rclcpp::Client<ri2c_msgs::srv::HighSpeedDataLoggingAction>::SharedPtr clHighSpeedDataLoggingOn;
         rclcpp::Client<ri2c_msgs::srv::HighSpeedDataLoggingAction>::SharedPtr clHighSpeedDataLoggingOff;
@@ -84,6 +88,8 @@ namespace recu {
         std::chrono::milliseconds ignitionSequenceCloseMV1 = -1ms;
         std::chrono::milliseconds ignitionSequenceOpenMV2 = -1ms;
         std::chrono::milliseconds ignitionSequenceCloseMV2 = -1ms;
+        std::chrono::milliseconds ignitionSequenceOpenPurge = -1ms;
+        std::chrono::milliseconds ignitionSequenceClosePurge = -1ms;
         std::chrono::milliseconds ignitionSequenceOnIgnitor = -1ms;
         std::chrono::milliseconds ignitionSequenceOffIgnitor = -1ms;
         std::chrono::milliseconds ignitionSequenceOnHSDatalogging = -1ms;
@@ -97,6 +103,8 @@ namespace recu {
         bool ignitionSequenceCloseMV1Triggered = false;
         bool ignitionSequenceOpenMV2Triggered = false;
         bool ignitionSequenceCloseMV2Triggered = false;
+        bool ignitionSequenceOpenPurgeTriggered = false;
+        bool ignitionSequenceClosePurgeTriggered = false;
         bool ignitionSequenceOnIgnitorTriggered = false;
         bool ignitionSequenceOffIgnitorTriggered = false;
         bool ignitionSequenceOnHSDataloggingTriggered = false;
@@ -149,6 +157,12 @@ namespace recu {
         void MV2_Close(const std::shared_ptr<recu_msgs::srv::ValveAction::Request>,
                        std::shared_ptr<recu_msgs::srv::ValveAction::Response>);
         void MV2_GetState(const std::shared_ptr<recu_msgs::srv::GetValveState::Request>,
+                          std::shared_ptr<recu_msgs::srv::GetValveState::Response>);
+        void Purge_Open(const std::shared_ptr<recu_msgs::srv::ValveAction::Request>,
+                      std::shared_ptr<recu_msgs::srv::ValveAction::Response>);
+        void Purge_Close(const std::shared_ptr<recu_msgs::srv::ValveAction::Request>,
+                       std::shared_ptr<recu_msgs::srv::ValveAction::Response>);
+        void Purge_GetState(const std::shared_ptr<recu_msgs::srv::GetValveState::Request>,
                           std::shared_ptr<recu_msgs::srv::GetValveState::Response>);
 
         void deleteAllPointers();

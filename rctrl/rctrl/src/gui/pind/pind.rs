@@ -24,6 +24,7 @@ pub struct PInD {
     valve_control_mv2: ValveControl,
     valve_control_esv: ValveControl,
     valve_control_pv: ValveControl,
+    valve_control_purge: ValveControl,
     abort_button: AbortButton,
     fire_button: FireButton,
 }
@@ -38,6 +39,7 @@ impl PInD {
             valve_control_mv2: ValveControl::new(ws_lock, "recu/mv2".to_string(), "MV2".to_string()),
             valve_control_esv: ValveControl::new(ws_lock, "recu/bv".to_string(), "BV".to_string()),
             valve_control_pv: ValveControl::new(ws_lock, "ri2c/p_control".to_string(), "PV".to_string()),
+            valve_control_purge: ValveControl::new(ws_lock, "recu/purge".to_string(), "PURGE".to_string()),
             fire_button: FireButton::new(ws_lock),
             abort_button: AbortButton::new(ws_lock),
         }
@@ -77,6 +79,7 @@ impl epi::App for PInD {
             valve_control_mv2,
             valve_control_esv,
             valve_control_pv,
+            valve_control_purge,
             fire_button,
             abort_button,
         } = self;
@@ -99,10 +102,12 @@ impl epi::App for PInD {
             egui::Area::new("pnid_overlay").fixed_pos(egui::pos2(32.0, 32.0)).show(ctx, |ui| {
                 ui.horizontal(|ui| {
                     let rstate_panel = self.rstate_panel.draw(ctx, ui);
-                    ui.add_space(460.0);
+                    ui.add_space(360.0);
                     self.fire_button.draw(ctx, ui);
                     ui.add_space(20.0);
                     self.abort_button.draw(ctx, ui);
+                    ui.add_space(20.0);
+                    self.valve_control_purge.draw(ctx, ui);
                 });
 
                 ui.add_space(50.0);
@@ -161,6 +166,11 @@ impl App for PInD {
 
             // Request valve state
             let topic = "/recu/bv/get_state";
+            let cmd = rctrl_rosbridge::protocol::CallService::<u8>::new(&topic);
+            self.ws_lock.add_ws_write(serde_json::to_string(&cmd).unwrap());
+
+            // Request valve state
+            let topic = "/recu/purge/get_state";
             let cmd = rctrl_rosbridge::protocol::CallService::<u8>::new(&topic);
             self.ws_lock.add_ws_write(serde_json::to_string(&cmd).unwrap());
 
