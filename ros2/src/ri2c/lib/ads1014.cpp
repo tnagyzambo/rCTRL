@@ -160,8 +160,8 @@ namespace ri2c {
         // The LSB is 3mV
         // For now just outputting volts directly
         // TODO: increase gain and calibrate
-        double lc_slope = this->LSB;
-        double lc_offset = 0;
+        double lc_slope = this->LSB*2.12841733e5;
+        double lc_offset = -7.6718687e1;
         return lc_slope * rawData + lc_offset;
     }
 
@@ -204,7 +204,7 @@ namespace ri2c {
         // Assumed ambient of 15 degrees c
 
         // float v = this->LSB * rawData * 1.0E6;
-        float v = this->LSB * rawData;
+        float v = (this->LSB * rawData+1000e-6)/(40.96e-6);
         // float temp = v * 2.508355E-2 + pow(v, 2) * 7.5860106E-8 - pow(v, 3) * 2.503131E-10 + pow(v, 4) * 8.315270E-14;
         return v;
     }

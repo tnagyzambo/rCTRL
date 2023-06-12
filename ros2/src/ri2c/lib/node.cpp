@@ -40,7 +40,7 @@ namespace ri2c {
         std::this_thread::sleep_for(std::chrono::nanoseconds(1000000));
         this->p_manifold->init(this->i2cBus);
         std::this_thread::sleep_for(std::chrono::nanoseconds(1000000));
-        this->t_chamber->init(this->i2cBus);
+        this->t_manifold->init(this->i2cBus);
         std::this_thread::sleep_for(std::chrono::nanoseconds(1000000));
 
         try {
@@ -169,7 +169,7 @@ namespace ri2c {
         this->loadcell.reset();
         this->p_chamber.reset();
         this->p_manifold.reset();
-        this->t_chamber.reset();
+        this->t_manifold.reset();
 
         this->timerDataLoggingLowSpeed.reset();
         this->timerDataLoggingLowSpeedWrite.reset();
@@ -209,7 +209,7 @@ namespace ri2c {
                 std::make_unique<M5HB_30BAR>(M5HB_30BAR(rutil::toml::viewOfTable(ads1014View, "p_chamber")));
             this->p_manifold =
                 std::make_unique<M5HB_30BAR>(M5HB_30BAR(rutil::toml::viewOfTable(ads1014View, "p_manifold")));
-            this->t_chamber = std::make_unique<K_TYPE>(K_TYPE(rutil::toml::viewOfTable(ads1014View, "t_chamber")));
+            this->t_manifold = std::make_unique<K_TYPE>(K_TYPE(rutil::toml::viewOfTable(ads1014View, "t_manifold")));
 
             auto loggingView = rutil::toml::viewOfTable(tomlView, "data_logging");
 
@@ -247,15 +247,15 @@ namespace ri2c {
         float value4 = this->loadcell->read(this->i2cBus);
         float value5 = this->p_chamber->read(this->i2cBus);
         float value6 = this->p_manifold->read(this->i2cBus);
-        float value7 = this->t_chamber->read(this->i2cBus);
+        float value7 = this->t_manifold->read(this->i2cBus);
 
         this->loggerLowSpeed->log(fmt::format("sensor=p_h2o2 Bar={}", value1));
         this->loggerLowSpeed->log(fmt::format("sensor=p_ethanol Bar={}", value2));
         this->loggerLowSpeed->log(fmt::format("sensor=p_pressurant Bar={}", value3));
-        this->loggerLowSpeed->log(fmt::format("sensor=loadcell Volts={}", value4));
+        this->loggerLowSpeed->log(fmt::format("sensor=loadcell N={}", value4));
         this->loggerLowSpeed->log(fmt::format("sensor=p_chamber Bar={}", value5));
         this->loggerLowSpeed->log(fmt::format("sensor=p_manifold Bar={}", value6));
-        this->loggerLowSpeed->log(fmt::format("sensor=t_chamber Volts={}", value7));
+        this->loggerLowSpeed->log(fmt::format("sensor=t_manifold C={}", value7));
     }
 
     // Write buffer to influx
@@ -268,15 +268,15 @@ namespace ri2c {
         float value4 = this->loadcell->read(this->i2cBus);
         float value5 = this->p_chamber->read(this->i2cBus);
         float value6 = this->p_manifold->read(this->i2cBus);
-        float value7 = this->t_chamber->read(this->i2cBus);
+        float value7 = this->t_manifold->read(this->i2cBus);
 
         this->loggerLowSpeed->log(fmt::format("sensor=p_h2o2 Bar={}", value1));
         this->loggerLowSpeed->log(fmt::format("sensor=p_ethanol Bar={}", value2));
         this->loggerLowSpeed->log(fmt::format("sensor=p_pressurant Bar={}", value3));
-        this->loggerLowSpeed->log(fmt::format("sensor=loadcell Volts={}", value4));
+        this->loggerLowSpeed->log(fmt::format("sensor=loadcell N={}", value4));
         this->loggerLowSpeed->log(fmt::format("sensor=p_chamber Bar={}", value5));
         this->loggerLowSpeed->log(fmt::format("sensor=p_manifold Bar={}", value6));
-        this->loggerLowSpeed->log(fmt::format("sensor=t_chamber Volts={}", value7));
+        this->loggerLowSpeed->log(fmt::format("sensor=t_manifold C={}", value7));
     }
 
     void Node::callbackDataLoggingHighSpeedOn(

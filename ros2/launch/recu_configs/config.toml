@@ -15,31 +15,31 @@
     close = -1 # Not actuated
 
     [ignition_sequence.PV]
-    open = -1 # ms
-    close = -1 # ms
+    open = -1 # Not actuated
+    close = 11500 # ms
 
     [ignition_sequence.MV1]
-    open = 0 # ms
-    close = 1000 # ms
+    open = 9955 # ms
+    close = 11500 # ms
 
     [ignition_sequence.MV2]
-    open = -1 # ms
-    close = -1 # ms
+    open = 10000 # ms
+    close = 11500 # ms
 
     [ignition_sequence.Purge]
-    open = 1100 # ms
-    close = 2000 # ms
+    open = 11700 # ms
+    close = 12700 # ms
 
     [ignition_sequence.ignitor]
-    on = -1 # ms
-    off = -1 # ms
+    on = 9750 # ms
+    off = 10000 # ms
 
     [ignition_sequence.high_speed_data_logging]
-    on = 0 # ms
-    off = 2100 # ms
+    on = 8000 # ms
+    off = 14000 # ms
 
     [ignition_sequence.end]
-    end = 2500 # ms
+    end = 18000 # ms
 
 [gpio]
     [gpio.valveBV]

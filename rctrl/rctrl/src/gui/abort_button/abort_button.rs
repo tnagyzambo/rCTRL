@@ -45,5 +45,25 @@ impl AbortButton {
             let cmd = rctrl_rosbridge::protocol::CallService::<u8>::new(&service);
             self.ws_lock.add_ws_write(serde_json::to_string(&cmd).unwrap());
         }
+
+        let events = ui.input().events.clone();
+        for event in &events {
+            match event {
+                egui::Event::Key{key, pressed, modifiers} => {
+                    match key {
+                        egui::Key::Space => {
+                            if *pressed {
+                                let service = "/recu/abort";
+                                let cmd = rctrl_rosbridge::protocol::CallService::<u8>::new(&service);
+                                self.ws_lock.add_ws_write(serde_json::to_string(&cmd).unwrap());
+                            }
+                        },
+                        _ => {},
+                    }
+                },
+                egui::Event::Text(t) => { println!("Text = {:?}", t) }
+                _ => {}
+            }
+        }
     }
 }

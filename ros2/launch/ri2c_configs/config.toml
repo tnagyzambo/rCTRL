@@ -29,7 +29,7 @@
     [i2c.ads1014.loadcell]
         channel = 0x10
         address = 0x49
-        conf0 = 0b10000000
+        conf0 = 0b10001110
         conf1 = 0b10000011
 
     [i2c.ads1014.p_chamber]
@@ -44,7 +44,7 @@
         conf0 = 0b10000000
         conf1 = 0b10000011
 
-    [i2c.ads1014.t_chamber]
+    [i2c.ads1014.t_manifold]
         channel = 0x08
         address = 0x4b
         conf0 = 0b10001010

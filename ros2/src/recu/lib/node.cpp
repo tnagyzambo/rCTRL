@@ -591,6 +591,17 @@ namespace recu {
         this->pyro->write(rgpio::gpio::line_level::LOW);
         this->loggerLowSpeed->log(fmt::format("info=sequence Info=\"abort\""));
 
+        // Stop pressurant control loop
+        try {
+            auto request = std::make_shared<ri2c_msgs::srv::PresControlLoopAction::Request>();
+            auto result = this->clPresControlLoopOff->async_send_request(request);
+
+            // transfer the future's shared state to a longer-lived future
+            this->pending_futures_pres.push_back(std::move(result));
+        } catch (rgpio::except::gpio_error &e) {
+            RCLCPP_ERROR(this->get_logger(), "%s", e.what());
+        }
+
         this->ignitionSequenceTimer->cancel();
 
         try {
